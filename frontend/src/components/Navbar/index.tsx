@@ -25,14 +25,21 @@ const Navbar = () => {
         <div className="collapse navbar-collapse" id="tmetrage-navbar">
           <ul className="navbar-nav offset-md-7 main-menu">
             <li>
-              <a href="link" className='active'>Home</a>
+              <a href="link" className="active">
+                Home
+              </a>
             </li>
             <li>
               <a href="link">Listas</a>
             </li>
-            <li>
-              <a href="link">Perfil</a>
-            </li>
+            <li className="profile-dropdown">
+                    <a href="link">Perfil</a>
+                    <ul className="profile-menu">
+                        <li><a href="link">Visualizar Perfil</a></li>
+                        <li><a href="link">Editar Perfil</a></li>
+                        <li><a href="link">Listas</a></li>
+                    </ul>
+                </li>
           </ul>
         </div>
       </div>
