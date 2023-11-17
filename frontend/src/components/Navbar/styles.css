@@ -9,9 +9,10 @@
 }
 
 .main-menu {
+    padding-right: 40px;
     display: flex;
     font-size: 18px;
-    width: 250px;
+    width: 380px;
     justify-content: space-between;
 }
 
@@ -21,4 +22,9 @@
 
 .main-menu a:hover {
     color: #e5e5e5;
+}
+
+.main-menu a.active {
+    color: #e5e5e5;
+    font-weight: 700;
 }

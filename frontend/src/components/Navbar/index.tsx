@@ -23,7 +23,10 @@ const Navbar = () => {
         </button>
 
         <div className="collapse navbar-collapse" id="tmetrage-navbar">
-          <ul className="navbar-nav offset-md-8 main-menu">
+          <ul className="navbar-nav offset-md-7 main-menu">
+            <li>
+              <a href="link" className='active'>Home</a>
+            </li>
             <li>
               <a href="link">Listas</a>
             </li>
