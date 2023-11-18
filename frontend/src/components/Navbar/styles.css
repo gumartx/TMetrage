@@ -52,7 +52,8 @@
 }
 
 .profile-dropdown:hover .profile-menu {
-  display: block;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (min-width: 767px) {

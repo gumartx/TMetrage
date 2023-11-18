@@ -33,7 +33,7 @@ const Navbar = () => {
               <NavLink to="/lists">Listas</NavLink>
             </li>
             <li className="profile-dropdown">
-              <a href="link">Perfil</a>
+              <NavLink to="/profileView">Perfil</NavLink>
               <ul className="profile-menu">
                 <li>
                   <NavLink to="/profileView">Visualizar Perfil</NavLink>
