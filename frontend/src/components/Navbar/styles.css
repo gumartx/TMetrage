@@ -51,6 +51,10 @@
   font-size: 15px;
 }
 
+.profile-menu li {
+  list-style-type: none;
+}
+
 .profile-dropdown:hover .profile-menu {
   display: flex;
   flex-direction: column;
