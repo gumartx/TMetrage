@@ -1,0 +1,144 @@
+.movie-comments-container {
+  margin: 25px 3px 0 3px;
+  border-top: 1px solid grey;
+  padding: 15px;
+  background-color: rgba(18, 18, 18, 0.348);
+  border-radius: 20px;
+}
+
+.profile-details {
+  display: flex;
+}
+
+.profile-details p {
+  font-size: 15px;
+}
+
+.profile-name {
+  padding-left: 10px;
+  padding-top: 10px;
+}
+
+.profile-name h4 {
+  margin-top: 7px;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  font-size: 15px;
+}
+
+.profile-name p {
+  color: #c3c3c3d4;
+  font-size: 13px;
+}
+
+.profile-img {
+  margin-top: 5px;
+}
+
+.profile-img img {
+  width: 60px;
+  height: 55px;
+  border: 2px solid black;
+  border-radius: 100%;
+}
+
+.profile-comment {
+  padding-left: 25px;
+  border-left: 1px solid grey;
+  margin-left: 25px;
+}
+
+.profile-comment p {
+  font-size: 13px;
+  letter-spacing: -0.015em;
+  border-left: 1px solid grey;
+  padding: 10px;
+  background-color: #45454560;
+  border-radius: 10px;
+}
+
+.comments {
+  display: flex;
+  padding-left: 3px;
+}
+
+.comments-comment {
+  padding-bottom: 10px;
+}
+
+.comments-likes {
+  padding-bottom: 10px;
+}
+
+.comments-comment img {
+  width: 25%;
+  height: auto;
+  margin-top: 10px;
+}
+
+.comments-comment span {
+  font-size: 0.6em;
+  margin: 10px 7px;
+}
+
+.comments-likes img {
+  width: 32%;
+  height: auto;
+  margin-top: 10px;
+}
+
+.comments-likes span {
+  font-size: 0.5em;
+  margin: 10px 7px;
+}
+
+@media (min-width: 576px) {
+  .profile-comment p {
+    font-size: 15px;
+  }
+
+  .profile-name h4 {
+    font-size: 17px;
+  }
+
+  .profile-name p {
+    font-size: 15px;
+  }
+
+  .profile-img img {
+    width: 65px;
+    height: 60px;
+  }
+
+  .profile-comment {
+    margin-left: 33px;
+  }
+}
+
+@media (min-width: 768px) {
+    .profile-comment p {
+        font-size: 17px;
+      }
+    
+      .profile-name h4 {
+        font-size: 19px;
+      }
+    
+      .profile-name p {
+        font-size: 17px;
+      }
+    
+      .profile-img img {
+        width: 70px;
+        height: 70px;
+      }
+    
+      .profile-comment {
+        margin-left: 36px;
+      }
+
+      .movie-comments-container {
+        width: 550px;
+        padding: 10px 25px 10px 17px;
+      }
+}

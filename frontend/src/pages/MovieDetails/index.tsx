@@ -1,9 +1,8 @@
 import MovieImg from 'assets/images/barbie.png';
-import ProfileImg from 'assets/images/profileImg.png';
-import CommentImg from 'assets/images/comment.svg';
-import HeartImg from 'assets/images/heart.svg';
 import { ReactComponent as ArrowIcon } from 'assets/images/arrow.svg';
 import MovieStars from 'components/MovieStars';
+import ProfileComment from 'components/ProfileComment';
+import AvailableBox from 'components/AvailableBox';
 import './styles.css';
 
 const MovieDetails = () => {
@@ -20,18 +19,11 @@ const MovieDetails = () => {
               <div className="movie-img-container">
                 <img src={MovieImg} alt="Barbie" />
               </div>
-              <div className="movie-available-container">
-                <h4>Disponível</h4>
-                <ul>
-                  <li>Amazon Prime Video</li>
-                  <li>YouTube</li>
-                  <li>Google Play</li>
-                  <li>iTunes</li>
-                  <li>Claro TV</li>
-                </ul>
+              <div className="movie-available">
+                <AvailableBox />
               </div>
-              <div className="btn-rate-container">
-                <button className="btn btn-primary btn-rate">
+              <div className="btn-list-container">
+                <button className="btn btn-primary btn-list">
                   <h6>ADICIONAR EM LISTA</h6>
                 </button>
               </div>
@@ -84,29 +76,8 @@ const MovieDetails = () => {
             </div>
           </div>
           <div className="space"></div>
-          <div className="movie-comments-container">
-            <div className="profile-details">
-              <div className="profile-img">
-                <img src={ProfileImg} alt="Foto de perfil" />
-              </div>
-              <div className="profile-name">
-                <h4>pedrinhopaulo123</h4>
-                <p>&bull;10h</p>
-              </div>
-            </div>
-            <div className="profile-comment">
-              <p>Filme muito bom!</p>
-              <div className="comments">
-                <div className="comments-comment">
-                  <img src={CommentImg} alt="Ícone de comentário" />
-                  <span>0</span>
-                </div>
-                <div className="comments-likes">
-                  <img src={HeartImg} alt="Ícone de coração" />
-                  <span>34</span>
-                </div>
-              </div>
-            </div>
+          <div className="movie-profile-comments">
+            <ProfileComment />
           </div>
         </div>
       </div>
