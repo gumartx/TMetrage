@@ -1,0 +1,19 @@
+.menu-container {
+  font-size: 18px;
+}
+
+.menu-title-container {
+  margin-bottom: 20px;
+}
+
+.menu-title-container h1 {
+  text-align: center;
+  font-size: 1em;
+  letter-spacing: -0.015em;
+}
+
+@media (min-width: 576px) {
+  .menu-container {
+    font-size: 30px;
+  }
+}

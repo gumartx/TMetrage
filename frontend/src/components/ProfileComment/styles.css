@@ -39,7 +39,7 @@
   width: 60px;
   height: 55px;
   border: 2px solid black;
-  border-radius: 100%;
+  border-radius: 50%;
 }
 
 .profile-comment {
@@ -140,5 +140,6 @@
       .movie-comments-container {
         width: 550px;
         padding: 10px 25px 10px 17px;
+        margin-left: 35px;
       }
 }

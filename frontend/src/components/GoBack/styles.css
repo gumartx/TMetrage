@@ -1,0 +1,18 @@
+.goback-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .goback-container h3 {
+    margin-left: 3px;
+    font-size: 0.75em;
+    letter-spacing: -0.015em;
+  }
+  
+  .goback-container svg {
+    margin-left: 5px;
+    transform: rotate(-180deg);
+    width: 35px;
+    height: 17px;
+  }

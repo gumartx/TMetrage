@@ -1,17 +1,18 @@
 import MovieImg from 'assets/images/barbie.png';
-import { ReactComponent as ArrowIcon } from 'assets/images/arrow.svg';
+
 import MovieStars from 'components/MovieStars';
 import ProfileComment from 'components/ProfileComment';
 import AvailableBox from 'components/AvailableBox';
 import './styles.css';
+import GoBack from 'components/GoBack';
+import { Link } from 'react-router-dom';
 
 const MovieDetails = () => {
   return (
     <div className="movie-details-container">
       <div className="base-card movie-details-card">
-        <div className="goback-container">
-          <ArrowIcon />
-          <h3>VOLTAR</h3>
+        <div className="btn-goback-container">
+          <GoBack />
         </div>
         <div className="row">
           <div className="col-xl-6">
@@ -23,9 +24,11 @@ const MovieDetails = () => {
                 <AvailableBox />
               </div>
               <div className="btn-list-container">
-                <button className="btn btn-primary btn-list">
-                  <h6>ADICIONAR EM LISTA</h6>
-                </button>
+                <Link to="/lists">
+                  <button className="btn btn-primary btn-list">
+                    <h6>ADICIONAR EM LISTA</h6>
+                  </button>
+                </Link>
               </div>
             </div>
           </div>

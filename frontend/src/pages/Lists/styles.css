@@ -1,0 +1,39 @@
+.list-title-container {
+  padding-bottom: 10px;
+  border-bottom: 1px solid grey;
+}
+
+.list-container {
+  padding: 10px;
+  font-size: 24px;
+}
+
+.list-card {
+  padding: 10px;
+  border-radius: 20px;
+}
+
+@media (min-width: 576px) {
+  .list-container {
+    padding: 30px;
+  }
+
+  .list-card {
+    padding: 20px;
+  }
+
+  .list-title-container {
+    padding: 30px;
+    margin-bottom: 30px;
+  }
+}
+
+@media (min-width: 792px) {
+  .list-container {
+    padding: 40px;
+  }
+
+  .list-card {
+    padding: 30px;
+  }
+}

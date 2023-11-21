@@ -2,6 +2,7 @@
     width: 130px;
     display: flex;
     justify-content: space-between;
+    overflow: hidden;
 }
 
 .movie-stars-container svg {
