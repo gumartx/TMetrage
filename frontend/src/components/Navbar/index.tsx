@@ -8,7 +8,7 @@ const Navbar = () => {
   return (
     <nav className="navbar navbar-expand-md navbar-white bg-primary main-nav">
       <div className="container-fluid">
-        <Link to="/" className="nav-logo-text">
+        <Link to="/menu" className="nav-logo-text">
           <h4>TMétrage</h4>
         </Link>
 

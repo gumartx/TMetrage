@@ -1,6 +1,7 @@
 .movie-available-container {
   border: 3px solid rgba(128, 128, 128, 0.776);
   margin: 0 10px;
+  background-color: rgba(0, 0, 0, 0.389);
 }
 
 .movie-available-container h4 {

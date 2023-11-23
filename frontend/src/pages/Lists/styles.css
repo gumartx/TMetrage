@@ -1,6 +1,14 @@
 .list-title-container {
-  padding-bottom: 10px;
+  padding: 0 0 10px 10px;
   border-bottom: 1px solid grey;
+}
+
+.list-movies {
+  background-color: #0e12143c;
+  margin: 20px;
+  padding-bottom: 10px;
+  border-radius: 20px;
+  border: 1px solid grey;
 }
 
 .list-container {
@@ -13,6 +21,10 @@
   border-radius: 20px;
 }
 
+.btn-list:hover {
+  background-color: #0e1214;
+}
+
 @media (min-width: 576px) {
   .list-container {
     padding: 30px;
@@ -23,12 +35,17 @@
   }
 
   .list-title-container {
-    padding: 30px;
+    padding-left: 30px;
     margin-bottom: 30px;
   }
 }
 
 @media (min-width: 792px) {
+
+  .list-movies {
+    padding-bottom: 15px;
+  }
+
   .list-container {
     padding: 40px;
   }

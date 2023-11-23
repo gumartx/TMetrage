@@ -8,19 +8,27 @@ const Lists = () => {
     <div className="list-container">
       <div className="base-card list-card">
         <div className="btn-goback-container">
-          <GoBack />
+        <Link to="/menu">
+            <div className="goback-container">
+              <GoBack />
+            </div>
+          </Link>
         </div>
         <div className="btn-list-container">
-          <button className="btn btn-primary btn-list">
-            <h6>CRIAR UMA LISTA</h6>
-          </button>
+          <Link to="/list/form">
+            <button className="btn btn-primary btn-list">
+              <h6>CRIAR UMA LISTA</h6>
+            </button>
+          </Link>
         </div>
         <div className="list-title-container">
           <h1>Listas</h1>
         </div>
-        <div className="row">
+        <div className="row list-movies">
           <div className="col-sm-6 col-lg-4 col-xl-3">
-            <ListCard />
+            <Link to="/lists/:listId">
+              <ListCard />
+            </Link>
           </div>
           <div className="col-sm-6 col-lg-4 col-xl-3">
             <ListCard />

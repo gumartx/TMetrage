@@ -69,6 +69,7 @@
   flex-direction: column;
   border: 1px solid grey;
   padding: 10px;
+  background-color: rgba(0, 0, 0, 0.389);
 }
 
 .movie-board div {
@@ -130,7 +131,6 @@
 }
 
 @media (min-width: 792px) {
- 
   .movie-details-container {
     padding: 35px;
   }
@@ -163,5 +163,10 @@
 @media (min-width: 1200px) {
   .movie-details-card {
     padding-right: 45px;
+  }
+
+  .movie-stars span {
+    font-size: 0.7em;
+    margin-left: 10px;
   }
 }

@@ -1,0 +1,137 @@
+.list-form-container {
+    padding: 10px;
+}
+
+.list-form-card {
+    padding: 10px;
+}
+
+.list-form-content {
+    padding: 0 5px;
+}
+
+.list-form-title {
+    border-bottom: 1px solid grey;
+    margin: 0 10px;
+    padding-bottom: 10px;
+    text-align: center;
+    font-size: 25px;
+}
+
+.list-form-top-content {
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.list-form-description-board {
+    min-height: 250px;
+}
+
+.list-form-bottom-content {
+    border-top: 1px solid grey;
+    padding-top: 20px;
+}
+
+.btn-container {
+    margin-bottom: 20px;
+}
+
+.btn-add-movie h6 {
+    font-size: 15px;
+    letter-spacing: -0.015em;
+}
+
+.list-form-bottons {
+    text-align: end;
+    padding-top: 5px;
+}
+
+.btn-button-form {
+    margin-left: 10px;
+    height: 50px;
+    width: 100px;
+}
+
+.form-list {
+    border-radius: 0 10px 10px 0;
+}
+
+.btn-save {
+    border: 1px solid rgba(128, 128, 128, 0.655);
+    font-weight: bold;
+}
+
+.btn-save:hover {
+    border: 1px solid grey;
+    background-color: rgba(0, 0, 0, 0.472)
+}
+
+@media (min-width: 576px) {
+    .btn-add-movie h6 {
+        font-size: 18px;
+    }
+
+    .list-form-top-content label {
+        font-size: 20px;
+    }
+
+    .list-form-container {
+        padding: 15px;
+    }
+
+    .list-form-card {
+        padding: 15px;
+    }
+
+    .list-form-bottons {
+        padding: 10px;
+    }
+    
+    .btn-button-form {
+        margin-left: 0;
+        width: 140px;
+    }
+
+}
+
+@media(min-width: 992px) {
+
+    .list-form-top-content {
+        padding-right: 30px;
+    }
+
+    .btn-add-movie h6 {
+        font-size: 16px;
+    }
+
+    .list-form-bottons {
+        margin-top: 10px;
+    }
+
+    .list-form-bottom-content {
+        border-left: 1px solid rgba(128, 128, 128, 0.477);
+        border-top: 0;
+        margin-top: 15px;
+        padding-top: 20px;
+        padding-left: 30px;
+    }
+
+    .list-form-title {
+        padding-left: 20px;
+        font-size: 30px;
+        text-align: start;
+    }
+
+    .list-form-content {
+        margin-top: 10px;
+        padding: 0 10px;
+    }
+
+    .list-form-container {
+        padding: 35px;
+    }
+    
+    .list-form-card {
+        padding: 35px;
+    }
+}

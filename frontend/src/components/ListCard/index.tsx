@@ -11,10 +11,9 @@ const ListCard = () => {
           <MovieCard />
           <MovieCard />
           <MovieCard />
-          <MovieCard />
         </div>
         <div className="list-card-bottom-content">
-          <h2>Filmes assistos em 2023</h2>
+          <h2>Filmes assistidos em 2023</h2>
         </div>
       </div>
     </div>

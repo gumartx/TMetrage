@@ -2,6 +2,7 @@
     display: flex;
     align-items: center;
     margin-bottom: 20px;
+    font-size: 18px;
   }
   
   .goback-container h3 {
@@ -16,3 +17,13 @@
     width: 35px;
     height: 17px;
   }
+
+@media (min-width: 576px) {
+  .goback-container h3 {
+    font-size: 1em;
+  }
+
+  .goback-container svg {
+    margin-left: 0;
+  }
+}

@@ -12,7 +12,11 @@ const MovieDetails = () => {
     <div className="movie-details-container">
       <div className="base-card movie-details-card">
         <div className="btn-goback-container">
-          <GoBack />
+          <Link to="/menu">
+            <div className="goback-container">
+              <GoBack />
+            </div>
+          </Link>
         </div>
         <div className="row">
           <div className="col-xl-6">
