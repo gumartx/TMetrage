@@ -1,9 +1,7 @@
 .movie-comments-container {
   margin: 25px 3px 0 3px;
-  border-top: 1px solid grey;
-  padding: 15px;
-  background-color: rgba(18, 18, 18, 0.348);
-  border-radius: 20px;
+  border-top: 1px solid rgba(128, 128, 128, 0.51);
+  border-radius: 10px;
 }
 
 .profile-details {
@@ -44,7 +42,6 @@
 
 .profile-comment {
   padding-left: 25px;
-  border-left: 1px solid grey;
   margin-left: 25px;
 }
 
@@ -53,11 +50,11 @@
   letter-spacing: -0.015em;
   border-left: 1px solid grey;
   padding: 10px;
-  background-color: #45454560;
+  background-color: #00000060;
   border-radius: 10px;
 }
 
-.comments {
+.profile-comments {
   display: flex;
   padding-left: 3px;
 }
@@ -93,6 +90,11 @@
 }
 
 @media (min-width: 576px) {
+
+  .movie-comments-container {
+    padding: 15px;
+  }
+
   .profile-comment p {
     font-size: 15px;
   }

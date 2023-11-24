@@ -83,10 +83,20 @@
   letter-spacing: -0.015em;
 }
 
+.menu-movies-container {
+  padding-top: 10px;
+  border-top: 3px solid rgba(128, 128, 128, 0.531);
+}
+
 @media (min-width: 576px) {
   .menu-title-container {
     font-size: 30px;
     margin-top: 40px;
+  }
+
+  .menu-movies-container {
+    padding-top: 15px;
+    margin-top: 15px;
   }
 }
 
@@ -105,5 +115,16 @@
     margin-top: 47px;
   }
 
+  .menu-movies-container {
+    padding-top: 20px;
+    margin-top: 20px;
+  }
+
+}
+
+@media (min-width: 992px) {
+  .menu-movies-container {
+    padding-top: 30px;
+  }
 }
 

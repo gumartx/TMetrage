@@ -1,6 +1,7 @@
 import ProfileImg from 'assets/images/profileImg.png';
 import CommentImg from 'assets/images/comment.svg';
 import HeartImg from 'assets/images/heart.svg';
+import Replies from 'components/Replies'
 
 import './styles.css';
 
@@ -18,10 +19,10 @@ const Comments = () => {
       </div>
       <div className="profile-comment">
         <p>Filme muito bom!</p>
-        <div className="comments">
+        <div className="profile-comments">
           <div className="comments-comment">
             <img src={CommentImg} alt="Ícone de comentário" />
-            <span>0</span>
+            <span>2</span>
           </div>
           <div className="comments-likes">
             <img src={HeartImg} alt="Ícone de coração" />
@@ -29,6 +30,7 @@ const Comments = () => {
           </div>
         </div>
       </div>
+      <Replies />
     </div>
   );
 };

@@ -83,6 +83,18 @@ const MovieDetails = () => {
             </div>
           </div>
           <div className="space"></div>
+          <div className="add-comment-container">
+            <textarea
+              name=""
+              rows={10}
+              id="list-form-description"
+              placeholder="Escreva seu comentário"
+              className="form-control base-input "
+            ></textarea>
+            <button className="btn btn-primary btn-add-comment">
+              <h6>Enviar</h6>
+            </button>
+          </div>
           <div className="movie-profile-comments">
             <ProfileComment />
           </div>

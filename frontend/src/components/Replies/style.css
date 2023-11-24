@@ -1,0 +1,26 @@
+.comment {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.view-replies-btn {
+  margin-left: 0;
+  padding-left: 0; 
+}
+
+.replies {
+    margin-left: 0;
+    padding: 0;
+}
+
+@media (min-width: 768px) {
+  .view-replies-btn {
+    margin-right: 10px;
+  }
+
+  .replies {
+    margin-top: 20px;
+    padding-left: 20px;
+    border-left: 2px solid #ccc;
+  }
+}

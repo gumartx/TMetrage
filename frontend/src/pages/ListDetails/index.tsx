@@ -51,9 +51,11 @@ const ListDetails = () => {
               </p>
             </div>
             <div className="list-details-bottons">
+              <Link to="/list/form">
               <button className="btn btn-primary btn-edit">
                 <h6>Editar Lista</h6>
               </button>
+              </Link>
               <button className="btn btn-primary btn-graphic">
                 <h6>Gerar Gráfico</h6>
               </button>

@@ -38,30 +38,32 @@ const Menu = () => {
           </div>
         </div>
       </div>
-      <div className="row">
-        <div className="col-sm-6 col-lg-4 col-xl-3">
-          <Link to="/menu/:movieId">
+      <div className="menu-movies-container">
+        <div className="row">
+          <div className="col-sm-6 col-lg-4 col-xl-3">
+            <Link to="/menu/:movieId">
+              <MovieCard />
+            </Link>
+          </div>
+          <div className="col-sm-6 col-lg-4 col-xl-3">
             <MovieCard />
-          </Link>
+          </div>
+          <div className="col-sm-6 col-lg-4 col-xl-3">
+            <MovieCard />
+          </div>
+          <div className="col-sm-6 col-lg-4 col-xl-3">
+            <MovieCard />
+          </div>
+          <div className="col-sm-6 col-lg-4 col-xl-3">
+            <MovieCard />
+          </div>
+          <div className="col-sm-6 col-lg-4 col-xl-3">
+            <MovieCard />
+          </div>
         </div>
-        <div className="col-sm-6 col-lg-4 col-xl-3">
-          <MovieCard />
+        <div className="row">
+          <Pagination />
         </div>
-        <div className="col-sm-6 col-lg-4 col-xl-3">
-          <MovieCard />
-        </div>
-        <div className="col-sm-6 col-lg-4 col-xl-3">
-          <MovieCard />
-        </div>
-        <div className="col-sm-6 col-lg-4 col-xl-3">
-          <MovieCard />
-        </div>
-        <div className="col-sm-6 col-lg-4 col-xl-3">
-          <MovieCard />
-        </div>
-      </div>
-      <div className="row">
-        <Pagination />
       </div>
     </div>
   );

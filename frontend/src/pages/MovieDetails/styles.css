@@ -108,6 +108,26 @@
   border: 1px solid rgb(147, 147, 147);
 }
 
+.add-comment-container {
+  margin-top: 15px;
+  text-align: end;
+  padding: 10px;
+}
+
+.add-comment-container button {
+  text-align: end;
+}
+
+.btn-add-comment {
+  border: 1px solid rgba(128, 128, 128, 0.516);
+  text-align: end;
+  margin-top: 5px;
+}
+
+.btn-add-comment:hover {
+  border: 1px solid grey;
+}
+
 @media (min-width: 576px) {
   .movie-img-container img {
     width: 400px;
@@ -157,6 +177,11 @@
 
   .movie-board-container h4 {
     font-size: 1em;
+  }
+
+  .add-comment-container {
+    width: 75vh;
+    margin-left: 40px;
   }
 }
 
