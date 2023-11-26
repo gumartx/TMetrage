@@ -22,9 +22,7 @@ const ListDetails = () => {
             </div>
             <div className="row list-details-movies">
               <div className="col-sm-6 col-lg-4 col-xl-3">
-                <Link to="/lists/:listId/:movieId">
-                  <MovieCard />
-                </Link>
+                <MovieCard />
               </div>
               <div className="col-sm-6 col-lg-4 col-xl-3">
                 <MovieCard />
@@ -52,13 +50,15 @@ const ListDetails = () => {
             </div>
             <div className="list-details-bottons">
               <Link to="/list/form">
-              <button className="btn btn-primary btn-edit">
-                <h6>Editar Lista</h6>
-              </button>
+                <button className="btn btn-primary btn-edit">
+                  <h6>Editar Lista</h6>
+                </button>
               </Link>
-              <button className="btn btn-primary btn-graphic">
-                <h6>Gerar Gráfico</h6>
-              </button>
+              <Link to="/lists/:listId/chart">
+                <button className="btn btn-primary btn-graphic">
+                  <h6>Gerar Gráficos</h6>
+                </button>
+              </Link>
               <button className="btn btn-primary btn-share">
                 <h6>Compartilhar</h6>
               </button>

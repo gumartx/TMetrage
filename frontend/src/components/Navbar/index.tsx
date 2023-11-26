@@ -33,10 +33,10 @@ const Navbar = () => {
               <NavLink to="/lists">Listas</NavLink>
             </li>
             <li className="profile-dropdown">
-              <NavLink to="/profileView">Perfil</NavLink>
+              <NavLink to="/profileDetails">Perfil</NavLink>
               <ul className="profile-menu">
                 <li>
-                  <NavLink to="/profileView">Visualizar Perfil</NavLink>
+                  <NavLink to="/profileDetails">Visualizar Perfil</NavLink>
                 </li>
                 <li>
                   <NavLink to="/profileEdit">Editar Perfil</NavLink>

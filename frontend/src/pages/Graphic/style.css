@@ -1,0 +1,122 @@
+.chart-container {
+  padding: 10px;
+  font-size: 24px;
+}
+
+.chart-title {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.chart-title h1 {
+  font-size: 0.9em;
+  letter-spacing: -0.015em;
+}
+
+.chart-donut {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chart-name {
+  text-align: center;
+  border-bottom: 1px solid grey;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.chart-name p {
+    margin-top: 5px;
+    font-size: 0.8em;
+    color: rgb(196, 196, 196);
+    letter-spacing: -0.015em;
+  }
+
+.chart-name h2 {
+  font-size: 0.8em;
+  letter-spacing: -0.015em;
+}
+
+@media (min-width: 576px) {
+    .chart-name {
+        padding-left: 10px;
+        padding-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+      }
+    
+      .chart-name h2 {
+        font-size: 1.2em;
+        align-self: center;
+      }
+    
+      .chart-name p {
+        font-size: 1em;
+        padding-right: 10px;
+        margin-bottom: 5px;
+      }
+    
+
+  .chart-container {
+    padding: 15px;
+  }
+
+  .chart-title h1 {
+    font-size: 1em;
+  }
+
+  .chart-name h2 {
+    font-size: 0.9em;
+  }
+
+  .chart-donut {
+    margin-top: 20px;
+  }
+}
+
+@media (min-width: 792px) {
+  .chart-container {
+    padding: 20px;
+  }
+
+  .chart-title h1 {
+    font-size: 1.4em;
+  }
+
+  .chart-name h2 {
+    font-size: 1.2em;
+    text-align: start;
+    padding-left: 20px;
+  }
+}
+
+@media (min-width: 900px) {
+  .chart-container {
+    padding: 40px;
+    margin-left: 30px;
+    margin-right: 30px;
+  }
+
+  .chart-title h1 {
+    margin: 30px 0;
+    font-size: 1.6em;
+  }
+
+  .chart-name {
+    margin-bottom: 25px;
+  }
+
+  .chart-name h2 {
+    font-size: 1.5em;
+  }
+
+  .chart-name p {
+    font-size: 1.2em;
+    margin-bottom: 0;
+  }
+
+  .chart-donut {
+    margin-top: 40px;
+  }
+}

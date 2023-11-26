@@ -1,0 +1,166 @@
+.profile-container {
+    font-size: 24px;
+}
+
+.profile-image-container {
+    width: 100%;
+    text-align: center;
+}
+
+.profile-image-background {
+    height: 150px;
+    border: solid black;
+    background-image: url('https://i.pinimg.com/564x/de/b9/e8/deb9e862621d6f99148442b3f69ad42a.jpg');
+}
+
+.profile-image-photo img {
+    position: absolute;
+    top: 20%;
+    left: 15vh;
+    border-radius: 50%;
+    width: 130px;
+    height: 110px;
+    border: solid black;
+    z-index: 1;
+}
+
+.profile-content {
+    padding: 40px 10px 0 10px;
+}
+
+.profile-details {
+    display: block;
+    text-align: center;
+}
+
+.profile-details h1 {
+    font-size: 0.94em;
+}
+
+.profile-user h4 {
+    font-size: 0.65em;
+}
+
+.profile-user p {
+    font-size: 0.6em;
+}
+
+.profile-user {
+    color: rgba(187, 187, 187, 0.721);
+    display: flex;
+    justify-content: space-around;
+    padding-top: 10px;
+}
+
+.profile-follow {
+    display: flex;
+    justify-content: center;
+}
+
+.profile-dropdown {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    margin-right: 20px;
+}
+
+.profile-dropdown span {
+    font-size: 0.55em;
+    margin-left: 10px;
+}
+
+.profile-dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: rgb(0, 0, 0);
+    border: 0.5px solid grey;
+    min-width: 100px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.profile-dropdown:hover .profile-dropdown-content {
+    display: block;
+}
+
+.profile-arrow {
+    display: inline-block;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    padding: 3px;
+    margin-left: 5px;
+}
+
+.profile-down {
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+}
+
+.profile-bottom-content {
+    padding: 10px;
+    margin-top: 20px;
+}
+
+.profile-bottom-content h3 {
+    border-bottom: 1px solid gray;
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+.profile-scores {
+    margin-top: 20px;
+}
+
+@media (min-width: 576px) {
+    .profile-details {
+        text-align: start;
+        margin-left: 95px;
+    }
+
+    .profile-user {
+        justify-content: flex-start;
+    }
+
+    .profile-details h1 {
+        font-size: 1.1em;
+    }
+
+    .profile-user p {
+        margin-left: 15px;
+    }
+
+    .profile-bottom-content h3 {
+        font-size: 1.1em;
+        margin-top: 20px;
+    }
+}
+
+@media (min-width: 992px) {
+
+    .profile-bottom-content {
+        padding-left: 20px;
+    }
+
+    .profile-lists {
+        border-right: 1px solid rgba(128, 128, 128, 0.518);
+        padding-right: 20px;
+    }
+
+    .profile-scores {
+        margin-top: 35px;
+        padding-left: 10px;
+    }
+
+    .profile-bottom-content h3 {
+        text-align: start;
+        padding-left: 20px;
+        margin-right: 25px;
+    }
+
+    .profile-follow {
+        margin-right: 30px;
+        position: absolute;
+        right: 2%;
+        top: 40%;
+    }
+}

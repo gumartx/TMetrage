@@ -5,6 +5,7 @@
 }
 
 .btn-container button {
+    width: calc(100% - 50px);
     border-radius: 10px 0 0 10px;
 }
 
@@ -30,8 +31,10 @@
     }
 
     .btn-container button {
-        width: 300px;
+        width: calc(100% - 50px);
+        border-radius: 10px 0 0 10px;
     }
+    
 
     .btn h6 {
         font-size: 18px;

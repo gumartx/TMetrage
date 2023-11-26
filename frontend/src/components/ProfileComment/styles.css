@@ -4,48 +4,48 @@
   border-radius: 10px;
 }
 
-.profile-details {
+.profile-comment-details {
   display: flex;
 }
 
-.profile-details p {
+.profile-comment-details p {
   font-size: 15px;
 }
 
-.profile-name {
+.profile-comment-name {
   padding-left: 10px;
   padding-top: 10px;
 }
 
-.profile-name h4 {
+.profile-comment-name h4 {
   margin-top: 7px;
   font-size: 18px;
   letter-spacing: -0.01em;
   font-size: 15px;
 }
 
-.profile-name p {
+.profile-comment-name p {
   color: #c3c3c3d4;
   font-size: 13px;
 }
 
-.profile-img {
+.profile-comment-img {
   margin-top: 5px;
 }
 
-.profile-img img {
+.profile-comment-img img {
   width: 60px;
   height: 55px;
   border: 2px solid black;
   border-radius: 50%;
 }
 
-.profile-comment {
+.profile-comment-comment {
   padding-left: 25px;
   margin-left: 25px;
 }
 
-.profile-comment p {
+.profile-comment-comment p {
   font-size: 13px;
   letter-spacing: -0.015em;
   border-left: 1px solid grey;
@@ -54,37 +54,37 @@
   border-radius: 10px;
 }
 
-.profile-comments {
+.profile-comment-comments {
   display: flex;
   padding-left: 3px;
 }
 
-.comments-comment {
+.comments-comment-comment {
   padding-bottom: 10px;
 }
 
-.comments-likes {
+.comments-comment-likes {
   padding-bottom: 10px;
 }
 
-.comments-comment img {
+.comments-comment-comment img {
   width: 25%;
   height: auto;
   margin-top: 10px;
 }
 
-.comments-comment span {
+.comments-comment-comment span {
   font-size: 0.6em;
   margin: 10px 7px;
 }
 
-.comments-likes img {
+.comments-comment-likes img {
   width: 32%;
   height: auto;
   margin-top: 10px;
 }
 
-.comments-likes span {
+.comments-comment-likes span {
   font-size: 0.5em;
   margin: 10px 7px;
 }
@@ -95,53 +95,53 @@
     padding: 15px;
   }
 
-  .profile-comment p {
+  .profile-comment-comment p {
     font-size: 15px;
   }
 
-  .profile-name h4 {
+  .profile-comment-name h4 {
     font-size: 17px;
   }
 
-  .profile-name p {
+  .profile-comment-name p {
     font-size: 15px;
   }
 
-  .profile-img img {
+  .profile-comment-img img {
     width: 65px;
     height: 60px;
   }
 
-  .profile-comment {
+  .profile-comment-comment {
     margin-left: 33px;
   }
 }
 
 @media (min-width: 768px) {
-    .profile-comment p {
+    .profile-comment-comment p {
         font-size: 17px;
       }
     
-      .profile-name h4 {
+      .profile-comment-name h4 {
         font-size: 19px;
       }
     
-      .profile-name p {
+      .profile-comment-name p {
         font-size: 17px;
       }
     
-      .profile-img img {
+      .profile-comment-img img {
         width: 70px;
         height: 70px;
       }
     
-      .profile-comment {
+      .profile-comment-comment {
         margin-left: 36px;
       }
 
       .movie-comments-container {
         width: 550px;
         padding: 10px 25px 10px 17px;
-        margin-left: 35px;
+        margin-left: 35px
       }
 }

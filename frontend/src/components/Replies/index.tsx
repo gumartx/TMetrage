@@ -5,7 +5,7 @@ const Replies = () => {
   const [repliesVisible, setRepliesVisible] = useState(false);
 
   return (
-    <div className="comment">
+    <div className="replies-comment">
       <div>
         <button
           className="btn view-replies-btn"

@@ -1,8 +1,10 @@
 import MovieCard from 'components/MovieCard';
 import './styles.css';
+import { Link } from 'react-router-dom';
 
 const ListCard = () => {
   return (
+    <Link to="/lists/:listId" className="list-card-container">
     <div className="list-card-container">
       <div className="list-card-content">
         <div className="base-card list-card-top-content">
@@ -17,6 +19,7 @@ const ListCard = () => {
         </div>
       </div>
     </div>
+    </Link>
   );
 };
 
