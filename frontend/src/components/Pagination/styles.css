@@ -21,26 +21,44 @@
 
 .pagination-item.active {
   background-color: #3b4449;
+  border: 1px solid rgba(240, 169, 169, 0.504);
+  color: rgba(255, 255, 255, 0.64);
+}
+
+.pagination-link-active {
+  background-color: #3b4449;
   border: 1px solid rgba(189, 189, 189, 0.504);
   color: rgba(255, 255, 255, 0.64);
 }
 
 .arrow-previous {
-    transform: rotate(180deg);
+  transform: rotate(180deg);
+  color: rgba(255, 255, 255, 0.38);
+  width: 15px;
+  height: 30px;
 }
 
 .arrow-next {
-    margin-left: 10px;
+  margin-left: 10px;
+  color: rgba(255, 255, 255, 0.38);
+  width: 15px;
+  height: 30px;
+}
+
+.arrow-previous svg {
+  width: 100%;
+  height: auto;
+}
+
+.arrow-next svg {
+  width: 100%;
+  height: auto;
 }
 
 .arrow-inactive {
-    color: rgba(128, 128, 128, 0.193);
-    width: 15px;
-    height: 30px;
+  color: rgba(128, 128, 128, 0.193);
 }
 
 .arrow-active {
-    color: rgba(255, 255, 255, 0.38);
-    width: 15px;
-    height: 30px;
+  color: rgba(255, 255, 255, 0.38);
 }

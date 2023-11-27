@@ -39,40 +39,40 @@ const Menu = () => {
       </div>
       <div className="menu-movies-container">
         <div className="row">
-          <div className="col-sm-6 col-lg-3 col-xl-2">
+          <div className="col-sm-4 col-lg-3 col-xl-2">
             <MovieCard />
           </div>
-          <div className="col-sm-6 col-lg-3 col-xl-2">
+          <div className="col-sm-4 col-lg-3 col-xl-2">
             <MovieCard />
           </div>
-          <div className="col-sm-6 col-lg-3 col-xl-2">
+          <div className="col-sm-4 col-lg-3 col-xl-2">
             <MovieCard />
           </div>
-          <div className="col-sm-6 col-lg-3 col-xl-2">
+          <div className="col-sm-4 col-lg-3 col-xl-2">
             <MovieCard />
           </div>
-          <div className="col-sm-6 col-lg-3 col-xl-2">
+          <div className="col-sm-4 col-lg-3 col-xl-2">
             <MovieCard />
           </div>
-          <div className="col-sm-6 col-lg-3 col-xl-2">
+          <div className="col-sm-4 col-lg-3 col-xl-2">
             <MovieCard />
           </div>
-          <div className="col-sm-6 col-lg-3 col-xl-2">
+          <div className="col-sm-4 col-lg-3 col-xl-2">
             <MovieCard />
           </div>
-          <div className="col-sm-6 col-lg-3 col-xl-2">
+          <div className="col-sm-4 col-lg-3 col-xl-2">
             <MovieCard />
           </div>
-          <div className="col-sm-6 col-lg-3 col-xl-2">
+          <div className="col-sm-4 col-lg-3 col-xl-2">
             <MovieCard />
           </div>
-          <div className="col-sm-6 col-lg-3 col-xl-2">
+          <div className="col-sm-4 col-lg-3 col-xl-2">
             <MovieCard />
           </div>
-          <div className="col-sm-6 col-lg-3 col-xl-2">
+          <div className="col-sm-4 col-lg-3 col-xl-2">
             <MovieCard />
           </div>
-          <div className="col-sm-6 col-lg-3 col-xl-2">
+          <div className="col-sm-4 col-lg-3 col-xl-2">
             <MovieCard />
           </div>
         </div>

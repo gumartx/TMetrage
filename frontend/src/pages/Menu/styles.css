@@ -101,6 +101,11 @@
 }
 
 @media (min-width: 768px) {
+
+  .menu-search-container {
+    margin-top: 30px;
+  }
+
   .search-content {
     min-width: 420px;
   }
@@ -109,6 +114,9 @@
     display: flex;
     flex-direction: column;
     align-items: end;
+    margin-top: 5px;
+    margin-left: 140px;
+    width: 210px;
   }
 
   .dropdown-content {
@@ -116,8 +124,8 @@
   }
 
   .menu-movies-container {
-    padding-top: 20px;
-    margin-top: 20px;
+    padding-top: 40px;
+    margin-top: 40px;
   }
 
 }
@@ -128,3 +136,6 @@
   }
 }
 
+@media (min-width: 1200px) {
+
+}

@@ -80,6 +80,20 @@ const MovieDetails = () => {
                   <p>1h 54m</p>
                 </div>
               </div>
+              <div className="col-xl-6 movie-btn-score-container">
+                <h2>Avaliar</h2>
+                <div className="movie-btn-score">
+                  <input
+                    type="text"
+                    id="list-form-description"
+                    placeholder="Avalie de 1 a 5"
+                    className="form-control base-input"
+                  />
+                </div>
+                <button className="btn btn-primary btn-save-score">
+                  <h6>Salvar</h6>
+                </button>
+              </div>
             </div>
           </div>
           <div className="space"></div>

@@ -88,6 +88,36 @@
   padding-bottom: 10px;
 }
 
+.movie-btn-score-container {
+  margin-top: 20px;
+  border: 1px solid grey;
+  padding: 15px;
+  text-align: center;
+  border-radius: 10px;
+  background-color: rgba(0, 0, 0, 0.389);
+}
+
+.movie-btn-score-container h2 {
+  margin-bottom: 15px;
+  font-size: 20px;
+}
+
+.movie-btn-score {
+  margin-bottom: 15px;
+}
+
+.movie-btn-score p {
+  font-size: 10px;
+}
+
+.btn-save-score {
+  border: 1px solid rgba(128, 128, 128, 0.519);
+}
+
+.btn-save-score:hover {
+  border: 1px solid grey;
+}
+
 .space {
   border: 0.2px solid rgba(128, 128, 128, 0.414);
   margin-top: 20px;
@@ -148,6 +178,20 @@
   .btn-list {
     width: 360px;
   }
+
+  .movie-btn-score-container {
+    margin: calc(15% / 2);
+    padding: 20px;
+  }
+
+  .movie-btn-score-container h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  .movie-btn-score {
+    margin: 20px 10%;
+  }
 }
 
 @media (min-width: 792px) {
@@ -185,6 +229,17 @@
   }
 }
 
+@media (min-width: 992px) {
+  .movie-btn-score-container h2 {
+    font-size: 26px;
+    margin-bottom: 25px;
+  }
+
+  .movie-btn-score {
+    margin: 25px 10%;
+  }
+}
+
 @media (min-width: 1200px) {
   .movie-details-card {
     padding-right: 45px;
@@ -194,4 +249,16 @@
     font-size: 0.7em;
     margin-left: 10px;
   }
+
+  .movie-btn-score-container {
+    width: 80%;
+    height: 200px;
+    text-align: end;
+  }
+
+  .movie-btn-score-container h2 {
+    text-align: start;
+    padding-left: 20px;
+  }
+
 }
