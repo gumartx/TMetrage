@@ -1,0 +1,215 @@
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Plus, Trash2, Film, ListMusic, Pencil } from "lucide-react";
+import { getLists, createList, deleteList, updateList, type MovieList } from "@/lib/movieLists";
+import { getPosterUrl } from "@/lib/tmdb";
+import Navbar from "@/components/Navbar";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+
+const Lists = () => {
+  const [lists, setLists] = useState<MovieList[]>([]);
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+
+  useEffect(() => {
+    setLists(getLists());
+  }, []);
+
+  const handleCreate = () => {
+    if (!name.trim()) return;
+    createList(name.trim(), description.trim());
+    setLists(getLists());
+    setName("");
+    setDescription("");
+    setOpen(false);
+  };
+
+  const handleDelete = (id: string) => {
+    deleteList(id);
+    setLists(getLists());
+  };
+
+  const openEdit = (list: MovieList) => {
+    setEditId(list.id);
+    setEditName(list.name);
+    setEditDescription(list.description);
+    setEditOpen(true);
+  };
+
+  const handleEdit = () => {
+    if (!editId || !editName.trim()) return;
+    updateList(editId, editName.trim(), editDescription.trim());
+    setLists(getLists());
+    setEditOpen(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main className="container py-10">
+        <div className="flex items-center justify-between">
+          <h1 className="font-display text-2xl font-bold text-foreground">
+            Minhas Listas
+          </h1>
+
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="mr-1.5 h-4 w-4" />
+                Nova Lista
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Criar nova lista</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <Input
+                  placeholder="Nome da lista"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+                />
+                <Textarea
+                  placeholder="Descrição (opcional)"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                />
+                <Button onClick={handleCreate} className="w-full" disabled={!name.trim()}>
+                  Criar Lista
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <div className="mt-6 border-t border-border" />
+
+        {lists.length === 0 ? (
+          <div className="mt-20 flex flex-col items-center text-center">
+            <ListMusic className="h-16 w-16 text-muted-foreground" />
+            <p className="mt-4 text-lg font-medium text-muted-foreground">
+              Você ainda não criou nenhuma lista
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Crie uma lista para organizar seus filmes favoritos
+            </p>
+          </div>
+        ) : (
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {lists.map((list) => (
+              <div
+                key={list.id}
+                className="group relative rounded-lg border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+              >
+                {/* Action buttons */}
+                <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <button
+                    onClick={(e) => { e.preventDefault(); openEdit(list); }}
+                    className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(list.id)}
+                    className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <Link to={`/listas/${list.id}`} className="block">
+                  <h3 className="text-lg font-semibold text-card-foreground pr-8">
+                    {list.name}
+                  </h3>
+                  {list.description && (
+                    <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                      {list.description}
+                    </p>
+                  )}
+
+                  {/* Movie poster preview strip */}
+                  <div className="mt-4 flex gap-2">
+                    {list.movies.length === 0 ? (
+                      <div className="flex h-[100px] w-full items-center justify-center rounded-md bg-muted">
+                        <Film className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    ) : (
+                      list.movies.slice(0, 5).map((m) => {
+                        const url = getPosterUrl(m.poster_path, "w185");
+                        return url ? (
+                          <img
+                            key={m.id}
+                            src={url}
+                            alt={m.title}
+                            className="h-[100px] w-[67px] shrink-0 rounded-md object-cover border border-border"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div
+                            key={m.id}
+                            className="flex h-[100px] w-[67px] shrink-0 items-center justify-center rounded-md bg-muted border border-border"
+                          >
+                            <Film className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{list.movies.length} {list.movies.length === 1 ? "filme" : "filmes"}</span>
+                    <span>{new Date(list.createdAt).toLocaleDateString("pt-BR")}</span>
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Edit Dialog */}
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar lista</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <Input
+                placeholder="Nome da lista"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleEdit()}
+              />
+              <Textarea
+                placeholder="Descrição (opcional)"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                rows={3}
+              />
+              <Button onClick={handleEdit} className="w-full" disabled={!editName.trim()}>
+                Salvar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </main>
+    </div>
+  );
+};
+
+export default Lists;
