@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Trash2, Film, ListMusic, Pencil } from "lucide-react";
+import { Plus, Trash2, Film, ListMusic, Pencil, Search } from "lucide-react";
 import { getLists, createList, deleteList, updateList, type MovieList } from "@/lib/movieLists";
 import { getPosterUrl } from "@/lib/tmdb";
 import Navbar from "@/components/Navbar";
@@ -34,10 +34,15 @@ const Lists = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     setLists(getLists());
   }, []);
+
+  const filteredLists = lists.filter((list) =>
+    list.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   const handleCreate = () => {
     if (!name.trim()) return;
@@ -112,6 +117,18 @@ const Lists = () => {
           </Dialog>
         </div>
 
+        {lists.length > 0 && (
+          <div className="mt-6 relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Pesquisar listas..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        )}
+
         <div className="mt-6 border-t border-border" />
 
         {lists.length === 0 ? (
@@ -124,9 +141,16 @@ const Lists = () => {
               Crie uma lista para organizar seus filmes favoritos
             </p>
           </div>
+        ) : filteredLists.length === 0 ? (
+          <div className="mt-12 flex flex-col items-center text-center">
+            <Search className="h-12 w-12 text-muted-foreground" />
+            <p className="mt-3 text-sm text-muted-foreground">
+              Nenhuma lista encontrada para "{search}"
+            </p>
+          </div>
         ) : (
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {lists.map((list) => (
+            {filteredLists.map((list) => (
               <div
                 key={list.id}
                 className="group relative rounded-lg border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
