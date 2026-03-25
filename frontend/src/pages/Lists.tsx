@@ -12,6 +12,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -38,9 +48,13 @@ const Lists = () => {
     setOpen(false);
   };
 
-  const handleDelete = (id: string) => {
-    deleteList(id);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const handleDelete = () => {
+    if (!deleteId) return;
+    deleteList(deleteId);
     setLists(getLists());
+    setDeleteId(null);
   };
 
   const openEdit = (list: MovieList) => {
@@ -126,7 +140,7 @@ const Lists = () => {
                     <Pencil className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(list.id)}
+                    onClick={(e) => { e.preventDefault(); setDeleteId(list.id); }}
                     className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -207,6 +221,24 @@ const Lists = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation */}
+        <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir lista</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir esta lista? Essa ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );

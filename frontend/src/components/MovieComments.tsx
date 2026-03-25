@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +23,17 @@ function timeAgo(dateStr: string): string {
   return `${days}d`;
 }
 
-const CURRENT_USER = "Você";
+function getCurrentUsername(): string {
+  try {
+    const saved = localStorage.getItem("tmetrage_profile");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.username) return parsed.username;
+      if (parsed.name) return parsed.name;
+    }
+  } catch { /* empty */ }
+  return "Você";
+}
 
 interface CommentItemProps {
   comment: Comment;
@@ -34,29 +45,47 @@ interface CommentItemProps {
 const CommentItem = ({ comment, onRefresh, depth = 0, movieId }: CommentItemProps) => {
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState("");
-  const liked = comment.likedBy.includes(CURRENT_USER);
+  const navigate = useNavigate();
+  const currentUser = getCurrentUsername();
+  const liked = comment.likedBy.includes(currentUser);
 
   const handleLike = () => {
-    toggleLike(comment.id, CURRENT_USER);
+    toggleLike(comment.id, currentUser);
     onRefresh();
   };
 
   const handleReply = () => {
     if (!replyText.trim()) return;
-    addComment(movieId, CURRENT_USER, replyText.trim(), comment.id);
+    addComment(movieId, currentUser, replyText.trim(), comment.id);
     setReplyText("");
     setShowReply(false);
     onRefresh();
+  };
+
+  const goToProfile = () => {
+    if (comment.author === currentUser) {
+      navigate("/perfil");
+    } else {
+      navigate(`/usuario/${encodeURIComponent(comment.author)}`);
+    }
   };
 
   return (
     <div className={`${depth > 0 ? "ml-8 border-l-2 border-border pl-4" : ""}`}>
       <div className="py-3">
         <div className="flex items-center gap-2 mb-1.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">
+          <button
+            onClick={goToProfile}
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary hover:ring-2 hover:ring-primary/40 transition-all cursor-pointer"
+          >
             {comment.author.charAt(0).toUpperCase()}
-          </div>
-          <span className="text-sm font-semibold text-foreground">{comment.author}</span>
+          </button>
+          <button
+            onClick={goToProfile}
+            className="text-sm font-semibold text-foreground hover:text-primary hover:underline transition-colors cursor-pointer"
+          >
+            {comment.author}
+          </button>
           <span className="text-xs text-muted-foreground">{timeAgo(comment.createdAt)}</span>
         </div>
         <p className="text-sm leading-relaxed text-secondary-foreground mb-2">{comment.content}</p>
@@ -79,7 +108,7 @@ const CommentItem = ({ comment, onRefresh, depth = 0, movieId }: CommentItemProp
               Responder
             </button>
           )}
-          {comment.author === CURRENT_USER && (
+          {comment.author === currentUser && (
             <button
               onClick={() => {
                 deleteComment(comment.id);
@@ -126,9 +155,11 @@ const MovieComments = ({ movieId }: { movieId: number }) => {
 
   const refresh = () => setComments(getCommentsForMovie(movieId));
 
+  const currentUser = getCurrentUsername();
+
   const handleSubmit = () => {
     if (!newComment.trim()) return;
-    addComment(movieId, CURRENT_USER, newComment.trim());
+    addComment(movieId, currentUser, newComment.trim());
     setNewComment("");
     refresh();
   };

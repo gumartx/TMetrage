@@ -1,11 +1,26 @@
 import { useState, useEffect } from "react";
 import { Star } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const STORAGE_KEY = "tmetrage_ratings";
+
+export const PLATFORMS = [
+  { value: "netflix", label: "Netflix" },
+  { value: "prime", label: "Prime Video" },
+  { value: "disney", label: "Disney+" },
+  { value: "hbo", label: "HBO Max" },
+  { value: "apple", label: "Apple TV+" },
+  { value: "paramount", label: "Paramount+" },
+  { value: "crunchyroll", label: "Crunchyroll" },
+  { value: "globoplay", label: "Globoplay" },
+  { value: "cinema", label: "Cinema" },
+  { value: "other", label: "Outro" },
+] as const;
 
 export interface RatingEntry {
   rating: number;
   date: string; // ISO string
+  platform?: string;
 }
 
 export function getRatings(): Record<string, RatingEntry> {
@@ -24,9 +39,9 @@ export function getRatings(): Record<string, RatingEntry> {
   return result;
 }
 
-function saveRating(movieId: number, rating: number) {
+function saveRating(movieId: number, rating: number, platform?: string) {
   const ratings = getRatings();
-  ratings[movieId] = { rating, date: new Date().toISOString() };
+  ratings[movieId] = { rating, date: new Date().toISOString(), platform };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ratings));
 }
 
@@ -43,19 +58,32 @@ interface UserRatingProps {
 const UserRating = ({ movieId }: UserRatingProps) => {
   const [rating, setRating] = useState<number>(0);
   const [hover, setHover] = useState<number>(0);
+  const [platform, setPlatform] = useState<string>("");
 
   useEffect(() => {
     const saved = getRatings()[movieId];
-    if (saved) setRating(saved.rating);
+    if (saved) {
+      setRating(saved.rating);
+      setPlatform(saved.platform || "");
+    }
   }, [movieId]);
 
   const handleClick = (value: number) => {
     if (value === rating) {
       setRating(0);
+      setPlatform("");
       clearRating(movieId);
     } else {
       setRating(value);
-      saveRating(movieId, value);
+      saveRating(movieId, value, platform || undefined);
+    }
+  };
+
+  const handlePlatformChange = (value: string) => {
+    const newPlatform = value === "none" ? "" : value;
+    setPlatform(newPlatform);
+    if (rating > 0) {
+      saveRating(movieId, rating, newPlatform || undefined);
     }
   };
 
@@ -89,6 +117,24 @@ const UserRating = ({ movieId }: UserRatingProps) => {
           <span className="text-sm text-muted-foreground">{labels[activeValue]}</span>
         )}
       </div>
+
+      {rating > 0 && (
+        <div className="mt-3">
+          <p className="text-xs text-muted-foreground mb-1.5">Onde você assistiu? (opcional)</p>
+          <Select value={platform || "none"} onValueChange={handlePlatformChange}>
+            <SelectTrigger className="w-full sm:w-[200px] h-8 text-xs">
+              <SelectValue placeholder="Selecione a plataforma" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Não informar</SelectItem>
+              {PLATFORMS.map((p) => (
+                <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {rating > 0 && !hover && (
         <p className="mt-1.5 text-xs text-muted-foreground">
           Clique na mesma estrela para remover
