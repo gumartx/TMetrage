@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { getRatings, type RatingEntry } from "@/components/UserRating";
+import { getRatings, PLATFORMS, type RatingEntry } from "@/components/UserRating";
 import { getMovieDetails, getPosterUrl, type MovieDetails } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
+import { Tv } from "lucide-react";
 
 const GENRE_NAMES: Record<number, string> = {
   28: "Ação", 12: "Aventura", 16: "Animação", 35: "Comédia", 80: "Crime",
@@ -25,6 +26,7 @@ interface RatedMovie {
   movie: MovieDetails;
   rating: number;
   date: string;
+  platform?: string;
 }
 
 const DATE_PRESETS = [
@@ -41,6 +43,7 @@ const RatedMovies = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [genreFilter, setGenreFilter] = useState("all");
+  const [platformFilter, setPlatformFilter] = useState("all");
   const [datePreset, setDatePreset] = useState("all");
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
@@ -58,7 +61,7 @@ const RatedMovies = () => {
       for (const [movieId, entry] of entries) {
         try {
           const movie = await getMovieDetails(Number(movieId));
-          results.push({ movie, rating: entry.rating, date: entry.date });
+          results.push({ movie, rating: entry.rating, date: entry.date, platform: entry.platform });
         } catch {
           // skip failed fetches
         }
@@ -98,12 +101,14 @@ const RatedMovies = () => {
       rm.movie.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesGenre = genreFilter === "all" ||
       rm.movie.genres.some((g) => g.id === Number(genreFilter));
+    const matchesPlatform = platformFilter === "all" ||
+      (platformFilter === "none" ? !rm.platform : rm.platform === platformFilter);
     const range = getDateRange();
     const ratingDate = new Date(rm.date);
     const matchesDate =
       (!range.from || ratingDate >= range.from) &&
       (!range.to || ratingDate <= new Date(range.to.getTime() + 86400000));
-    return matchesSearch && matchesGenre && matchesDate;
+    return matchesSearch && matchesGenre && matchesPlatform && matchesDate;
   });
 
   return (
@@ -142,6 +147,19 @@ const RatedMovies = () => {
                   .map(([id, name]) => (
                     <SelectItem key={id} value={String(id)}>{name}</SelectItem>
                   ))}
+              </SelectContent>
+            </Select>
+            <Select value={platformFilter} onValueChange={setPlatformFilter}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <Tv className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Plataforma" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as plataformas</SelectItem>
+                <SelectItem value="none">Não informado</SelectItem>
+                {PLATFORMS.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Select value={datePreset} onValueChange={(v) => {
@@ -277,6 +295,12 @@ const RatedMovies = () => {
                       <CalendarIcon className="h-3 w-3" />
                       <span>{formattedDate}</span>
                     </div>
+                    {rm.platform && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Tv className="h-3 w-3" />
+                        <span>{PLATFORMS.find((p) => p.value === rm.platform)?.label || rm.platform}</span>
+                      </div>
+                    )}
                   </div>
                 </Link>
               );
