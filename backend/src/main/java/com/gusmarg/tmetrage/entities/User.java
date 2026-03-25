@@ -39,8 +39,8 @@ public class User {
 	private String email;
 	@Column(nullable = false)
 	private String password;
-	private Integer amountFollowed;
-	private Integer amountFollower;
+	private Integer amountFollowing = 0;
+	private Integer amountFollowers = 0;
 	private String profileImgUrl;
 	private String backgroundImgUrl;
 
