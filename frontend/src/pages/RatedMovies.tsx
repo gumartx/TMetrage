@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { getRatings, PLATFORMS, type RatingEntry } from "@/components/UserRating";
+import { getRatings, PLATFORMS, PlatformBadge, type RatingEntry } from "@/components/UserRating";
 import { getMovieDetails, getPosterUrl, type MovieDetails } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 import { Tv } from "lucide-react";
@@ -158,7 +158,12 @@ const RatedMovies = () => {
                 <SelectItem value="all">Todas as plataformas</SelectItem>
                 <SelectItem value="none">Não informado</SelectItem>
                 {PLATFORMS.map((p) => (
-                  <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                  <SelectItem key={p.value} value={p.value}>
+                    <span className="flex items-center gap-2">
+                      <PlatformBadge value={p.value} />
+                      {p.label}
+                    </span>
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -296,8 +301,8 @@ const RatedMovies = () => {
                       <span>{formattedDate}</span>
                     </div>
                     {rm.platform && (
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Tv className="h-3 w-3" />
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <PlatformBadge value={rm.platform} />
                         <span>{PLATFORMS.find((p) => p.value === rm.platform)?.label || rm.platform}</span>
                       </div>
                     )}
