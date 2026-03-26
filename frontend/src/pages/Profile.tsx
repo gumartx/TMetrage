@@ -23,7 +23,7 @@ const loadProfile = () => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) return JSON.parse(saved);
-  } catch {}
+  } catch { /* empty */ }
   return {
     name: "Cinéfilo Anônimo",
     username: "@cinefilo",

@@ -1,12 +1,22 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Film, UserPlus } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
+const USERS_KEY = "tmetrage_users";
+
+interface User {
+  name: string;
+  username: string;
+  email: string;
+  password: string;
+}
+
 const Register = () => {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -29,7 +39,43 @@ const Register = () => {
       toast.error("A senha deve ter pelo menos 6 caracteres");
       return;
     }
-    toast.success("Conta criada com sucesso! (modo visual)");
+
+    // Check if email or username already exists
+    const users: User[] = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+    if (users.find((u: User) => u.email === email.trim().toLowerCase())) {
+      toast.error("Este email já está cadastrado");
+      return;
+    }
+    const formattedUsername = username.startsWith("@") ? username : `@${username}`;
+    if (users.find((u: User) => u.username === formattedUsername.toLowerCase())) {
+      toast.error("Este nome de perfil já está em uso");
+      return;
+    }
+
+    // Save user
+    users.push({
+      name: name.trim(),
+      username: formattedUsername.toLowerCase(),
+      email: email.trim().toLowerCase(),
+      password,
+    });
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+
+    // Auto-login: set profile
+    const profileData = {
+      name: name.trim(),
+      profileName: formattedUsername.toLowerCase(),
+      username: formattedUsername.toLowerCase(),
+      bio: "",
+      avatar: "",
+      cover: "",
+      followers: 0,
+      following: 0,
+    };
+    localStorage.setItem("tmetrage_profile", JSON.stringify(profileData));
+
+    toast.success("Conta criada com sucesso!");
+    navigate("/");
   };
 
   return (

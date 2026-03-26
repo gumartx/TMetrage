@@ -1,36 +1,59 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogIn, User, LogOut } from "lucide-react";
+import { LogIn, LogOut } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useEffect, useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+
+interface ProfileData {
+  profileName?: string;
+  username?: string;
+  avatar?: string;
+  name?: string;
+}
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isLoggedIn = true;
-
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem("tmetrage_profile");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.profileImage) setProfileImage(parsed.profileImage);
+        if (parsed.profileName || parsed.username) {
+          setProfileData(parsed);
+        } else {
+          setProfileData(null);
+        }
+      } else {
+        setProfileData(null);
       }
-    } catch { /* empty */ }
+    } catch {
+      setProfileData(null);
+    }
   }, [location]);
+
+  const isLoggedIn = !!profileData;
+
+  const handleLogout = () => {
+    localStorage.removeItem("tmetrage_profile");
+    setProfileData(null);
+    toast.success("Você saiu da sua conta");
+    navigate("/");
+  };
 
   const linkClass = (path: string) =>
     `text-sm font-medium transition-colors hover:text-primary ${
       location.pathname === path ? "text-primary underline underline-offset-4" : "text-navbar-foreground"
     }`;
-
-  const handleLogout = () => {
-    // Visual-only logout
-    navigate("/login");
-  };
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-navbar">
@@ -48,24 +71,24 @@ const Navbar = () => {
           {isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="focus:outline-none">
+                <button className="flex items-center focus:outline-none">
                   <Avatar className="h-8 w-8 ring-2 ring-primary/30 hover:ring-primary transition-all cursor-pointer">
-                    {profileImage ? (
-                      <AvatarImage src={profileImage} alt="Perfil" />
+                    {profileData?.avatar ? (
+                      <AvatarImage src={profileData.avatar} alt="Perfil" />
                     ) : (
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">U</AvatarFallback>
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                        {profileData?.name?.[0]?.toUpperCase() || "U"}
+                      </AvatarFallback>
                     )}
                   </Avatar>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
                 <DropdownMenuItem onClick={() => navigate("/perfil")} className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4" />
                   Perfil
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
+                  <LogOut className="h-4 w-4 mr-2" />
                   Sair
                 </DropdownMenuItem>
               </DropdownMenuContent>

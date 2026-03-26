@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Star } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -71,9 +72,21 @@ interface UserRatingProps {
 }
 
 const UserRating = ({ movieId }: UserRatingProps) => {
+  const navigate = useNavigate();
   const [rating, setRating] = useState<number>(0);
   const [hover, setHover] = useState<number>(0);
   const [platform, setPlatform] = useState<string>("");
+
+  const isLoggedIn = () => {
+    try {
+      const saved = localStorage.getItem("tmetrage_profile");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return !!parsed.profileName;
+      }
+    } catch { /* empty */ }
+    return false;
+  };
 
   useEffect(() => {
     const saved = getRatings()[movieId];
@@ -84,6 +97,10 @@ const UserRating = ({ movieId }: UserRatingProps) => {
   }, [movieId]);
 
   const handleClick = (value: number) => {
+    if (!isLoggedIn()) {
+      navigate("/login");
+      return;
+    }
     if (value === rating) {
       setRating(0);
       setPlatform("");

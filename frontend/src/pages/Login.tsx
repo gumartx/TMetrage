@@ -1,12 +1,22 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Film, LogIn } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
+const USERS_KEY = "tmetrage_users";
+
+interface User {
+  email: string;
+  password: string;
+  name: string;
+  username: string;
+}
+
 const Login = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -17,7 +27,43 @@ const Login = () => {
       toast.error("Preencha todos os campos");
       return;
     }
-    toast.success("Login realizado com sucesso! (modo visual)");
+
+    const users: User[] = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+    const user = users.find(
+      (u: User) => u.email === email.trim().toLowerCase() && u.password === password
+    );
+
+    if (!user) {
+      toast.error("Email ou senha incorretos");
+      return;
+    }
+
+    // Set profile in localStorage
+    const existing = localStorage.getItem("tmetrage_profile");
+    let profileData: Record<string, unknown>;
+    if (existing) {
+      const parsed = JSON.parse(existing);
+      // Only restore if same user
+      if (parsed.username === user.username || parsed.profileName === user.username) {
+        profileData = parsed;
+      }
+    }
+    if (!profileData) {
+      profileData = {
+        name: user.name,
+        profileName: user.username,
+        username: user.username,
+        bio: "",
+        avatar: "",
+        cover: "",
+        followers: 0,
+        following: 0,
+      };
+    }
+    localStorage.setItem("tmetrage_profile", JSON.stringify(profileData));
+
+    toast.success("Login realizado com sucesso!");
+    navigate("/");
   };
 
   return (

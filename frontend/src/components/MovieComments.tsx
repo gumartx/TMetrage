@@ -1,5 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+function isLoggedIn(): boolean {
+  try {
+    const saved = localStorage.getItem("tmetrage_profile");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return !!(parsed.profileName || parsed.name);
+    }
+  } catch { /* empty */ }
+  return false;
+}
 import { Heart, MessageCircle, Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,11 +61,13 @@ const CommentItem = ({ comment, onRefresh, depth = 0, movieId }: CommentItemProp
   const liked = comment.likedBy.includes(currentUser);
 
   const handleLike = () => {
+    if (!isLoggedIn()) { navigate("/login"); return; }
     toggleLike(comment.id, currentUser);
     onRefresh();
   };
 
   const handleReply = () => {
+    if (!isLoggedIn()) { navigate("/login"); return; }
     if (!replyText.trim()) return;
     addComment(movieId, currentUser, replyText.trim(), comment.id);
     setReplyText("");
@@ -152,12 +165,14 @@ const CommentItem = ({ comment, onRefresh, depth = 0, movieId }: CommentItemProp
 const MovieComments = ({ movieId }: { movieId: number }) => {
   const [comments, setComments] = useState(() => getCommentsForMovie(movieId));
   const [newComment, setNewComment] = useState("");
+  const navigate = useNavigate();
 
   const refresh = () => setComments(getCommentsForMovie(movieId));
 
   const currentUser = getCurrentUsername();
 
   const handleSubmit = () => {
+    if (!isLoggedIn()) { navigate("/login"); return; }
     if (!newComment.trim()) return;
     addComment(movieId, currentUser, newComment.trim());
     setNewComment("");
