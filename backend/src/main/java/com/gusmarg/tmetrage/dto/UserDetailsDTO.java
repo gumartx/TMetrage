@@ -17,6 +17,7 @@ public class UserDetailsDTO {
     private String name;
     private String profileName;
     private String email;
+    private String bio;
     private String profileImgUrl;
     private String backgroundImgUrl;
     private Integer amountFollowers;
@@ -27,6 +28,7 @@ public class UserDetailsDTO {
 		name = entity.getName();
 		profileName = entity.getProfileName();
 		email = entity.getEmail();
+		bio = entity.getBio();
 		profileImgUrl = entity.getProfileImgUrl();
 		backgroundImgUrl = entity.getBackgroundImgUrl();
 		amountFollowers = entity.getAmountFollowers();

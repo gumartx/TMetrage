@@ -37,6 +37,7 @@ public class User {
 	private String profileName;
 	@Column(unique = true, nullable = false)
 	private String email;
+	private String bio;
 	@Column(nullable = false)
 	private String password;
 	private Integer amountFollowing = 0;

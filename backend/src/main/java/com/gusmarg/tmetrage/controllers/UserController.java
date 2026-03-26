@@ -23,17 +23,17 @@ public class UserController {
 	private final UserService userService;
 
 	@GetMapping("/buscar")
-	public ResponseEntity<List<UserSearchDTO>> searchUsers(@RequestParam String name) {
+	public ResponseEntity<List<UserSearchDTO>> searchUsers(@RequestParam String nome) {
 
-		List<UserSearchDTO> result = userService.searchUsers(name);
+		List<UserSearchDTO> result = userService.searchUsers(nome);
 
 		return ResponseEntity.ok(result);
 	}
 
-	@GetMapping("/usuario/{profileName}")
-	public ResponseEntity<UserDetailsDTO> findByProfileName(@PathVariable String profileName) {
+	@GetMapping("/usuario/{nomePerfil}")
+	public ResponseEntity<UserDetailsDTO> findByProfileName(@PathVariable String nomePerfil) {
 
-		UserDetailsDTO result = userService.findByProfileName(profileName);
+		UserDetailsDTO result = userService.findByProfileName(nomePerfil);
 
 		return ResponseEntity.ok(result);
 	}

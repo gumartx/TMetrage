@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Trash2, Film, ListMusic, Pencil, Search } from "lucide-react";
+import { Plus, Trash2, Film, ListMusic, Pencil, Search, CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { getLists, createList, deleteList, updateList, type MovieList } from "@/lib/movieLists";
 import { getPosterUrl } from "@/lib/tmdb";
 import Navbar from "@/components/Navbar";
@@ -24,6 +24,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const Lists = () => {
   const [lists, setLists] = useState<MovieList[]>([]);
@@ -34,15 +39,38 @@ const Lists = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
-  const [search, setSearch] = useState("");
+  const [filterMonth, setFilterMonth] = useState<number | null>(null);
+  const [filterYear, setFilterYear] = useState<number | null>(null);
+  const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     setLists(getLists());
   }, []);
 
-  const filteredLists = lists.filter((list) =>
-    list.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const [search, setSearch] = useState("");
+
+  const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+  const filteredLists = lists.filter((list) => {
+    const matchesSearch = list.name.toLowerCase().includes(search.toLowerCase());
+    if (!matchesSearch) return false;
+
+    if (filterYear === null && filterMonth === null) return true;
+
+    const created = new Date(list.createdAt);
+    if (filterYear !== null && created.getFullYear() !== filterYear) return false;
+    if (filterMonth !== null && created.getMonth() !== filterMonth) return false;
+    return true;
+  });
+
+  const clearDateFilter = () => {
+    setFilterMonth(null);
+    setFilterYear(null);
+  };
+
+  const dateFilterLabel = filterYear !== null || filterMonth !== null
+    ? `${filterMonth !== null ? months[filterMonth] : ""} ${filterYear ?? ""}`.trim()
+    : "";
 
   const handleCreate = () => {
     if (!name.trim()) return;
@@ -118,14 +146,57 @@ const Lists = () => {
         </div>
 
         {lists.length > 0 && (
-          <div className="mt-6 relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Pesquisar listas..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
+          <div className="mt-6 flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Pesquisar listas..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[180px] justify-start text-left font-normal">
+                  <CalendarDays className="mr-2 h-4 w-4 text-muted-foreground" />
+                  {dateFilterLabel || <span className="text-muted-foreground">Filtrar por data</span>}
+                  {dateFilterLabel && (
+                    <X
+                      className="ml-auto h-3.5 w-3.5 text-muted-foreground hover:text-foreground"
+                      onClick={(e) => { e.stopPropagation(); clearDateFilter(); }}
+                    />
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-3" align="end">
+                <div className="flex items-center justify-between mb-3">
+                  <button onClick={() => setCalendarYear((y) => y - 1)} className="p-1 rounded hover:bg-accent">
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => { setFilterYear(calendarYear); setFilterMonth(null); }}
+                    className={`text-sm font-semibold px-2 py-1 rounded hover:bg-accent ${filterYear === calendarYear && filterMonth === null ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""}`}
+                  >
+                    {calendarYear}
+                  </button>
+                  <button onClick={() => setCalendarYear((y) => y + 1)} className="p-1 rounded hover:bg-accent">
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {months.map((m, i) => (
+                    <button
+                      key={m}
+                      onClick={() => { setFilterMonth(i); setFilterYear(calendarYear); }}
+                      className={`rounded-md px-3 py-1.5 text-sm transition-colors hover:bg-accent ${filterMonth === i && filterYear === calendarYear ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""}`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         )}
 
