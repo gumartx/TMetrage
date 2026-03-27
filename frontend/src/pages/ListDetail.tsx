@@ -209,13 +209,76 @@ const ListDetail = () => {
             </p>
           </div>
 
-          <Dialog open={searchOpen} onOpenChange={(v) => { setSearchOpen(v); if (!v) { setQuery(""); setSearchTerm(""); } }}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Search className="mr-1.5 h-4 w-4" />
-                Adicionar Filme
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            {list.movies.length > 0 && (
+              <Dialog open={showChart} onOpenChange={setShowChart}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline">
+                    <BarChart3 className="mr-1.5 h-4 w-4" />
+                    Gerar Gráfico
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[850px]">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-primary" />
+                      Distribuição de Gêneros
+                    </DialogTitle>
+                  </DialogHeader>
+                  {genreChartData.length > 0 ? (
+                    <div className="pt-4 pb-2 overflow-visible">
+                      <ResponsiveContainer width="100%" height={480}>
+                        <PieChart margin={{ top: 20, right: 80, bottom: 20, left: 80 }}>
+                          <Pie
+                            data={genreChartData}
+                            cx="50%"
+                            cy="45%"
+                            innerRadius={80}
+                            outerRadius={130}
+                            paddingAngle={3}
+                            dataKey="value"
+                            label={({ name, percent, x, y, textAnchor, index }) => (
+                              <text x={x} y={y} textAnchor={textAnchor} fill={CHART_COLORS[index % CHART_COLORS.length]} fontSize={12} fontWeight={500}>
+                                {`${name} (${(percent * 100).toFixed(0)}%)`}
+                              </text>
+                            )}
+                            labelLine={true}
+                          >
+                            {genreChartData.map((_, index) => (
+                              <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(215, 25%, 16%)",
+                              border: "1px solid hsl(215, 20%, 25%)",
+                              borderRadius: "8px",
+                              color: "white",
+                            }}
+                            formatter={(value: number) => [<span style={{ color: "white" }}>{`${value} filme${value > 1 ? "s" : ""}`}</span>, <span style={{ color: "white" }}>Quantidade</span>]}
+                            labelStyle={{ color: "white" }}
+                          />
+                          <Legend
+                            verticalAlign="bottom"
+                            wrapperStyle={{ paddingTop: "30px" }}
+                            formatter={(value) => <span style={{ color: "white", fontSize: "13px" }}>{value}</span>}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-8 text-center">Nenhum dado de gênero disponível.</p>
+                  )}
+                </DialogContent>
+              </Dialog>
+            )}
+            <Dialog open={searchOpen} onOpenChange={(v) => { setSearchOpen(v); if (!v) { setQuery(""); setSearchTerm(""); } }}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <Search className="mr-1.5 h-4 w-4" />
+                  Adicionar Filme
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Buscar filme para adicionar</DialogTitle>
@@ -269,6 +332,7 @@ const ListDetail = () => {
               )}
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Filters */}
@@ -454,70 +518,6 @@ const ListDetail = () => {
           </div>
         )}
 
-        {/* Genre Chart */}
-        {list.movies.length > 0 && (
-          <section className="mt-12 pb-16">
-            {!showChart ? (
-              <Button
-                variant="outline"
-                onClick={() => setShowChart(true)}
-                className="flex items-center gap-2"
-              >
-                <BarChart3 className="h-4 w-4" />
-                Gerar gráfico de gêneros
-              </Button>
-            ) : genreChartData.length > 0 ? (
-              <>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-primary" />
-                    <h2 className="text-xl font-bold text-foreground">Distribuição de Gêneros</h2>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => setShowChart(false)}>
-                    Fechar
-                  </Button>
-                </div>
-                <div className="rounded-lg border border-border bg-card p-6 animate-fade-in">
-                  <ResponsiveContainer width="100%" height={320}>
-                    <PieChart>
-                      <Pie
-                        data={genreChartData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={70}
-                        outerRadius={120}
-                        paddingAngle={3}
-                        dataKey="value"
-                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                        labelLine={false}
-                      >
-                        {genreChartData.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(215, 25%, 16%)",
-                          border: "1px solid hsl(215, 20%, 25%)",
-                          borderRadius: "8px",
-                          color: "white",
-                        }}
-                        formatter={(value: number) => [<span style={{ color: "white" }}>{`${value} filme${value > 1 ? "s" : ""}`}</span>, <span style={{ color: "white" }}>Quantidade</span>]}
-                        labelStyle={{ color: "white" }}
-                      />
-                      <Legend
-                        verticalAlign="bottom"
-                        formatter={(value) => <span style={{ color: "white", fontSize: "13px" }}>{value}</span>}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">Nenhum dado de gênero disponível.</p>
-            )}
-          </section>
-        )}
       </main>
     </div>
   );
