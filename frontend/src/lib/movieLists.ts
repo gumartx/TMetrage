@@ -73,3 +73,37 @@ export function updateList(listId: string, name: string, description: string) {
 export function getList(listId: string): MovieList | undefined {
   return getLists().find((l) => l.id === listId);
 }
+
+// Shared lists
+export interface SharedList {
+  id: string;
+  list: MovieList;
+  sharedBy: string; // username of who shared
+  sharedTo: string[]; // usernames of recipients
+  sharedAt: string;
+}
+
+const SHARED_KEY = "tmetrage_shared_lists";
+
+export function getSharedLists(): SharedList[] {
+  const raw = localStorage.getItem(SHARED_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+
+export function shareList(list: MovieList, sharedBy: string, sharedTo: string[]) {
+  const shared = getSharedLists();
+  const entry: SharedList = {
+    id: crypto.randomUUID(),
+    list: { ...list },
+    sharedBy,
+    sharedTo,
+    sharedAt: new Date().toISOString(),
+  };
+  shared.push(entry);
+  localStorage.setItem(SHARED_KEY, JSON.stringify(shared));
+  return entry;
+}
+
+export function getMySharedLists(username: string): SharedList[] {
+  return getSharedLists().filter((s) => s.sharedBy === username);
+}

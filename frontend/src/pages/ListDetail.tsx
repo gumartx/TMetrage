@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Trash2, Film, Search, BarChart3, Star, Calendar as CalendarIcon, Filter, Share2 } from "lucide-react";
 import { Tv } from "lucide-react";
 import { format } from "date-fns";
-import { getList, removeMovieFromList, addMovieToList, type MovieList, type MovieListItem } from "@/lib/movieLists";
+import { getList, removeMovieFromList, addMovieToList, shareList, type MovieList, type MovieListItem } from "@/lib/movieLists";
 import { searchMovies, getPosterUrl, getGenres } from "@/lib/tmdb";
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
@@ -91,8 +91,9 @@ const ListDetail = () => {
   };
 
   const handleShare = () => {
-    // For now just show a toast/alert - real sharing would need backend
-    if (selectedUsers.length === 0) return;
+    if (selectedUsers.length === 0 || !list) return;
+    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    shareList(list, currentUser.username || "unknown", selectedUsers);
     setShowShare(false);
     setSelectedUsers([]);
     setShareSearch("");
