@@ -13,8 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.gusmarg.tmetrage.dto.UserDTO;
+import com.gusmarg.tmetrage.dto.UserLoginDTO;
+import com.gusmarg.tmetrage.dto.UserLoginResponseDTO;
 import com.gusmarg.tmetrage.dto.UserRegisterDTO;
 import com.gusmarg.tmetrage.dto.UserUpdatePasswordDTO;
+import com.gusmarg.tmetrage.services.AuthService;
 import com.gusmarg.tmetrage.services.UserService;
 
 import jakarta.validation.Valid;
@@ -25,7 +28,14 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/auth")
 public class AuthController {
 
+	private final AuthService authService;
 	private final UserService userService;
+	
+	@PostMapping(value = "/login")
+	public ResponseEntity<UserLoginResponseDTO> login(@RequestBody @Valid UserLoginDTO dto) {
+		UserLoginResponseDTO result = authService.login(dto);
+		return ResponseEntity.ok(result);
+	}
 	
 	@PostMapping(value = "/cadastro")
 	public ResponseEntity<UserDTO> register(@RequestBody @Valid UserRegisterDTO dto) {
@@ -36,7 +46,7 @@ public class AuthController {
 	
 	@PostMapping("/esqueci-senha")
 	public ResponseEntity<Void> forgotPassword(@RequestParam String email){
-	    userService.resetPassword(email);
+	    authService.resetPassword(email);
 	    return ResponseEntity.ok().build();
 	}
 	

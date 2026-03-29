@@ -1,4 +1,4 @@
-package com.gusmarg.tmetrage.utils;
+package com.gusmarg.tmetrage.services.utils;
 
 import java.security.SecureRandom;
 

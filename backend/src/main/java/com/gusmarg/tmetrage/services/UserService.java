@@ -14,7 +14,6 @@ import com.gusmarg.tmetrage.dto.UserUpdateDTO;
 import com.gusmarg.tmetrage.dto.UserUpdatePasswordDTO;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.UserRepository;
-import com.gusmarg.tmetrage.utils.PasswordGenerator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +25,6 @@ public class UserService {
 
 	private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-	private final EmailService emailService;
 
 	@Transactional(readOnly = true)
 	public List<UserSearchDTO> searchUsers(String name) {
@@ -94,25 +92,9 @@ public class UserService {
 		entity.setPassword(newPassword);
 		
 		userRepository.save(entity);
-	}
-
-	@Transactional
-	public void resetPassword(String email) {
-
-		User entity = userRepository.findByEmail(email);
-
-		String newPassword = PasswordGenerator.generatePassword(8);
-		String encryptedPassword = passwordEncoder.encode(newPassword);
 		
-		entity.setPassword(encryptedPassword);
-
-		userRepository.save(entity);
-
 		log.info("Senha alterada");
-		
-		emailService.sendEmail(entity.getEmail(), "TMétrage: Nova senha da sua conta", "Sua nova senha é: " + newPassword);
-
-		log.info("Email enviado para: {}", entity.getEmail());
 	}
+
 
 }
