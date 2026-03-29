@@ -53,14 +53,13 @@ public class MovieListService {
 			MovieDTO tmdbMovie = tmdbService.getMovieById(dto.getId());
 			Movie newMovie = new Movie();
 			newMovie.setId(tmdbMovie.getId());
-			newMovie.setTitle(tmdbMovie.getTitle());
 			return movieRepository.save(newMovie);
 		});
 
-		entity.getMovies().add(new Movie(movie.getId(), movie.getTitle()));
+		entity.getMovies().add(new Movie(movie.getId()));
 		entity = movieListRepository.save(entity);
 
-		log.info("Filme '{}' adicionado a lista '{}'", movie.getTitle(), entity.getName());
+		log.info("Filme '{}' adicionado a lista '{}'", movie.getId(), entity.getName());
 
 		return new MovieListResponseDTO(entity);
 	}

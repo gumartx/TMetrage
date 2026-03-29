@@ -28,12 +28,9 @@ public class Movie {
 	@Id
 	@Column(unique = true)
 	private Long id;
-	@Column(unique = true)
-	private String title;
 	
-	public Movie(Long id, String title) {
+	public Movie(Long id) {
 		this.id = id;
-		this.title = title;
 	}
 	
 	@OneToMany(mappedBy = "id.movie")

@@ -13,7 +13,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.gusmarg.tmetrage.dto.AddMovieDTO;
 import com.gusmarg.tmetrage.dto.CreateListDTO;
 import com.gusmarg.tmetrage.dto.MovieListResponseDTO;
-import com.gusmarg.tmetrage.entities.MovieList;
 import com.gusmarg.tmetrage.services.MovieListService;
 
 import jakarta.validation.Valid;

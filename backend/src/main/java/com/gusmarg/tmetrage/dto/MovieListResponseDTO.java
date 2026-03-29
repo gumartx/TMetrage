@@ -35,7 +35,7 @@ public class MovieListResponseDTO {
 		amountMovies = entity.getAmountMovies();
 		
 		for (Movie movie : entity.getMovies()) {
-			movies.add(new MovieDTO(movie.getId(), movie.getTitle()));
+			movies.add(new MovieDTO(movie.getId()));
 		}
 	}
 	
