@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -28,6 +29,12 @@ public class AuthController {
 		UserDTO newDTO = userService.save(dto);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(newDTO.getId()).toUri();
 		return ResponseEntity.created(uri).body(newDTO);
+	}
+	
+	@PostMapping("/esqueci-senha")
+	public ResponseEntity<Void> forgotPassword(@RequestParam String email){
+	    userService.resetPassword(email);
+	    return ResponseEntity.ok().build();
 	}
 	
 }

@@ -12,6 +12,7 @@ import com.gusmarg.tmetrage.dto.UserSearchDTO;
 import com.gusmarg.tmetrage.dto.UserUpdateDTO;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.UserRepository;
+import com.gusmarg.tmetrage.utils.PasswordGenerator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 public class UserService {
 
 	private final UserRepository userRepository;
+	
+	private final EmailService emailService;
 	
 	@Transactional(readOnly = true)
 	public List<UserSearchDTO> searchUsers(String name) {
@@ -66,6 +69,28 @@ public class UserService {
 		entity.setProfileImgUrl(dto.getProfileImgUrl());
 		entity.setBackgroundImgUrl(dto.getBackgroundImgUrl());
 		entity = userRepository.save(entity);
+		
+		log.info("Perfil editado: {}", entity.getProfileName());
+		
 		return new UserDetailsDTO(entity);
 	}
+	
+	@Transactional
+	public void resetPassword(String email) {
+
+        User user = userRepository.findByEmail(email);
+
+        String newPassword = PasswordGenerator.generatePassword(8);
+
+        user.setPassword(newPassword);
+
+        userRepository.save(user);
+
+        emailService.sendEmail(
+                user.getEmail(),
+                "Nova senha da sua conta",
+                "Sua nova senha é: " + newPassword
+        );
+	}
+	
  }
