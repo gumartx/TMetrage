@@ -5,7 +5,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gusmarg.tmetrage.dto.UserDTO;
 import com.gusmarg.tmetrage.dto.UserDetailsDTO;
+import com.gusmarg.tmetrage.dto.UserRegisterDTO;
 import com.gusmarg.tmetrage.dto.UserSearchDTO;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.UserRepository;
@@ -39,4 +41,15 @@ public class UserService {
 		
 		return new UserDetailsDTO(result);
 	}
-}
+	
+	@Transactional
+	public UserDTO save(UserRegisterDTO dto) {
+		User entity = new User();
+		entity.setName(dto.getName());
+		entity.setProfileName(dto.getProfileName());
+		entity.setEmail(dto.getEmail());
+		entity.setPassword(dto.getPassword());
+		entity = userRepository.save(entity);
+		return new UserDTO(entity);
+	}
+ }
