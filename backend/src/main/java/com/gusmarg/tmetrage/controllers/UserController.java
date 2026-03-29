@@ -5,12 +5,15 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gusmarg.tmetrage.dto.UserDetailsDTO;
 import com.gusmarg.tmetrage.dto.UserSearchDTO;
+import com.gusmarg.tmetrage.dto.UserUpdateDTO;
 import com.gusmarg.tmetrage.services.UserService;
 
 import lombok.RequiredArgsConstructor;
@@ -22,7 +25,7 @@ public class UserController {
 
 	private final UserService userService;
 
-	@GetMapping("/buscar")
+	@GetMapping(value = "/buscar")
 	public ResponseEntity<List<UserSearchDTO>> searchUsers(@RequestParam String nome) {
 
 		List<UserSearchDTO> result = userService.searchUsers(nome);
@@ -30,11 +33,17 @@ public class UserController {
 		return ResponseEntity.ok(result);
 	}
 
-	@GetMapping("/usuario/{nomePerfil}")
+	@GetMapping(value = "/usuario/{nomePerfil}")
 	public ResponseEntity<UserDetailsDTO> findByProfileName(@PathVariable String nomePerfil) {
 
 		UserDetailsDTO result = userService.findByProfileName(nomePerfil);
 
 		return ResponseEntity.ok(result);
+	}
+	
+	@PutMapping(value = "/{id}")
+	public ResponseEntity<UserDetailsDTO> updateProfile(@PathVariable Long id, @RequestBody UserUpdateDTO dto) {
+		UserDetailsDTO newDTO = userService.updateProfile(id, dto);
+		return ResponseEntity.ok(newDTO);
 	}
 }

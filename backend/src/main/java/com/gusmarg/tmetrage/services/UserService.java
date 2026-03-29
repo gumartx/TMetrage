@@ -9,6 +9,7 @@ import com.gusmarg.tmetrage.dto.UserDTO;
 import com.gusmarg.tmetrage.dto.UserDetailsDTO;
 import com.gusmarg.tmetrage.dto.UserRegisterDTO;
 import com.gusmarg.tmetrage.dto.UserSearchDTO;
+import com.gusmarg.tmetrage.dto.UserUpdateDTO;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.UserRepository;
 
@@ -50,6 +51,21 @@ public class UserService {
 		entity.setEmail(dto.getEmail());
 		entity.setPassword(dto.getPassword());
 		entity = userRepository.save(entity);
+		
+		log.info("Perfil cadastrado: {}", entity.getProfileName());
+		
 		return new UserDTO(entity);
+	}
+
+	@Transactional
+	public UserDetailsDTO updateProfile(Long id, UserUpdateDTO dto) {
+		User entity = userRepository.getReferenceById(id);
+		entity.setName(dto.getName());
+		entity.setProfileName(dto.getProfileName());
+		entity.setBio(dto.getBio());
+		entity.setProfileImgUrl(dto.getProfileImgUrl());
+		entity.setBackgroundImgUrl(dto.getBackgroundImgUrl());
+		entity = userRepository.save(entity);
+		return new UserDetailsDTO(entity);
 	}
  }

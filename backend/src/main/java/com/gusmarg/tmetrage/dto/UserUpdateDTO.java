@@ -2,8 +2,8 @@ package com.gusmarg.tmetrage.dto;
 
 import com.gusmarg.tmetrage.entities.User;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,25 +14,27 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class UserRegisterDTO {
+public class UserUpdateDTO {
+
 	@NotBlank
 	@Size(max = 50)
     private String name;
 	@NotBlank
 	@Size(max = 25)
     private String profileName;
-	@NotBlank
-	@Email
-    private String email;
-	@NotBlank
-	@Size(min = 6)
-    private String password;
+	@Size(max = 500)
+    private String bio; 
+    @Pattern(regexp = "^(http(s?):)([/|.|\\w|\\s|-])*\\.(?:jpg|jpeg|png|gif)$")
+    private String profileImgUrl;
+    @Pattern(regexp = "^(http(s?):)([/|.|\\w|\\s|-])*\\.(?:jpg|jpeg|png|gif)$")
+    private String backgroundImgUrl;
 	
-    public UserRegisterDTO(User entity) {
+    public UserUpdateDTO(User entity) {
 		name = entity.getName();
 		profileName = entity.getProfileName();
-		email = entity.getEmail();
-		password = entity.getPassword();
+		bio = entity.getBio();
+		profileImgUrl = entity.getProfileImgUrl();
+		backgroundImgUrl = entity.getBackgroundImgUrl();
 	}
     
 }
