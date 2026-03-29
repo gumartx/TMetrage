@@ -1,2 +1,2 @@
-INSERT INTO tb_user (name, profile_name, email, password, amount_followers, amount_following) VALUES ('Gustavo Gomes', 'gumartx', 'gustavo.gmartx@gmail.com', '$2a$10$eACCYoNOHEqXve8aIWT8Nu3PkMXWBaOxJ9aORUYzfMQCbVBIhZ8tG', 0, 0);
+INSERT INTO tb_user (name, profile_name, email, password, amount_followers, amount_following) VALUES ('Gustavo Gomes', 'gumartx', 'gustavo@gmail.com', '$2a$10$eACCYoNOHEqXve8aIWT8Nu3PkMXWBaOxJ9aORUYzfMQCbVBIhZ8tG', 0, 0);
 INSERT INTO tb_user (name, profile_name, email, password, amount_followers, amount_following) VALUES ('João Pedro', 'moorgsz', 'moorgado@gmail.com', '$2a$10$eACCYoNOHEqXve8aIWT8Nu3PkMXWBaOxJ9aORUYzfMQCbVBIhZ8tG', 0, 0);
