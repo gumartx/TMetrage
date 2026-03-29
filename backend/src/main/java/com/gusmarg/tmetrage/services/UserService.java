@@ -11,6 +11,7 @@ import com.gusmarg.tmetrage.dto.UserDetailsDTO;
 import com.gusmarg.tmetrage.dto.UserRegisterDTO;
 import com.gusmarg.tmetrage.dto.UserSearchDTO;
 import com.gusmarg.tmetrage.dto.UserUpdateDTO;
+import com.gusmarg.tmetrage.dto.UserUpdatePasswordDTO;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.UserRepository;
 import com.gusmarg.tmetrage.utils.PasswordGenerator;
@@ -77,24 +78,41 @@ public class UserService {
 
 		return new UserDetailsDTO(entity);
 	}
+	
+	@Transactional
+	public void updatePassword(Long id, UserUpdatePasswordDTO dto) {
+		User entity = userRepository.getReferenceById(id);
+		
+		boolean passwordMatches = passwordEncoder.matches(dto.getCurrentPassword(), entity.getPassword());
+		
+		if(!passwordMatches) {
+			throw new RuntimeException("Senha atual incorreta");
+		}
+		
+		String newPassword = passwordEncoder.encode(dto.getNewPassword());
+		
+		entity.setPassword(newPassword);
+		
+		userRepository.save(entity);
+	}
 
 	@Transactional
 	public void resetPassword(String email) {
 
-		User user = userRepository.findByEmail(email);
+		User entity = userRepository.findByEmail(email);
 
 		String newPassword = PasswordGenerator.generatePassword(8);
 		String encryptedPassword = passwordEncoder.encode(newPassword);
 		
-		user.setPassword(encryptedPassword);
+		entity.setPassword(encryptedPassword);
 
-		userRepository.save(user);
+		userRepository.save(entity);
 
 		log.info("Senha alterada");
 		
-		emailService.sendEmail(user.getEmail(), "Nova senha da sua conta", "Sua nova senha é: " + newPassword);
+		emailService.sendEmail(entity.getEmail(), "TMétrage: Nova senha da sua conta", "Sua nova senha é: " + newPassword);
 
-		log.info("Email enviado para: {}", email);
+		log.info("Email enviado para: {}", entity.getEmail());
 	}
 
 }
