@@ -13,8 +13,6 @@ public class MovieDTO {
 
 	private Long id;
 	private String title;
-	private String imgUrl;
-	private Integer amountScore;
-	private Double score;
+
 
 }

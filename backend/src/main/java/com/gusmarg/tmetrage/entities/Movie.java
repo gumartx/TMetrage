@@ -28,12 +28,13 @@ public class Movie {
 	@Id
 	@Column(unique = true)
 	private Long id;
-	@Column(nullable = false)
+	@Column(unique = true)
 	private String title;
-	@Column(nullable = false)
-	private String imgUrl;
-	private Integer amountScore;
-	private Double score;
+	
+	public Movie(Long id, String title) {
+		this.id = id;
+		this.title = title;
+	}
 	
 	@OneToMany(mappedBy = "id.movie")
 	private Set<Rating> ratings = new HashSet<>();
