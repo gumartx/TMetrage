@@ -1,15 +1,11 @@
 package com.gusmarg.tmetrage.entities;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -17,13 +13,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
 @AllArgsConstructor
 @Setter
@@ -38,9 +35,7 @@ public class MovieList {
 	@Column(unique = true, nullable = false)
 	private String name;
 	private String description;
-	@CreatedDate
-	private Instant createdAt;
-	private Integer amountMovies;
+	private LocalDate createdAt;
 	
 	@ManyToOne
 	@JoinColumn(name = "user_id")
@@ -53,4 +48,14 @@ public class MovieList {
 	    inverseJoinColumns = @JoinColumn(name = "movie_id")
 	)
 	private Set<Movie> movies = new HashSet<>();
+	
+    @PrePersist
+    public void setCreationDate() {
+        createdAt = LocalDate.now();
+    }
+    
+    @Transient
+    public Integer getAmountMovies() {
+    	return movies.size();
+    }
 }

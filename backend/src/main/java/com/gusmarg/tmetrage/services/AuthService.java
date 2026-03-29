@@ -8,6 +8,7 @@ import com.gusmarg.tmetrage.dto.UserLoginDTO;
 import com.gusmarg.tmetrage.dto.UserLoginResponseDTO;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.UserRepository;
+import com.gusmarg.tmetrage.services.utils.EmailService;
 import com.gusmarg.tmetrage.services.utils.JwtService;
 import com.gusmarg.tmetrage.services.utils.PasswordGenerator;
 

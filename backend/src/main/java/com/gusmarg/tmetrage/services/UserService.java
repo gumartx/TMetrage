@@ -49,7 +49,7 @@ public class UserService {
 	}
 
 	@Transactional
-	public UserDTO save(UserRegisterDTO dto) {
+	public UserDTO register(UserRegisterDTO dto) {
 		User entity = new User();
 		entity.setName(dto.getName());
 		entity.setProfileName(dto.getProfileName());

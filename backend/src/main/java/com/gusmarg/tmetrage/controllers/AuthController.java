@@ -39,7 +39,7 @@ public class AuthController {
 	
 	@PostMapping(value = "/cadastro")
 	public ResponseEntity<UserDTO> register(@RequestBody @Valid UserRegisterDTO dto) {
-		UserDTO newDTO = userService.save(dto);
+		UserDTO newDTO = userService.register(dto);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(newDTO.getId()).toUri();
 		return ResponseEntity.created(uri).body(newDTO);
 	}

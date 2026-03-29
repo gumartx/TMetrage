@@ -1,2 +1,4 @@
 INSERT INTO tb_user (name, profile_name, email, password, amount_followers, amount_following) VALUES ('Gustavo Gomes', 'gumartx', 'gustavo@gmail.com', '$2a$10$eACCYoNOHEqXve8aIWT8Nu3PkMXWBaOxJ9aORUYzfMQCbVBIhZ8tG', 0, 0);
 INSERT INTO tb_user (name, profile_name, email, password, amount_followers, amount_following) VALUES ('João Pedro', 'moorgsz', 'moorgado@gmail.com', '$2a$10$eACCYoNOHEqXve8aIWT8Nu3PkMXWBaOxJ9aORUYzfMQCbVBIhZ8tG', 0, 0);
+
+INSERT INTO tb_movie (id, title, img_url, amount_score, score) VALUES (1L, 'Um maluco no golfe', 'https://br.web.img3.acsta.net/c_310_420/medias/nmedia/18/87/34/32/19874514.jpg', 4, 3.3);

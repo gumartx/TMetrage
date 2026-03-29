@@ -15,6 +15,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,8 +41,6 @@ public class User {
 	private String bio;
 	@Column(nullable = false)
 	private String password;
-	private Integer amountFollowing = 0;
-	private Integer amountFollowers = 0;
 	private String profileImgUrl;
 	private String backgroundImgUrl;
 
@@ -60,4 +59,14 @@ public class User {
 
 	@ManyToMany(mappedBy = "following")
 	private Set<User> followers = new HashSet<>();
+	
+    @Transient
+    public Integer getAmountFollowing() {
+    	return following.size();
+    }
+    
+    @Transient
+    public Integer getAmountFollowers() {
+    	return followers.size();
+    }
 }

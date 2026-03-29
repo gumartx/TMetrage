@@ -1,4 +1,4 @@
-package com.gusmarg.tmetrage.services;
+package com.gusmarg.tmetrage.services.utils;
 
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
