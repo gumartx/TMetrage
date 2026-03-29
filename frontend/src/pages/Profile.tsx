@@ -34,7 +34,7 @@ const loadProfile = () => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) return JSON.parse(saved);
-  } catch {}
+  } catch { /* empty */ }
   return {
     name: "Cinéfilo Anônimo",
     username: "@cinefilo",
@@ -601,7 +601,7 @@ const Profile = () => {
               onClick={() => {
                 const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
                 const users = JSON.parse(localStorage.getItem("users") || "[]");
-                const user = users.find((u: any) => u.email === currentUser.email);
+                const user = users.find((u: StoredUser) => u.email === currentUser.email);
 
                 if (!user || user.password !== currentPassword) {
                   setPasswordError("Senha atual incorreta.");
