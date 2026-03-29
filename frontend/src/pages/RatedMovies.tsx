@@ -47,6 +47,7 @@ const RatedMovies = () => {
   const [datePreset, setDatePreset] = useState("all");
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [ratingFilter, setRatingFilter] = useState("all");
 
   useEffect(() => {
     const loadRatedMovies = async () => {
@@ -103,12 +104,14 @@ const RatedMovies = () => {
       rm.movie.genres.some((g) => g.id === Number(genreFilter));
     const matchesPlatform = platformFilter === "all" ||
       (platformFilter === "none" ? !rm.platform : rm.platform === platformFilter);
+    const matchesRating = ratingFilter === "all" ||
+      rm.rating === Number(ratingFilter);
     const range = getDateRange();
     const ratingDate = new Date(rm.date);
     const matchesDate =
       (!range.from || ratingDate >= range.from) &&
       (!range.to || ratingDate <= new Date(range.to.getTime() + 86400000));
-    return matchesSearch && matchesGenre && matchesPlatform && matchesDate;
+    return matchesSearch && matchesGenre && matchesPlatform && matchesRating && matchesDate;
   });
 
   return (
@@ -162,6 +165,25 @@ const RatedMovies = () => {
                     <span className="flex items-center gap-2">
                       <PlatformBadge value={p.value} />
                       {p.label}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={ratingFilter} onValueChange={setRatingFilter}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <Star className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Nota" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as notas</SelectItem>
+                {[5, 4, 3, 2, 1].map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    <span className="flex items-center gap-1">
+                      {Array.from({ length: n }).map((_, i) => (
+                        <Star key={i} className="h-3 w-3 fill-star text-star" />
+                      ))}
+                      <span className="ml-1">{n}</span>
                     </span>
                   </SelectItem>
                 ))}
