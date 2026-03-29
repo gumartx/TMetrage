@@ -16,6 +16,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const STORAGE_KEY = "tmetrage_profile";
 
@@ -469,18 +480,33 @@ const Profile = () => {
 
             <div className="border-t border-border pt-4">
               <p className="text-xs text-muted-foreground mb-2">Zona de perigo</p>
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={() => {
-                  if (window.confirm("Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.")) {
-                    localStorage.clear();
-                    window.location.href = "/";
-                  }
-                }}
-              >
-                Excluir conta
-              </Button>
+             <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="w-full">
+                    Excluir conta
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Excluir conta</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja excluir sua conta? Essa ação não pode ser desfeita.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => {
+                        localStorage.clear();
+                        window.location.href = "/";
+                      }}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Excluir
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </DialogContent>
@@ -569,13 +595,13 @@ const Profile = () => {
             {passwordError && (
               <p className="text-sm text-destructive">{passwordError}</p>
             )}
-              <Button
+            <Button
               className="w-full"
               disabled={!currentPassword || !newPassword || !confirmPassword}
               onClick={() => {
                 const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-                const users = JSON.parse(localStorage.getItem("users") || "[]") as StoredUser[];
-                const user = users.find((u: StoredUser) => u.email === currentUser.email);
+                const users = JSON.parse(localStorage.getItem("users") || "[]");
+                const user = users.find((u: any) => u.email === currentUser.email);
 
                 if (!user || user.password !== currentPassword) {
                   setPasswordError("Senha atual incorreta.");
