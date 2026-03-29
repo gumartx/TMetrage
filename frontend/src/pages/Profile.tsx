@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { getGenreColor } from "@/lib/genreColors";
 import { Link } from "react-router-dom";
-import { Search, Star, Film, List, Users, UserPlus, Camera, Pencil, X, Upload } from "lucide-react";
+import { Search, Star, Film, List, Users, UserPlus, Camera, Pencil, X, Upload, Lock } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { getRatings } from "@/components/UserRating";
 import { getLists } from "@/lib/movieLists";
@@ -23,7 +23,7 @@ const loadProfile = () => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) return JSON.parse(saved);
-  } catch { /* empty */ }
+  } catch {}
   return {
     name: "Cinéfilo Anônimo",
     username: "@cinefilo",
@@ -39,6 +39,11 @@ interface ProfileUser {
   name: string;
   username: string;
   avatar: string;
+}
+
+interface StoredUser {
+  email: string;
+  password: string;
 }
 
 const MOCK_USERS: ProfileUser[] = [
@@ -77,6 +82,11 @@ const Profile = () => {
   const [editUsername, setEditUsername] = useState(profile.username);
   const [editBio, setEditBio] = useState(profile.bio);
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const lists = getLists();
@@ -442,6 +452,21 @@ const Profile = () => {
               Salvar alterações
             </Button>
 
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => {
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+                setPasswordError("");
+                setPasswordDialogOpen(true);
+              }}
+            >
+              <Lock className="h-4 w-4" />
+              Alterar senha
+            </Button>
+
             <div className="border-t border-border pt-4">
               <p className="text-xs text-muted-foreground mb-2">Zona de perigo</p>
               <Button
@@ -504,6 +529,77 @@ const Profile = () => {
                 <span className="text-xs text-primary font-medium">Ver perfil →</span>
               </Link>
             ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Change Password Dialog */}
+      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Alterar senha</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Senha atual</label>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Digite sua senha atual"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Nova senha</label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Digite a nova senha"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Confirmar nova senha</label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirme a nova senha"
+              />
+            </div>
+            {passwordError && (
+              <p className="text-sm text-destructive">{passwordError}</p>
+            )}
+              <Button
+              className="w-full"
+              disabled={!currentPassword || !newPassword || !confirmPassword}
+              onClick={() => {
+                const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+                const users = JSON.parse(localStorage.getItem("users") || "[]") as StoredUser[];
+                const user = users.find((u: StoredUser) => u.email === currentUser.email);
+
+                if (!user || user.password !== currentPassword) {
+                  setPasswordError("Senha atual incorreta.");
+                  return;
+                }
+                if (newPassword.length < 6) {
+                  setPasswordError("A nova senha deve ter pelo menos 6 caracteres.");
+                  return;
+                }
+                if (newPassword !== confirmPassword) {
+                  setPasswordError("As senhas não coincidem.");
+                  return;
+                }
+
+                const updatedUsers = users.map((u: StoredUser) =>
+                  u.email === currentUser.email ? { ...u, password: newPassword } : u
+                );
+                localStorage.setItem("users", JSON.stringify(updatedUsers));
+                setPasswordError("");
+                setPasswordDialogOpen(false);
+              }}
+            >
+              Salvar nova senha
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
