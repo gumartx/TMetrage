@@ -14,6 +14,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.gusmarg.tmetrage.dto.CreateListDTO;
 import com.gusmarg.tmetrage.dto.MovieDTO;
 import com.gusmarg.tmetrage.dto.MovieListResponseDTO;
+import com.gusmarg.tmetrage.dto.ShareListDTO;
 import com.gusmarg.tmetrage.services.MovieListService;
 
 import jakarta.validation.Valid;
@@ -35,13 +36,21 @@ public class MovieListController {
 
 	@PostMapping("/{listId}/filmes")
 	public ResponseEntity<MovieListResponseDTO> addMovie(@PathVariable Long listId, @RequestBody MovieDTO dto) {
-		MovieListResponseDTO newDTO = movieListService.addMovieToList(listId, dto);
+		MovieListResponseDTO newDTO = movieListService.addMovieToList(listId, dto.getId());
 		return ResponseEntity.ok(newDTO);
 	}
-	
+
 	@DeleteMapping("/{listId}/filmes")
 	public ResponseEntity<Void> removeMovie(@PathVariable Long listId, @RequestBody MovieDTO dto) {
-		movieListService.removeMovieFromList(listId, dto);
+		movieListService.removeMovieFromList(listId, dto.getId());
 		return ResponseEntity.noContent().build();
+	}
+
+	@PostMapping("/{listId}/compartilhar")
+	public ResponseEntity<Void> shareList(@PathVariable Long listId, @RequestBody ShareListDTO dto) {
+
+		movieListService.shareList(listId, dto.getUserId());
+
+		return ResponseEntity.ok().build();
 	}
 }

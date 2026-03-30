@@ -22,4 +22,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 		       OR LOWER(u.profileName) LIKE LOWER(CONCAT('%', :value, '%'))
 		""")
 	List<User> searchUsers(@Param("value") String value);
+	
+	@Query("""
+		    SELECT COUNT(u) > 0
+		    FROM User u
+		    JOIN u.following f
+		    WHERE u.id = :followerId
+		    AND f.id = :followingId
+		""")
+	boolean existsFollow(Long followerId, Long followingId);
 }

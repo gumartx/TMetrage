@@ -11,6 +11,7 @@ import com.gusmarg.tmetrage.entities.MovieList;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.MovieListRepository;
 import com.gusmarg.tmetrage.repositories.MovieRepository;
+import com.gusmarg.tmetrage.repositories.UserRepository;
 import com.gusmarg.tmetrage.services.utils.TMDBService;
 
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class MovieListService {
 	private final TMDBService tmdbService;
 	private final MovieRepository movieRepository;
 	private final MovieListRepository movieListRepository;
+	private final UserRepository userRepository;
 
 	@Transactional
 	public MovieListResponseDTO createList(CreateListDTO dto) {
@@ -43,7 +45,7 @@ public class MovieListService {
 	}
 
 	@Transactional
-	public MovieListResponseDTO addMovieToList(Long listId, MovieDTO dto) {
+	public MovieListResponseDTO addMovieToList(Long listId, Long movieId) {
 
 	    User user = authService.getAuthenticatedUser();
 
@@ -53,9 +55,9 @@ public class MovieListService {
 	        throw new RuntimeException("Você não pode alterar essa lista");
 	    }
 
-		Movie movie = movieRepository.findById(dto.getId()).orElseGet(() -> {
+		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
 
-			MovieDTO tmdbMovie = tmdbService.getMovieById(dto.getId());
+			MovieDTO tmdbMovie = tmdbService.getMovieById(movieId);
 			Movie newMovie = new Movie();
 			newMovie.setId(tmdbMovie.getId());
 			return movieRepository.save(newMovie);
@@ -70,7 +72,7 @@ public class MovieListService {
 	}
 	
 	@Transactional
-	public void removeMovieFromList(Long listId, MovieDTO dto) {
+	public void removeMovieFromList(Long listId, Long movieId) {
 
 	    User user = authService.getAuthenticatedUser();
 
@@ -80,11 +82,36 @@ public class MovieListService {
 	        throw new RuntimeException("Você não pode alterar essa lista");
 	    }
 
-	    entity.getMovies().removeIf(movie -> movie.getId().equals(dto.getId()));
+	    entity.getMovies().removeIf(movie -> movie.getId().equals(movieId));
 
 	    movieListRepository.save(entity);
 
 		log.info("Filme '{}' removido da lista '{}'", entity.getId(), entity.getName());
 
+	}
+
+	@Transactional
+	public void shareList(Long listId, Long userId) {
+
+	    User currentUser = authService.getAuthenticatedUser();
+
+	    MovieList list = movieListRepository.getReferenceById(listId);
+
+	    if(!currentUser.getId().equals(list.getUser().getId())) {
+	        throw new RuntimeException("Você não pode compartilhar essa lista");
+	    }
+	    
+	    User user = userRepository.getReferenceById(userId);
+
+	    boolean currentUserFollows = userRepository.existsFollow(currentUser.getId(), userId);
+	    boolean userFollowsBack = userRepository.existsFollow(userId, currentUser.getId());
+
+	    if (!currentUserFollows || !userFollowsBack) {
+	        throw new RuntimeException("A lista só pode ser compartilhada com usuários que se seguem mutuamente");
+	    }
+	    
+	    list.getSharedWith().add(user);
+
+	    movieListRepository.save(list);
 	}
 }

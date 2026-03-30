@@ -32,7 +32,7 @@ public class MovieList {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	@Column(unique = true, nullable = false)
+	@Column(nullable = false)
 	private String name;
 	private String description;
 	private LocalDate createdAt;
@@ -40,6 +40,14 @@ public class MovieList {
 	@ManyToOne
 	@JoinColumn(name = "user_id")
 	private User user;
+	
+    @ManyToMany
+    @JoinTable(
+        name = "tb_list_shared_users",
+        joinColumns = @JoinColumn(name = "list_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> sharedWith = new HashSet<>();
 	
 	@ManyToMany
 	@JoinTable(
