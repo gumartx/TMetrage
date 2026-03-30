@@ -1,5 +1,7 @@
 package com.gusmarg.tmetrage.services;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,16 @@ public class MovieListService {
 	private final MovieListRepository movieListRepository;
 	private final UserRepository userRepository;
 
+	@Transactional(readOnly = true)
+	public List<MovieListResponseDTO> findLists(String name, Integer month, Integer year) {
+		
+		User user = authService.getAuthenticatedUser();
+		
+	    List<MovieList> lists = movieListRepository.searchUserLists(user.getId(), name, month, year);
+
+	    return lists.stream().map(MovieListResponseDTO::new).toList();
+	}
+	
 	@Transactional
 	public MovieListResponseDTO createList(CreateListDTO dto) {
 

@@ -8,4 +8,5 @@ import com.gusmarg.tmetrage.entities.Movie;
 @Repository
 public interface MovieRepository extends JpaRepository<Movie, Long> {
 
+
 }
