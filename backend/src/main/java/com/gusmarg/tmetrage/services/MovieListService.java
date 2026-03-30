@@ -3,7 +3,6 @@ package com.gusmarg.tmetrage.services;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.gusmarg.tmetrage.dto.AddMovieDTO;
 import com.gusmarg.tmetrage.dto.CreateListDTO;
 import com.gusmarg.tmetrage.dto.MovieDTO;
 import com.gusmarg.tmetrage.dto.MovieListResponseDTO;
@@ -12,7 +11,6 @@ import com.gusmarg.tmetrage.entities.MovieList;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.MovieListRepository;
 import com.gusmarg.tmetrage.repositories.MovieRepository;
-import com.gusmarg.tmetrage.repositories.UserRepository;
 import com.gusmarg.tmetrage.services.utils.TMDBService;
 
 import lombok.RequiredArgsConstructor;
@@ -23,15 +21,15 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class MovieListService {
 
+	private final AuthService authService;
 	private final TMDBService tmdbService;
 	private final MovieRepository movieRepository;
 	private final MovieListRepository movieListRepository;
-	private final UserRepository userRepository;
 
 	@Transactional
-	public MovieListResponseDTO createList(Long id, CreateListDTO dto) {
+	public MovieListResponseDTO createList(CreateListDTO dto) {
 
-		User user = userRepository.getReferenceById(id);
+		User user = authService.getAuthenticatedUser();
 
 		MovieList entity = new MovieList();
 		entity.setName(dto.getName());
@@ -44,9 +42,16 @@ public class MovieListService {
 		return new MovieListResponseDTO(entity);
 	}
 
-	public MovieListResponseDTO addMovieToList(Long listId, AddMovieDTO dto) {
+	@Transactional
+	public MovieListResponseDTO addMovieToList(Long listId, MovieDTO dto) {
 
-		MovieList entity = movieListRepository.getReferenceById(listId);
+	    User user = authService.getAuthenticatedUser();
+
+	    MovieList entity = movieListRepository.getReferenceById(listId);
+
+	    if (!entity.getUser().getId().equals(user.getId())) {
+	        throw new RuntimeException("Você não pode alterar essa lista");
+	    }
 
 		Movie movie = movieRepository.findById(dto.getId()).orElseGet(() -> {
 
@@ -62,5 +67,24 @@ public class MovieListService {
 		log.info("Filme '{}' adicionado a lista '{}'", movie.getId(), entity.getName());
 
 		return new MovieListResponseDTO(entity);
+	}
+	
+	@Transactional
+	public void removeMovieFromList(Long listId, MovieDTO dto) {
+
+	    User user = authService.getAuthenticatedUser();
+
+	    MovieList entity = movieListRepository.getReferenceById(listId);
+
+	    if (!entity.getUser().getId().equals(user.getId())) {
+	        throw new RuntimeException("Você não pode alterar essa lista");
+	    }
+
+	    entity.getMovies().removeIf(movie -> movie.getId().equals(dto.getId()));
+
+	    movieListRepository.save(entity);
+
+		log.info("Filme '{}' removido da lista '{}'", entity.getId(), entity.getName());
+
 	}
 }

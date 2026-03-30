@@ -3,7 +3,6 @@ package com.gusmarg.tmetrage.controllers;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,12 +46,12 @@ public class AuthController {
 	@PostMapping("/esqueci-senha")
 	public ResponseEntity<Void> forgotPassword(@RequestParam String email){
 	    authService.resetPassword(email);
-	    return ResponseEntity.ok().build();
+	    return ResponseEntity.noContent().build();
 	}
 	
 	@PutMapping()
 	public ResponseEntity<Void> changePassword(@RequestBody @Valid UserUpdatePasswordDTO dto) {
 		userService.updatePassword(dto);
-		return ResponseEntity.ok().build();
+		return ResponseEntity.noContent().build();
 	}
 }

@@ -52,12 +52,12 @@ public class UserController {
 	@PostMapping("/{id}/seguir")
 	public ResponseEntity<Void> followUser(@PathVariable Long id) {
 	    userService.followUser(id);
-	    return ResponseEntity.ok().build();
+	    return ResponseEntity.noContent().build();
 	}
 	
 	@DeleteMapping("/{id}/seguir")
 	public ResponseEntity<Void> unfollowUser(@PathVariable Long id) {
 	    userService.unfollowUser(id);
-	    return ResponseEntity.ok().build();
+	    return ResponseEntity.noContent().build();
 	} 
 }
