@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { getGenreColor } from "@/lib/genreColors";
 import { Link } from "react-router-dom";
-import { Search, Star, Film, List, Users, UserPlus, Camera, Pencil, X, Upload, Lock } from "lucide-react";
+import { Search, Star, Film, List, Users, UserPlus, Camera, Pencil, X, Upload, Lock, MessageCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { getRatings } from "@/components/UserRating";
 import { getLists } from "@/lib/movieLists";
@@ -52,7 +52,7 @@ interface ProfileUser {
   avatar: string;
 }
 
-interface StoredUser {
+interface User {
   email: string;
   password: string;
 }
@@ -101,6 +101,19 @@ const Profile = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const lists = getLists();
+
+  interface Comment {
+    author: string;
+    [key: string]: unknown;
+  }
+
+  const totalUserComments = (() => {
+    try {
+      const all = JSON.parse(localStorage.getItem("movie_comments") || "[]") as Comment[];
+      const username = profile.username || profile.name;
+      return all.filter((c: Comment) => c.author === username).length;
+    } catch { return 0; }
+  })();
 
   // Persist profile to localStorage
   useEffect(() => {
@@ -295,13 +308,15 @@ const Profile = () => {
               </CardContent>
             </Card>
           </Link>
-          <Card className="bg-card border-border">
-            <CardContent className="flex flex-col items-center justify-center py-6">
-              <Film className="h-6 w-6 text-accent mb-2" />
-              <span className="text-2xl font-bold text-foreground">{totalMoviesInLists}</span>
-              <span className="text-xs text-muted-foreground">Filmes em listas</span>
-            </CardContent>
-          </Card>
+          <Link to="/comentarios">
+            <Card className="bg-card border-border cursor-pointer transition-colors hover:border-primary/40">
+              <CardContent className="flex flex-col items-center justify-center py-6">
+                <MessageCircle className="h-6 w-6 text-accent mb-2" />
+                <span className="text-2xl font-bold text-foreground">{totalUserComments}</span>
+                <span className="text-xs text-muted-foreground">Comentários</span>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Favorite Genres */}
@@ -600,8 +615,8 @@ const Profile = () => {
               disabled={!currentPassword || !newPassword || !confirmPassword}
               onClick={() => {
                 const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-                const users = JSON.parse(localStorage.getItem("users") || "[]");
-                const user = users.find((u: StoredUser) => u.email === currentUser.email);
+                const users: User[] = JSON.parse(localStorage.getItem("users") || "[]");
+                const user = users.find((u: User) => u.email === currentUser.email);
 
                 if (!user || user.password !== currentPassword) {
                   setPasswordError("Senha atual incorreta.");
@@ -616,7 +631,7 @@ const Profile = () => {
                   return;
                 }
 
-                const updatedUsers = users.map((u: StoredUser) =>
+                const updatedUsers = users.map((u: User) =>
                   u.email === currentUser.email ? { ...u, password: newPassword } : u
                 );
                 localStorage.setItem("users", JSON.stringify(updatedUsers));
