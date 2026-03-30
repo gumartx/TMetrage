@@ -1,8 +1,12 @@
 package com.gusmarg.tmetrage.services;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gusmarg.tmetrage.dto.RatingFilterDTO;
 import com.gusmarg.tmetrage.dto.RatingMovieDTO;
 import com.gusmarg.tmetrage.dto.RatingPlatformDTO;
 import com.gusmarg.tmetrage.dto.RatingResponseDTO;
@@ -24,40 +28,80 @@ public class RatingService {
 	private final AuthService authService;
 	private final RatingRepository ratingRepository;
 	private final MovieRepository movieRepository;
-	
+
+	@Transactional(readOnly = true)
+	public List<RatingResponseDTO> findUserRatings(RatingFilterDTO filter) {
+
+		User user = authService.getAuthenticatedUser();
+
+		LocalDate startDate = null;
+		LocalDate endDate = null;
+
+		if(filter.getPeriod() != null){
+
+			LocalDate now = LocalDate.now();
+
+		    switch (filter.getPeriod()) {
+
+		        case LAST_WEEK -> startDate = now.minusWeeks(1);
+
+		        case LAST_MONTH -> startDate = now.minusMonths(1);
+
+		        case LAST_3_MONTHS -> startDate = now.minusMonths(3);
+
+		        case LAST_YEAR -> startDate = now.minusYears(1);
+
+		        case CUSTOM -> {
+		            startDate = filter.getStartDate();
+		            endDate = filter.getEndDate();
+		        }
+		    }
+
+		    if(endDate == null){
+		        endDate = now;
+		    }
+		}
+
+		List<Rating> ratings = ratingRepository.findByFilters(user.getId(), filter.getPlatform(), filter.getScore(),
+				startDate, endDate);
+
+		return ratings.stream().map(RatingResponseDTO::new).toList();
+	}
+
 	@Transactional
 	public RatingResponseDTO rateMovie(RatingMovieDTO dto) {
 
-	    User user = authService.getAuthenticatedUser();
+		User user = authService.getAuthenticatedUser();
 
-	    Movie movie = movieRepository.findById(dto.getMovieId())
-	            .orElseGet(() -> movieRepository.save(new Movie(dto.getMovieId())));
+		Movie movie = movieRepository.findById(dto.getMovieId())
+				.orElseGet(() -> movieRepository.save(new Movie(dto.getMovieId())));
 
-	    RatingPK id = new RatingPK(user, movie);
+		RatingPK id = new RatingPK(user, movie);
 
-	    Rating rating = new Rating();
-	    rating.setId(id);
-	    rating.setScore(dto.getScore());
-	    rating.setPlatform(dto.getPlatform());
+		Rating rating = new Rating();
+		rating.setId(id);
+		rating.setScore(dto.getScore());
+		rating.setPlatform(dto.getPlatform());
 
-	    rating = ratingRepository.save(rating);
-	    
-	    return new RatingResponseDTO(rating);
+		rating = ratingRepository.save(rating);
+
+		return new RatingResponseDTO(rating);
 	}
-	
+
 	@Transactional
 	public RatingResponseDTO updatePlatform(Long movieId, RatingPlatformDTO dto) {
 
-	    User user = authService.getAuthenticatedUser();
+		User user = authService.getAuthenticatedUser();
 
-	    RatingPK id = new RatingPK(user, new Movie(movieId));
+		RatingPK id = new RatingPK(user, new Movie(movieId));
 
-	    Rating rating = ratingRepository.getReferenceById(id);
+		Rating rating = ratingRepository.getReferenceById(id);
 
-	    rating.setPlatform(dto.getPlatform());
-	    
-	    rating = ratingRepository.save(rating);
+		rating.setPlatform(dto.getPlatform());
 
-	    return new RatingResponseDTO(rating);
+		rating = ratingRepository.save(rating);
+
+		return new RatingResponseDTO(rating);
 	}
+
 }
