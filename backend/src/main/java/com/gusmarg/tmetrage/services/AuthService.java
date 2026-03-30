@@ -1,5 +1,7 @@
 package com.gusmarg.tmetrage.services;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +46,17 @@ public class AuthService {
         return new UserLoginResponseDTO(token);
     }
 
+    @Transactional(readOnly = true)
+    public User getAuthenticatedUser() {
+
+        Authentication authentication = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        String email = authentication.getName();
+
+        return userRepository.findByEmail(email);
+    }
 
 	@Transactional
 	public void resetPassword(String email) {

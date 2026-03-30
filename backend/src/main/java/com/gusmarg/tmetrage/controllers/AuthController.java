@@ -50,9 +50,9 @@ public class AuthController {
 	    return ResponseEntity.ok().build();
 	}
 	
-	@PutMapping(value = "/{id}")
-	public ResponseEntity<Void> changePassword(@PathVariable Long id, @RequestBody @Valid UserUpdatePasswordDTO dto) {
-		userService.updatePassword(id, dto);
+	@PutMapping()
+	public ResponseEntity<Void> changePassword(@RequestBody @Valid UserUpdatePasswordDTO dto) {
+		userService.updatePassword(dto);
 		return ResponseEntity.ok().build();
 	}
 }

@@ -3,8 +3,10 @@ package com.gusmarg.tmetrage.controllers;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,9 +43,21 @@ public class UserController {
 		return ResponseEntity.ok(result);
 	}
 	
-	@PutMapping(value = "/{id}")
-	public ResponseEntity<UserDetailsDTO> updateProfile(@PathVariable Long id, @RequestBody UserUpdateDTO dto) {
-		UserDetailsDTO newDTO = userService.updateProfile(id, dto);
+	@PutMapping()
+	public ResponseEntity<UserDetailsDTO> updateProfile(@RequestBody UserUpdateDTO dto) {
+		UserDetailsDTO newDTO = userService.updateProfile(dto);
 		return ResponseEntity.ok(newDTO);
 	}
+	
+	@PostMapping("/{id}/seguir")
+	public ResponseEntity<Void> followUser(@PathVariable Long id) {
+	    userService.followUser(id);
+	    return ResponseEntity.ok().build();
+	}
+	
+	@DeleteMapping("/{id}/seguir")
+	public ResponseEntity<Void> unfollowUser(@PathVariable Long id) {
+	    userService.unfollowUser(id);
+	    return ResponseEntity.ok().build();
+	} 
 }

@@ -2,6 +2,9 @@ package com.gusmarg.tmetrage.services;
 
 import java.util.List;
 
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
+	private final AuthService authService;
 	private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -63,25 +67,27 @@ public class UserService {
 	}
 
 	@Transactional
-	public UserDetailsDTO updateProfile(Long id, UserUpdateDTO dto) {
-		User entity = userRepository.getReferenceById(id);
-		entity.setName(dto.getName());
-		entity.setProfileName(dto.getProfileName());
-		entity.setBio(dto.getBio());
-		entity.setProfileImgUrl(dto.getProfileImgUrl());
-		entity.setBackgroundImgUrl(dto.getBackgroundImgUrl());
-		entity = userRepository.save(entity);
+	public UserDetailsDTO updateProfile(UserUpdateDTO dto) {
+		User currentUser = authService.getAuthenticatedUser();
+		
+		currentUser.setName(dto.getName());
+		currentUser.setProfileName(dto.getProfileName());
+		currentUser.setBio(dto.getBio());
+		currentUser.setProfileImgUrl(dto.getProfileImgUrl());
+		currentUser.setBackgroundImgUrl(dto.getBackgroundImgUrl());
+		currentUser = userRepository.save(currentUser);
 
-		log.info("Perfil editado: {}", entity.getProfileName());
+		log.info("Perfil editado: {}", currentUser.getProfileName());
 
-		return new UserDetailsDTO(entity);
+		return new UserDetailsDTO(currentUser);
 	}
 	
 	@Transactional
-	public void updatePassword(Long id, UserUpdatePasswordDTO dto) {
-		User entity = userRepository.getReferenceById(id);
+	public void updatePassword(UserUpdatePasswordDTO dto) {
 		
-		boolean passwordMatches = passwordEncoder.matches(dto.getCurrentPassword(), entity.getPassword());
+		User currentUser = authService.getAuthenticatedUser();
+		
+		boolean passwordMatches = passwordEncoder.matches(dto.getCurrentPassword(), currentUser.getPassword());
 		
 		if(!passwordMatches) {
 			throw new RuntimeException("Senha atual incorreta");
@@ -89,12 +95,43 @@ public class UserService {
 		
 		String newPassword = passwordEncoder.encode(dto.getNewPassword());
 		
-		entity.setPassword(newPassword);
+		currentUser.setPassword(newPassword);
 		
-		userRepository.save(entity);
+		userRepository.save(currentUser);
 		
 		log.info("Senha alterada");
 	}
+	
+	@Transactional
+	public void followUser(Long id) {
 
+	    User currentUser = authService.getAuthenticatedUser();
+
+	    User userToFollow = userRepository.getReferenceById(id);
+
+	    currentUser.getFollowing().add(userToFollow);
+
+	    userRepository.save(currentUser);
+	    
+	    log.info("Usuário '{}' passou a seguir '{}'", currentUser.getProfileName(), userToFollow.getProfileName());
+	}
+	
+	@Transactional
+	public void unfollowUser(Long id) {
+
+	    User currentUser = authService.getAuthenticatedUser();
+	    User userToUnfollow = userRepository.getReferenceById(id);
+
+	    currentUser.getFollowing().remove(userToUnfollow);
+
+	    userRepository.save(currentUser);
+	    
+	    log.info("Usuário '{}' deixou de seguir '{}'", currentUser.getProfileName(), userToUnfollow.getProfileName());
+	}
+
+	@Override
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		return userRepository.findByEmail(username);
+	}
 
 }
