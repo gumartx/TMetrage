@@ -37,6 +37,8 @@ public class MovieListService {
 		
 	    List<MovieList> lists = movieListRepository.searchUserLists(user.getId(), name, month, year);
 
+		log.info("Encontrado {} lista(s)", lists.size());
+	    
 	    return lists.stream().map(MovieListResponseDTO::new).toList();
 	}
 	
@@ -125,5 +127,7 @@ public class MovieListService {
 	    list.getSharedWith().add(user);
 
 	    movieListRepository.save(list);
+
+		log.info("Lista '{}' compartilhada com '{}'", list.getName(), user.getProfileName());
 	}
 }
