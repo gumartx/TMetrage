@@ -1,6 +1,6 @@
 package com.gusmarg.tmetrage.entities;
 
-import java.time.Instant;
+import java.time.LocalDate;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -34,7 +34,7 @@ public class Rating {
 	@Column(nullable = false)
 	private Double score;
 	@CreatedDate
-	private Instant createdAt;
+	private LocalDate createdAt;
 	@Enumerated(EnumType.STRING)
 	private Platform platform;
 	

@@ -1,0 +1,63 @@
+package com.gusmarg.tmetrage.services;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.gusmarg.tmetrage.dto.RatingMovieDTO;
+import com.gusmarg.tmetrage.dto.RatingPlatformDTO;
+import com.gusmarg.tmetrage.dto.RatingResponseDTO;
+import com.gusmarg.tmetrage.entities.Movie;
+import com.gusmarg.tmetrage.entities.Rating;
+import com.gusmarg.tmetrage.entities.User;
+import com.gusmarg.tmetrage.entities.pk.RatingPK;
+import com.gusmarg.tmetrage.repositories.MovieRepository;
+import com.gusmarg.tmetrage.repositories.RatingRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+@Service
+public class RatingService {
+
+	private final AuthService authService;
+	private final RatingRepository ratingRepository;
+	private final MovieRepository movieRepository;
+	
+	@Transactional
+	public RatingResponseDTO rateMovie(RatingMovieDTO dto) {
+
+	    User user = authService.getAuthenticatedUser();
+
+	    Movie movie = movieRepository.findById(dto.getMovieId())
+	            .orElseGet(() -> movieRepository.save(new Movie(dto.getMovieId())));
+
+	    RatingPK id = new RatingPK(user, movie);
+
+	    Rating rating = new Rating();
+	    rating.setId(id);
+	    rating.setScore(dto.getScore());
+	    rating.setPlatform(dto.getPlatform());
+
+	    rating = ratingRepository.save(rating);
+	    
+	    return new RatingResponseDTO(rating);
+	}
+	
+	@Transactional
+	public RatingResponseDTO updatePlatform(Long movieId, RatingPlatformDTO dto) {
+
+	    User user = authService.getAuthenticatedUser();
+
+	    RatingPK id = new RatingPK(user, new Movie(movieId));
+
+	    Rating rating = ratingRepository.getReferenceById(id);
+
+	    rating.setPlatform(dto.getPlatform());
+	    
+	    rating = ratingRepository.save(rating);
+
+	    return new RatingResponseDTO(rating);
+	}
+}
