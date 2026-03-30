@@ -24,7 +24,13 @@ public interface RatingRepository extends JpaRepository<Rating, RatingPK> {
 			AND (:startDate IS NULL OR r.createdAt >= :startDate)
 			AND (:endDate IS NULL OR r.createdAt <= :endDate)
 			""")
-	List<Rating> findByFilters(Long userId, Platform platform, Integer score, LocalDate startDate,
-			LocalDate endDate);
+	List<Rating> findByFilters(Long userId, Platform platform, Integer score, LocalDate startDate, LocalDate endDate);
+
+	@Query("""
+			SELECT AVG(r.score)
+			FROM Rating r
+			WHERE r.id.user.id = :userId
+			""")
+	Double findAvgScoreByUserId(Long userId);
 
 }

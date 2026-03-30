@@ -74,8 +74,22 @@ public class User implements UserDetails {
     public Integer getAmountFollowers() {
     	return followers.size();
     }
-
-
+    
+    @Transient
+    public Integer getAmountRatedMovies() {
+    	return ratings.size();
+    }
+    
+    @Transient
+    public Integer getAmountComments() {
+    	return comments.size();
+    }
+    
+    @Transient
+    public Integer getAmountLists() {
+    	return lists.size();
+    }
+    
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		return null;
@@ -85,4 +99,5 @@ public class User implements UserDetails {
 	public String getUsername() {
 		return email;
 	}
+
 }

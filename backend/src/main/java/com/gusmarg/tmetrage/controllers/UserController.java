@@ -27,6 +27,12 @@ public class UserController {
 
 	private final UserService userService;
 
+	@GetMapping()
+	public ResponseEntity<UserDetailsDTO> userDetails() {
+		UserDetailsDTO result = userService.showUserDetails();
+		return ResponseEntity.ok(result);
+	}
+	
 	@GetMapping(value = "/buscar")
 	public ResponseEntity<List<UserSearchDTO>> searchUsers(@RequestParam String nome) {
 

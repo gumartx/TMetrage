@@ -16,6 +16,7 @@ import com.gusmarg.tmetrage.dto.UserSearchDTO;
 import com.gusmarg.tmetrage.dto.UserUpdateDTO;
 import com.gusmarg.tmetrage.dto.UserUpdatePasswordDTO;
 import com.gusmarg.tmetrage.entities.User;
+import com.gusmarg.tmetrage.repositories.RatingRepository;
 import com.gusmarg.tmetrage.repositories.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -28,8 +29,25 @@ public class UserService implements UserDetailsService {
 
 	private final AuthService authService;
 	private final UserRepository userRepository;
+	private final RatingRepository ratingRepository;
     private final PasswordEncoder passwordEncoder;
 
+	@Transactional
+	public UserDetailsDTO showUserDetails() {
+		
+		User user = authService.getAuthenticatedUser();
+
+		Double avgScore = ratingRepository.findAvgScoreByUserId(user.getId());
+
+		if(avgScore == null) {
+			avgScore = 0.0;
+		}
+		
+		log.info("Detalhes do perfil: {}", user.getProfileName());
+
+		return new UserDetailsDTO(user, avgScore);
+	}
+    
 	@Transactional(readOnly = true)
 	public List<UserSearchDTO> searchUsers(String name) {
 
@@ -45,11 +63,17 @@ public class UserService implements UserDetailsService {
 	@Transactional(readOnly = true)
 	public UserDetailsDTO findByProfileName(String profileName) {
 
-		User result = userRepository.findByProfileName(profileName);
+		User user = userRepository.findByProfileName(profileName);
 
+		Double avgScore = ratingRepository.findAvgScoreByUserId(user.getId());
+
+		if(avgScore == null) {
+			avgScore = 0.0;
+		}
+		
 		log.info("Perfil encontrado: {}", profileName);
 
-		return new UserDetailsDTO(result);
+		return new UserDetailsDTO(user, avgScore);
 	}
 
 	@Transactional
@@ -133,5 +157,6 @@ public class UserService implements UserDetailsService {
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		return userRepository.findByEmail(username);
 	}
+
 
 }
