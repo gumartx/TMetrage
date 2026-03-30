@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,6 +47,12 @@ public class RatingController {
 	public ResponseEntity<RatingResponseDTO> rateMovie(@Valid @RequestBody RatingMovieDTO dto) {
 		RatingResponseDTO result = ratingService.rateMovie(dto);
 		return ResponseEntity.ok(result);
+	}
+	
+	@DeleteMapping(value = "/{id}")
+	public ResponseEntity<Void> removeRating(@PathVariable Long id) {
+	    ratingService.removeRating(id);
+	    return ResponseEntity.noContent().build();
 	}
 
 	@PatchMapping(value = "/{id}")

@@ -126,4 +126,31 @@ public class RatingService {
 		return new RatingResponseDTO(rating);
 	}
 
+	@Transactional
+	public void removeRating(Long movieId) {
+
+	    User user = authService.getAuthenticatedUser();
+
+	    RatingPK id = new RatingPK();
+	    
+		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
+
+			MovieDTO tmdbMovie = tmdbService.getMovieById(movieId);
+			Movie newMovie = new Movie();
+			newMovie.setId(tmdbMovie.getId());
+			return movieRepository.save(newMovie);
+		});
+		
+	    id.setUser(user);
+	    id.setMovie(movie);
+
+	    if(!ratingRepository.existsById(id)){
+	        throw new RuntimeException("Usuário não tem avaliação nesse filme");
+	    }
+
+	    ratingRepository.deleteById(id);
+
+		log.info("Usuário '{}' retirou avaliação do filme '{}'", user.getProfileName(), movie.getId());
+	}
+
 }
