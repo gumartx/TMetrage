@@ -24,9 +24,15 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    @GetMapping(value = "/{movieId}")
-    public ResponseEntity<List<CommentResponseDTO>> findAllMovieComments(@PathVariable Long movieId) {
+    @GetMapping(value = "/filme/{movieId}")
+    public ResponseEntity<List<CommentResponseDTO>> getMovieComments(@PathVariable Long movieId) {
         List<CommentResponseDTO> result = commentService.findAllMovieComments(movieId);
+        return ResponseEntity.ok(result);
+    }
+    
+    @GetMapping(value = "/{commentId}/respostas")
+    public ResponseEntity<List<CommentResponseDTO>> getReplies(@PathVariable Long commentId) {
+        List<CommentResponseDTO> result = commentService.getReplies(commentId);
         return ResponseEntity.ok(result);
     }
     

@@ -11,5 +11,6 @@ import com.gusmarg.tmetrage.entities.Comment;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
 	List<Comment> findByMovieIdAndParentIsNullOrderByCreatedAtDesc(Long movieId);
-	
+
+    List<Comment> findByParentIdOrderByCreatedAtAsc(Long parentId);
 }

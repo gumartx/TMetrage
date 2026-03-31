@@ -31,7 +31,7 @@ public class CommentService {
 	@Transactional
 	public List<CommentResponseDTO> findAllMovieComments(Long movieId) {
 		List<Comment> result = commentRepository.findByMovieIdAndParentIsNullOrderByCreatedAtDesc(movieId);
-		
+
 		return result.stream().map(CommentResponseDTO::new).toList();
 	}
 
@@ -69,6 +69,14 @@ public class CommentService {
 		Comment comment = commentRepository.getReferenceById(commentId);
 
 		comment.getLikes().add(user);
+	}
+
+	@Transactional(readOnly = true)
+	public List<CommentResponseDTO> getReplies(Long commentId) {
+
+		List<Comment> replies = commentRepository.findByParentIdOrderByCreatedAtAsc(commentId);
+
+		return replies.stream().map(CommentResponseDTO::new).toList();
 	}
 
 }

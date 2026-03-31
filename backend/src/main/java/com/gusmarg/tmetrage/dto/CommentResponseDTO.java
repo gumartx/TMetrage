@@ -15,6 +15,7 @@ import lombok.Setter;
 @Setter
 public class CommentResponseDTO {
 	
+	private Long commentId;
 	private Long movieId;
 	private Long userId;
 	private String profileImg;
@@ -24,6 +25,7 @@ public class CommentResponseDTO {
 	private Long parentId;
     
 	public CommentResponseDTO (Comment entity) {
+		commentId = entity.getId();
 		movieId = entity.getMovie().getId();
 		userId = entity.getUser().getId();
 		profileImg = entity.getUser().getProfileImgUrl();
