@@ -3,9 +3,9 @@ package com.gusmarg.tmetrage.services;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gusmarg.tmetrage.components.TMDBSaveData;
 import com.gusmarg.tmetrage.dto.CommentCreateDTO;
 import com.gusmarg.tmetrage.dto.CommentResponseDTO;
-import com.gusmarg.tmetrage.dto.MovieDTO;
 import com.gusmarg.tmetrage.entities.Comment;
 import com.gusmarg.tmetrage.entities.Movie;
 import com.gusmarg.tmetrage.entities.User;
@@ -32,11 +32,7 @@ public class CommentService {
         User user = authService.getAuthenticatedUser();
 
 		Movie movie = movieRepository.findById(dto.getMovieId()).orElseGet(() -> {
-
-			MovieDTO tmdbMovie = tmdbService.getMovieById(dto.getMovieId());
-			Movie newMovie = new Movie();
-			newMovie.setId(tmdbMovie.getId());
-			return movieRepository.save(newMovie);
+			return TMDBSaveData.saveMovieFromTMDB(dto.getMovieId(), tmdbService, movieRepository);
 		});
 
         Comment comment = new Comment();
@@ -51,6 +47,8 @@ public class CommentService {
 
         comment = commentRepository.save(comment);
 
+		log.info("Usuário '{}' publicou comentário no filme '{}'", user.getProfileName(), movie.getId());
+        
         return new CommentResponseDTO(comment);
     }
 

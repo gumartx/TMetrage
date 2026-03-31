@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gusmarg.tmetrage.components.TMDBSaveData;
 import com.gusmarg.tmetrage.dto.ListCreateDTO;
-import com.gusmarg.tmetrage.dto.MovieDTO;
 import com.gusmarg.tmetrage.dto.MovieListResponseDTO;
 import com.gusmarg.tmetrage.entities.Movie;
 import com.gusmarg.tmetrage.entities.MovieList;
@@ -70,11 +70,7 @@ public class MovieListService {
 	    }
 
 		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
-
-			MovieDTO tmdbMovie = tmdbService.getMovieById(movieId);
-			Movie newMovie = new Movie();
-			newMovie.setId(tmdbMovie.getId());
-			return movieRepository.save(newMovie);
+			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository);
 		});
 
 		entity.getMovies().add(new Movie(movie.getId()));

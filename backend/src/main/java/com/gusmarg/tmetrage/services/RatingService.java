@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.gusmarg.tmetrage.dto.MovieDTO;
+import com.gusmarg.tmetrage.components.TMDBSaveData;
 import com.gusmarg.tmetrage.dto.RatingFilterDTO;
 import com.gusmarg.tmetrage.dto.RatingMovieDTO;
 import com.gusmarg.tmetrage.dto.RatingPlatformDTO;
@@ -31,7 +31,7 @@ public class RatingService {
 	private final RatingRepository ratingRepository;
 	private final MovieRepository movieRepository;
 	private final TMDBService tmdbService;
-	
+
 	@Transactional(readOnly = true)
 	public List<RatingResponseDTO> findUserRatings(RatingFilterDTO filter) {
 
@@ -40,36 +40,36 @@ public class RatingService {
 		LocalDate startDate = null;
 		LocalDate endDate = null;
 
-		if(filter.getPeriod() != null){
+		if (filter.getPeriod() != null) {
 
 			LocalDate now = LocalDate.now();
 
-		    switch (filter.getPeriod()) {
+			switch (filter.getPeriod()) {
 
-		        case LAST_WEEK -> startDate = now.minusWeeks(1);
+			case LAST_WEEK -> startDate = now.minusWeeks(1);
 
-		        case LAST_MONTH -> startDate = now.minusMonths(1);
+			case LAST_MONTH -> startDate = now.minusMonths(1);
 
-		        case LAST_3_MONTHS -> startDate = now.minusMonths(3);
+			case LAST_3_MONTHS -> startDate = now.minusMonths(3);
 
-		        case LAST_YEAR -> startDate = now.minusYears(1);
+			case LAST_YEAR -> startDate = now.minusYears(1);
 
-		        case CUSTOM -> {
-		            startDate = filter.getStartDate();
-		            endDate = filter.getEndDate();
-		        }
-		    }
+			case CUSTOM -> {
+				startDate = filter.getStartDate();
+				endDate = filter.getEndDate();
+			}
+			}
 
-		    if(endDate == null){
-		        endDate = now;
-		    }
+			if (endDate == null) {
+				endDate = now;
+			}
 		}
 
 		List<Rating> ratings = ratingRepository.findByFilters(user.getId(), filter.getPlatform(), filter.getScore(),
 				startDate, endDate);
 
 		log.info("Encontrado {} avaliação(ões)", ratings.size());
-		
+
 		return ratings.stream().map(RatingResponseDTO::new).toList();
 	}
 
@@ -79,11 +79,7 @@ public class RatingService {
 		User user = authService.getAuthenticatedUser();
 
 		Movie movie = movieRepository.findById(dto.getMovieId()).orElseGet(() -> {
-
-			MovieDTO tmdbMovie = tmdbService.getMovieById(dto.getMovieId());
-			Movie newMovie = new Movie();
-			newMovie.setId(tmdbMovie.getId());
-			return movieRepository.save(newMovie);
+			return TMDBSaveData.saveMovieFromTMDB(dto.getMovieId(), tmdbService, movieRepository);
 		});
 
 		RatingPK id = new RatingPK(user, movie);
@@ -96,7 +92,7 @@ public class RatingService {
 		rating = ratingRepository.save(rating);
 
 		log.info("Usuário '{}' avaliou filme '{}' com nota {}", user.getProfileName(), movie.getId(), dto.getScore());
-		
+
 		return new RatingResponseDTO(rating);
 	}
 
@@ -106,13 +102,9 @@ public class RatingService {
 		User user = authService.getAuthenticatedUser();
 
 		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
-
-			MovieDTO tmdbMovie = tmdbService.getMovieById(movieId);
-			Movie newMovie = new Movie();
-			newMovie.setId(tmdbMovie.getId());
-			return movieRepository.save(newMovie);
+			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository);
 		});
-		
+
 		RatingPK id = new RatingPK(user, movie);
 
 		Rating rating = ratingRepository.getReferenceById(id);
@@ -121,34 +113,31 @@ public class RatingService {
 
 		rating = ratingRepository.save(rating);
 
-		log.info("Usuário '{}' atualizou plataforma '{}' no filme '{}'", user.getProfileName(), dto.getPlatform(), movie.getId());
-		
+		log.info("Usuário '{}' atualizou plataforma '{}' no filme '{}'", user.getProfileName(), dto.getPlatform(),
+				movie.getId());
+
 		return new RatingResponseDTO(rating);
 	}
 
 	@Transactional
 	public void removeRating(Long movieId) {
 
-	    User user = authService.getAuthenticatedUser();
+		User user = authService.getAuthenticatedUser();
 
-	    RatingPK id = new RatingPK();
-	    
+		RatingPK id = new RatingPK();
+
 		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
-
-			MovieDTO tmdbMovie = tmdbService.getMovieById(movieId);
-			Movie newMovie = new Movie();
-			newMovie.setId(tmdbMovie.getId());
-			return movieRepository.save(newMovie);
+			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository);
 		});
-		
-	    id.setUser(user);
-	    id.setMovie(movie);
 
-	    if(!ratingRepository.existsById(id)){
-	        throw new RuntimeException("Usuário não tem avaliação nesse filme");
-	    }
+		id.setUser(user);
+		id.setMovie(movie);
 
-	    ratingRepository.deleteById(id);
+		if (!ratingRepository.existsById(id)) {
+			throw new RuntimeException("Usuário não tem avaliação nesse filme");
+		}
+
+		ratingRepository.deleteById(id);
 
 		log.info("Usuário '{}' retirou avaliação do filme '{}'", user.getProfileName(), movie.getId());
 	}
