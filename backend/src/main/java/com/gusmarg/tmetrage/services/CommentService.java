@@ -1,5 +1,7 @@
 package com.gusmarg.tmetrage.services;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,33 +25,50 @@ public class CommentService {
 
 	private final TMDBService tmdbService;
 	private final CommentRepository commentRepository;
-    private final MovieRepository movieRepository;
-    private final AuthService authService;
+	private final MovieRepository movieRepository;
+	private final AuthService authService;
 
-    @Transactional
-    public CommentResponseDTO createComment(CommentCreateDTO dto) {
+	@Transactional
+	public List<CommentResponseDTO> findAllMovieComments(Long movieId) {
+		List<Comment> result = commentRepository.findByMovieIdAndParentIsNullOrderByCreatedAtDesc(movieId);
+		
+		return result.stream().map(CommentResponseDTO::new).toList();
+	}
 
-        User user = authService.getAuthenticatedUser();
+	@Transactional
+	public CommentResponseDTO createComment(CommentCreateDTO dto) {
+
+		User user = authService.getAuthenticatedUser();
 
 		Movie movie = movieRepository.findById(dto.getMovieId()).orElseGet(() -> {
 			return TMDBSaveData.saveMovieFromTMDB(dto.getMovieId(), tmdbService, movieRepository);
 		});
 
-        Comment comment = new Comment();
-        comment.setMessage(dto.getMessage());
-        comment.setUser(user);
-        comment.setMovie(movie);
+		Comment comment = new Comment();
+		comment.setMessage(dto.getMessage());
+		comment.setUser(user);
+		comment.setMovie(movie);
 
-        if (dto.getParentId() != null) {
-            Comment parent = commentRepository.getReferenceById(dto.getParentId());
-            comment.setParent(parent);
-        }
+		if (dto.getParentId() != null) {
+			Comment parent = commentRepository.getReferenceById(dto.getParentId());
+			comment.setParent(parent);
+		}
 
-        comment = commentRepository.save(comment);
+		comment = commentRepository.save(comment);
 
 		log.info("Usuário '{}' publicou comentário no filme '{}'", user.getProfileName(), movie.getId());
-        
-        return new CommentResponseDTO(comment);
-    }
+
+		return new CommentResponseDTO(comment);
+	}
+
+	@Transactional
+	public void likeComment(Long commentId) {
+
+		User user = authService.getAuthenticatedUser();
+
+		Comment comment = commentRepository.getReferenceById(commentId);
+
+		comment.getLikes().add(user);
+	}
 
 }

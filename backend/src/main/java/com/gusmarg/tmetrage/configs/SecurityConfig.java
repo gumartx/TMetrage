@@ -28,9 +28,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/h2-console/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/comentarios/**").permitAll()
                     .requestMatchers(HttpMethod.PUT, "/auth/**").authenticated()
                     .requestMatchers("/perfis/**").authenticated()
                     .requestMatchers("/listas/**").authenticated()
+                    .requestMatchers("/avaliacoes/**").authenticated()
+                    .requestMatchers("/comentarios/**").authenticated()
                     .anyRequest().permitAll()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

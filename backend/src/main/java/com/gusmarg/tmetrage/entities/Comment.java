@@ -22,6 +22,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -66,4 +67,9 @@ public class Comment {
 	public void setCreationDate() {
 		createdAt = LocalDateTime.now();
 	}
+	
+    @Transient
+    public Integer getAmountLikes() {
+    	return likes.size();
+    }
 }

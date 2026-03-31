@@ -1,7 +1,6 @@
 package com.gusmarg.tmetrage.dto;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import com.gusmarg.tmetrage.entities.Comment;
 
@@ -20,7 +19,7 @@ public class CommentResponseDTO {
 	private Long userId;
 	private String profileImg;
     private String message;
-    private List<Long> likes;
+    private Integer likes;
     private LocalDateTime createdAt;
 	private Long parentId;
     
@@ -31,6 +30,6 @@ public class CommentResponseDTO {
 		message = entity.getMessage();
 		createdAt = entity.getCreatedAt();
     	parentId = entity.getParent() != null ? entity.getParent().getId() : null;
-    	likes = entity.getLikes().stream().map(like -> like.getId()).toList();
+    	likes = entity.getAmountLikes();
 	}
 }
