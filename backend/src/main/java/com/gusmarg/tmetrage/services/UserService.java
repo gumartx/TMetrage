@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.gusmarg.tmetrage.dto.OtherUserDetailsDTO;
-import com.gusmarg.tmetrage.dto.UserRegisterResponseDTO;
 import com.gusmarg.tmetrage.dto.UserDetailsDTO;
 import com.gusmarg.tmetrage.dto.UserRegisterDTO;
+import com.gusmarg.tmetrage.dto.UserRegisterResponseDTO;
 import com.gusmarg.tmetrage.dto.UserSearchDTO;
 import com.gusmarg.tmetrage.dto.UserUpdateDTO;
 import com.gusmarg.tmetrage.dto.UserUpdatePasswordDTO;
@@ -130,29 +130,23 @@ public class UserService implements UserDetailsService {
 	@Transactional
 	public void followUser(Long id) {
 
-	    User currentUser = authService.getAuthenticatedUser();
+		User user = authService.getAuthenticatedUser();
 
-	    User userToFollow = userRepository.getReferenceById(id);
+	    User userFollow = userRepository.getReferenceById(id);
 
-	    currentUser.getFollowing().add(userToFollow);
+		if (user.getFollowing().contains(userFollow)) {
 
-	    userRepository.save(currentUser);
-	    
-	    log.info("Usuário '{}' passou a seguir '{}'", currentUser.getProfileName(), userToFollow.getProfileName());
+		    user.getFollowing().remove(userFollow);
+
+		    log.info("Usuário '{}' passou a seguir '{}'", user.getProfileName(), userFollow.getProfileName());
+
+		} else {
+		    user.getFollowing().add(userFollow);
+
+		    log.info("Usuário '{}' deixou de seguir '{}'", user.getProfileName(), userFollow.getProfileName());
+		}
 	}
 	
-	@Transactional
-	public void unfollowUser(Long id) {
-
-	    User currentUser = authService.getAuthenticatedUser();
-	    User userToUnfollow = userRepository.getReferenceById(id);
-
-	    currentUser.getFollowing().remove(userToUnfollow);
-
-	    userRepository.save(currentUser);
-	    
-	    log.info("Usuário '{}' deixou de seguir '{}'", currentUser.getProfileName(), userToUnfollow.getProfileName());
-	}
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

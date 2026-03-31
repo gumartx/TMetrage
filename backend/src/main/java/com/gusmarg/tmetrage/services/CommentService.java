@@ -32,6 +32,8 @@ public class CommentService {
 	public List<CommentResponseDTO> findAllMovieComments(Long movieId) {
 		List<Comment> result = commentRepository.findByMovieIdAndParentIsNullOrderByCreatedAtDesc(movieId);
 
+	    log.info("{} comentários no filme '{}'", result.size(), movieId);
+	    
 		return result.stream().map(CommentResponseDTO::new).toList();
 	}
 
@@ -71,9 +73,13 @@ public class CommentService {
 		if (comment.getLikes().contains(user)) {
 
 			comment.getLikes().remove(user);
+			
+		    log.info("Usuário '{}' descurtiu o comentário '{}'", user.getProfileName(), comment.getId());
 
 		} else {
 			comment.getLikes().add(user);
+			
+		    log.info("Usuário '{}' curtiu o comentário '{}'", user.getProfileName(), comment.getId());
 		}
 	}
 
