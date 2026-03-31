@@ -3,6 +3,7 @@ package com.gusmarg.tmetrage.controllers;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,6 +41,12 @@ public class CommentController {
     public ResponseEntity<CommentResponseDTO> createComment(@RequestBody CommentCreateDTO dto) {
         CommentResponseDTO result = commentService.createComment(dto);
         return ResponseEntity.ok(result);
+    }
+    
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
+        commentService.deleteComment(commentId);
+        return ResponseEntity.noContent().build();
     }
     
     @PatchMapping("/{id}/curtir")

@@ -79,4 +79,18 @@ public class CommentService {
 		return replies.stream().map(CommentResponseDTO::new).toList();
 	}
 
+	@Transactional
+	public void deleteComment(Long commentId) {
+
+	    Comment comment = commentRepository.getReferenceById(commentId);
+		
+		User user = authService.getAuthenticatedUser();
+		
+		if (!comment.getUser().getId().equals(user.getId())) {
+	        throw new RuntimeException("Você não pode deletar esse comentário");
+	    }
+		
+		commentRepository.delete(comment);
+	}
+
 }
