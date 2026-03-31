@@ -8,7 +8,7 @@ function isLoggedIn(): boolean {
       const parsed = JSON.parse(saved);
       return !!(parsed.profileName || parsed.name);
     }
-  } catch {}
+  } catch { /* empty */ }
   return false;
 }
 import { Heart, MessageCircle, Send, Trash2 } from "lucide-react";
@@ -42,7 +42,7 @@ function getCurrentUsername(): string {
       if (parsed.username) return parsed.username;
       if (parsed.name) return parsed.name;
     }
-  } catch {}
+  } catch { /* empty */ }
   return "Você";
 }
 
