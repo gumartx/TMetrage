@@ -46,10 +46,16 @@ public class MovieListController {
 		return ResponseEntity.created(uri).body(newDTO);
 	}
 
-	@PutMapping(value = "{listId}")
+	@PutMapping(value = "/{listId}")
 	public ResponseEntity<MovieListResponseDTO> updateList(@PathVariable Long listId, @Valid @RequestBody MovieListUpdateDTO dto) {
 		MovieListResponseDTO newDTO = movieListService.updateList(listId, dto);
 		return ResponseEntity.ok(newDTO);
+	}
+	
+	@DeleteMapping("/{listId}")
+	public ResponseEntity<Void> deleteList(@PathVariable Long listId) {
+		movieListService.deleteList(listId);
+		return ResponseEntity.noContent().build();
 	}
 	
 	@PostMapping("/{listId}/filmes")

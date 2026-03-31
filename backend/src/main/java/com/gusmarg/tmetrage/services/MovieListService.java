@@ -73,9 +73,25 @@ public class MovieListService {
 		entity.setDescription(dto.getDescription());
 		entity = movieListRepository.save(entity);
 
-		log.info("Lista '{}' editada", entity.getName());
+		log.info("Lista '{}' editada", entity.getId());
 
 		return new MovieListResponseDTO(entity);
+	}
+	
+	@Transactional
+	public void deleteList(Long listId) {
+		User user = authService.getAuthenticatedUser();
+
+		MovieList entity = movieListRepository.getReferenceById(listId);
+
+		if (!user.getId().equals(entity.getUser().getId())) {
+			throw new RuntimeException("Você não pode deletar essa lista");
+		}
+		
+	    movieListRepository.deleteById(listId);
+
+		log.info("Lista '{}' deletada", entity.getName());
+
 	}
 	
 	@Transactional
