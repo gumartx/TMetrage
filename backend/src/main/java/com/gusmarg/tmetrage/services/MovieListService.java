@@ -32,16 +32,16 @@ public class MovieListService {
 
 	@Transactional(readOnly = true)
 	public List<MovieListResponseDTO> findLists(String name, Integer month, Integer year) {
-		
+
 		User user = authService.getAuthenticatedUser();
-		
-	    List<MovieList> lists = movieListRepository.searchUserLists(user.getId(), name, month, year);
+
+		List<MovieList> lists = movieListRepository.searchUserLists(user.getId(), name, month, year);
 
 		log.info("Encontrado {} lista(s)", lists.size());
-	    
-	    return lists.stream().map(MovieListResponseDTO::new).toList();
+
+		return lists.stream().map(MovieListResponseDTO::new).toList();
 	}
-	
+
 	@Transactional
 	public MovieListResponseDTO createList(ListCreateDTO dto) {
 
@@ -61,40 +61,33 @@ public class MovieListService {
 	@Transactional
 	public MovieListResponseDTO addMovieToList(Long listId, Long movieId) {
 
-	    User user = authService.getAuthenticatedUser();
+		User user = authService.getAuthenticatedUser();
 
-	    MovieList entity = movieListRepository.getReferenceById(listId);
+		MovieList entity = movieListRepository.getReferenceById(listId);
 
-	    if (!entity.getUser().getId().equals(user.getId())) {
-	        throw new RuntimeException("Você não pode alterar essa lista");
-	    }
+	    validateListPermission(entity, user);
 
 		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
 			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository);
 		});
 
-		entity.getMovies().add(new Movie(movie.getId()));
-		entity = movieListRepository.save(entity);
+		entity.getMovies().add(movie);
 
 		log.info("Filme '{}' adicionado a lista '{}'", movie.getId(), entity.getName());
 
 		return new MovieListResponseDTO(entity);
 	}
-	
+
 	@Transactional
 	public void removeMovieFromList(Long listId, Long movieId) {
 
-	    User user = authService.getAuthenticatedUser();
+		User user = authService.getAuthenticatedUser();
 
-	    MovieList entity = movieListRepository.getReferenceById(listId);
+		MovieList entity = movieListRepository.getReferenceById(listId);
 
-	    if (!entity.getUser().getId().equals(user.getId())) {
-	        throw new RuntimeException("Você não pode alterar essa lista");
-	    }
+	    validateListPermission(entity, user);
 
-	    entity.getMovies().removeIf(movie -> movie.getId().equals(movieId));
-
-	    movieListRepository.save(entity);
+		entity.getMovies().removeIf(movie -> movie.getId().equals(movieId));
 
 		log.info("Filme '{}' removido da lista '{}'", entity.getId(), entity.getName());
 
@@ -103,27 +96,35 @@ public class MovieListService {
 	@Transactional
 	public void shareList(Long listId, Long userId) {
 
-	    User currentUser = authService.getAuthenticatedUser();
+		User currentUser = authService.getAuthenticatedUser();
 
-	    MovieList list = movieListRepository.getReferenceById(listId);
+		MovieList list = movieListRepository.getReferenceById(listId);
 
-	    if(!currentUser.getId().equals(list.getUser().getId())) {
-	        throw new RuntimeException("Você não pode compartilhar essa lista");
-	    }
-	    
-	    User user = userRepository.getReferenceById(userId);
+		if (!currentUser.getId().equals(list.getUser().getId())) {
+			throw new RuntimeException("Você não pode compartilhar essa lista");
+		}
 
-	    boolean currentUserFollows = userRepository.existsFollow(currentUser.getId(), userId);
-	    boolean userFollowsBack = userRepository.existsFollow(userId, currentUser.getId());
+		User user = userRepository.getReferenceById(userId);
 
-	    if (!currentUserFollows || !userFollowsBack) {
-	        throw new RuntimeException("A lista só pode ser compartilhada com usuários que se seguem mutuamente");
-	    }
-	    
-	    list.getSharedWith().add(user);
+		boolean currentUserFollows = userRepository.existsFollow(currentUser.getId(), userId);
+		boolean userFollowsBack = userRepository.existsFollow(userId, currentUser.getId());
 
-	    movieListRepository.save(list);
+		if (!currentUserFollows || !userFollowsBack) {
+			throw new RuntimeException("A lista só pode ser compartilhada com usuários que se seguem mutuamente");
+		}
+
+		list.getSharedWith().add(user);
 
 		log.info("Lista '{}' compartilhada com '{}'", list.getName(), user.getProfileName());
+	}
+
+	private void validateListPermission(MovieList list, User user) {
+
+		boolean isOwner = list.getUser().getId().equals(user.getId());
+		boolean isSharedUser = list.getSharedWith().stream().anyMatch(u -> u.getId().equals(user.getId()));
+
+		if (!isOwner && !isSharedUser) {
+			throw new RuntimeException("Você não tem permissão para alterar essa lista");
+		}
 	}
 }

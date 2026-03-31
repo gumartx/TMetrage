@@ -132,6 +132,10 @@ public class UserService implements UserDetailsService {
 
 		User user = authService.getAuthenticatedUser();
 
+	    if (user.getId().equals(id)) {
+	        throw new RuntimeException("Você não pode seguir a si mesmo");
+	    }
+		
 	    User userFollow = userRepository.getReferenceById(id);
 
 		if (user.getFollowing().contains(userFollow)) {
