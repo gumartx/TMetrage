@@ -32,6 +32,12 @@ public class MovieListController {
 
 	private final MovieListService movieListService;
 
+	@GetMapping(value = "/{listId}")
+	public ResponseEntity<MovieListResponseDTO> findListById(@PathVariable Long listId) {
+		MovieListResponseDTO newDTO = movieListService.findById(listId);
+		return ResponseEntity.ok(newDTO);
+	}
+	
 	@GetMapping()
 	public ResponseEntity<List<MovieListResponseDTO>> findLists(@RequestParam(required = false) String nome,
 			@RequestParam(required = false) Integer mes, @RequestParam(required = false) Integer ano) {

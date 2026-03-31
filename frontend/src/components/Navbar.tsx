@@ -24,35 +24,33 @@ const Navbar = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("tmetrage_profile");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.profileName || parsed.username) {
-          setProfileData(parsed);
-        } else {
-          setProfileData(null);
-        }
-      } else {
-        setProfileData(null);
-      }
-    } catch {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
       setProfileData(null);
+      return;
+    }
+
+    const saved = localStorage.getItem("tmetrage_profile");
+
+    if (saved) {
+      setProfileData(JSON.parse(saved));
     }
   }, [location]);
 
-  const isLoggedIn = !!profileData;
+  const token = localStorage.getItem("token");
+  const isLoggedIn = !!token;
 
   const handleLogout = () => {
     localStorage.removeItem("tmetrage_profile");
+    localStorage.removeItem("token");
     setProfileData(null);
     toast.success("Você saiu da sua conta");
     navigate("/");
   };
 
   const linkClass = (path: string) =>
-    `text-sm font-medium transition-colors hover:text-primary ${
-      location.pathname === path ? "text-primary underline underline-offset-4" : "text-navbar-foreground"
+    `text-sm font-medium transition-colors hover:text-primary ${location.pathname === path ? "text-primary underline underline-offset-4" : "text-navbar-foreground"
     }`;
 
   return (

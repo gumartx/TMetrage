@@ -12,5 +12,7 @@ import lombok.Setter;
 public class UserLoginResponseDTO {
 
 	private String token;
-	
+	private String name;
+	private String profileName;
+	private String profileImg;
 }

@@ -1,3 +1,5 @@
+
+import axios from "axios";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Film, LogIn } from "lucide-react";
@@ -5,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { loginUser } from "@/lib/auth";
 
 const USERS_KEY = "tmetrage_users";
 
@@ -32,87 +35,39 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+
     e.preventDefault();
+
     if (!email.trim() || !password) {
       toast.error("Preencha todos os campos");
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]") as User[];
-    const user = users.find(
-      (u: User) => u.email === email.trim().toLowerCase() && u.password === password
-    );
+    try {
 
-    if (!user) {
+      const response = await loginUser(email, password);
+
+      localStorage.setItem("token", response.token);
+
+      localStorage.setItem(
+        "tmetrage_profile",
+        JSON.stringify({
+          name: response.name,
+          profileName: response.profileName,
+        })
+      );
+
+      toast.success("Login realizado!");
+
+      navigate("/");
+
+    } catch (error) {
+
       toast.error("Email ou senha incorretos");
-      return;
+
     }
 
-    // Set profile in localStorage
-    const existing = localStorage.getItem("tmetrage_profile");
-    let profileData: ProfileData | undefined;
-    if (existing) {
-      const parsed = JSON.parse(existing);
-      // Only restore if same user
-      if (parsed.username === user.username || parsed.profileName === user.username) {
-        profileData = parsed;
-      }
-    }
-    if (!profileData) {
-      profileData = {
-        name: user.name,
-        profileName: user.username,
-        username: user.username,
-        bio: "",
-        avatar: "",
-        cover: "",
-        followers: 0,
-        following: 0,
-      };
-    }
-    localStorage.setItem("tmetrage_profile", JSON.stringify(profileData));
-
-    // Seed mock following data if not already present
-    const followingKey = `following_${profileData.username}`;
-    if (!localStorage.getItem(followingKey)) {
-      const mockFollowing = ["cinefilo42", "filmlover", "movieguru", "cinemafan", "screenwriter01"];
-      localStorage.setItem(followingKey, JSON.stringify(mockFollowing));
-
-      // Seed mock profiles for the followed users
-      const mockProfiles = [
-        { name: "Ana Cinéfila", username: "cinefilo42", bio: "Amante de cinema clássico", avatar: "" },
-        { name: "Lucas Film", username: "filmlover", bio: "Fã de ficção científica", avatar: "" },
-        { name: "Maria Guru", username: "movieguru", bio: "Crítica de filmes independentes", avatar: "" },
-        { name: "Pedro Cinema", username: "cinemafan", bio: "Maratonista de séries e filmes", avatar: "" },
-        { name: "Julia Roteirista", username: "screenwriter01", bio: "Aspirante a roteirista", avatar: "" },
-      ];
-      mockProfiles.forEach((p) => {
-        if (!localStorage.getItem(`profile_${p.username}`)) {
-          localStorage.setItem(`profile_${p.username}`, JSON.stringify(p));
-        }
-      });
-    }
-
-    // Seed mock shared lists if not already present
-    const sharedKey = "tmetrage_shared_lists";
-    if (!localStorage.getItem(sharedKey)) {
-      const lists = JSON.parse(localStorage.getItem("tmetrage_lists") || "[]");
-      if (lists.length > 0) {
-        const mockShared = [
-          {
-            id: crypto.randomUUID(),
-            list: lists[0],
-            sharedBy: profileData.username,
-            sharedTo: ["cinefilo42", "filmlover"],
-            sharedAt: new Date().toISOString(),
-          },
-        ];
-        localStorage.setItem(sharedKey, JSON.stringify(mockShared));
-      }
-    }
-
-    navigate("/");
   };
 
   return (

@@ -33,6 +33,15 @@ public class MovieListService {
 	private final UserRepository userRepository;
 
 	@Transactional(readOnly = true)
+	public MovieListResponseDTO findById(Long listId) {
+		User user = authService.getAuthenticatedUser();
+		
+		MovieList list = movieListRepository.findByListId(listId, user.getId());
+
+		return new MovieListResponseDTO(list);
+	}
+	
+	@Transactional(readOnly = true)
 	public List<MovieListResponseDTO> findLists(String name, Integer month, Integer year) {
 
 		User user = authService.getAuthenticatedUser();

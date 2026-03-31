@@ -1,3 +1,4 @@
+import { registerUser } from "@/lib/auth";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Film, UserPlus } from "lucide-react";
@@ -25,57 +26,53 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+
     e.preventDefault();
+
     if (!name.trim() || !username.trim() || !email.trim() || !password || !confirmPassword) {
       toast.error("Preencha todos os campos");
       return;
     }
+
     if (password !== confirmPassword) {
       toast.error("As senhas não coincidem");
       return;
     }
+
     if (password.length < 6) {
       toast.error("A senha deve ter pelo menos 6 caracteres");
       return;
     }
 
-    // Check if email or username already exists
-    const users: User[] = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
-    if (users.find((u: User) => u.email === email.trim().toLowerCase())) {
-      toast.error("Este email já está cadastrado");
-      return;
+    try {
+
+      const formattedUsername = username.startsWith("@")
+        ? username
+        : `@${username}`;
+
+      await registerUser(
+        name.trim(),
+        formattedUsername.toLowerCase(),
+        email.trim().toLowerCase(),
+        password
+      );
+
+      toast.success("Conta criada com sucesso!");
+
+      navigate("/login");
+
+    } catch (error) {
+      const err = error as { response?: { status: number } };
+
+      if (err.response?.status === 409) {
+        toast.error("Email ou username já cadastrado");
+      } else {
+        toast.error("Erro ao criar conta");
+      }
+
     }
-    const formattedUsername = username.startsWith("@") ? username : `@${username}`;
-    if (users.find((u: User) => u.username === formattedUsername.toLowerCase())) {
-      toast.error("Este nome de perfil já está em uso");
-      return;
-    }
 
-    // Save user
-    users.push({
-      name: name.trim(),
-      username: formattedUsername.toLowerCase(),
-      email: email.trim().toLowerCase(),
-      password,
-    });
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-
-    // Auto-login: set profile
-    const profileData = {
-      name: name.trim(),
-      profileName: formattedUsername.toLowerCase(),
-      username: formattedUsername.toLowerCase(),
-      bio: "",
-      avatar: "",
-      cover: "",
-      followers: 0,
-      following: 0,
-    };
-    localStorage.setItem("tmetrage_profile", JSON.stringify(profileData));
-
-    toast.success("Conta criada com sucesso!");
-    navigate("/");
   };
 
   return (

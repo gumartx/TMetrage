@@ -21,4 +21,12 @@ public interface MovieListRepository extends JpaRepository<MovieList, Long> {
 			""")
 	List<MovieList> searchUserLists(Long userId, String name, Integer month, Integer year);
 
+	@Query("""
+			SELECT l
+			FROM MovieList l
+			WHERE l.user.id = :userId
+			AND l.id = :listId
+			""")
+	MovieList findByListId(Long listId, Long userId);
+	
 }
