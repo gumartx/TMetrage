@@ -13,3 +13,5 @@ INSERT INTO tb_rating (user_id, movie_id, score, platform, created_at) VALUES (1
 INSERT INTO tb_rating (user_id, movie_id, score, platform, created_at) VALUES (1, 2, 1.0, 'NETFLIX', '2026-03-30');
 INSERT INTO tb_rating (user_id, movie_id, score, platform, created_at) VALUES (1, 3, 1.0, 'DISNEY_PLUS', '2026-03-01');
 INSERT INTO tb_rating (user_id, movie_id, score, platform, created_at) VALUES (1, 4, 5.0, 'OUTRO', '2025-02-01');
+
+INSERT INTO tb_comment (id, user_id, movie_id, parent_id, message, created_at) VALUES (1, 1, 1, null, 'filme bom', '2026-03-31T13:19:51.759766');

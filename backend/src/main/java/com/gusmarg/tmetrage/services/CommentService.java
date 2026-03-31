@@ -62,13 +62,19 @@ public class CommentService {
 	}
 
 	@Transactional
-	public void likeComment(Long commentId) {
+	public void toggleLike(Long commentId) {
 
 		User user = authService.getAuthenticatedUser();
 
 		Comment comment = commentRepository.getReferenceById(commentId);
 
-		comment.getLikes().add(user);
+		if (comment.getLikes().contains(user)) {
+
+			comment.getLikes().remove(user);
+
+		} else {
+			comment.getLikes().add(user);
+		}
 	}
 
 	@Transactional(readOnly = true)
@@ -82,14 +88,14 @@ public class CommentService {
 	@Transactional
 	public void deleteComment(Long commentId) {
 
-	    Comment comment = commentRepository.getReferenceById(commentId);
-		
+		Comment comment = commentRepository.getReferenceById(commentId);
+
 		User user = authService.getAuthenticatedUser();
-		
+
 		if (!comment.getUser().getId().equals(user.getId())) {
-	        throw new RuntimeException("Você não pode deletar esse comentário");
-	    }
-		
+			throw new RuntimeException("Você não pode deletar esse comentário");
+		}
+
 		commentRepository.delete(comment);
 	}
 
