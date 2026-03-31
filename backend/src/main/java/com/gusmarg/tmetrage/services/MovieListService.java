@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.gusmarg.tmetrage.dto.CreateListDTO;
+import com.gusmarg.tmetrage.dto.ListCreateDTO;
 import com.gusmarg.tmetrage.dto.MovieDTO;
 import com.gusmarg.tmetrage.dto.MovieListResponseDTO;
 import com.gusmarg.tmetrage.entities.Movie;
@@ -43,7 +43,7 @@ public class MovieListService {
 	}
 	
 	@Transactional
-	public MovieListResponseDTO createList(CreateListDTO dto) {
+	public MovieListResponseDTO createList(ListCreateDTO dto) {
 
 		User user = authService.getAuthenticatedUser();
 

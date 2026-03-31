@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class CreateListDTO {
+public class ListCreateDTO {
 	
 	@NotBlank
 	@Size(max = 50)

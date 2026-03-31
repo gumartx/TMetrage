@@ -1,0 +1,57 @@
+package com.gusmarg.tmetrage.services;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.gusmarg.tmetrage.dto.CommentCreateDTO;
+import com.gusmarg.tmetrage.dto.CommentResponseDTO;
+import com.gusmarg.tmetrage.dto.MovieDTO;
+import com.gusmarg.tmetrage.entities.Comment;
+import com.gusmarg.tmetrage.entities.Movie;
+import com.gusmarg.tmetrage.entities.User;
+import com.gusmarg.tmetrage.repositories.CommentRepository;
+import com.gusmarg.tmetrage.repositories.MovieRepository;
+import com.gusmarg.tmetrage.services.utils.TMDBService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+@Service
+public class CommentService {
+
+	private final TMDBService tmdbService;
+	private final CommentRepository commentRepository;
+    private final MovieRepository movieRepository;
+    private final AuthService authService;
+
+    @Transactional
+    public CommentResponseDTO createComment(CommentCreateDTO dto) {
+
+        User user = authService.getAuthenticatedUser();
+
+		Movie movie = movieRepository.findById(dto.getMovieId()).orElseGet(() -> {
+
+			MovieDTO tmdbMovie = tmdbService.getMovieById(dto.getMovieId());
+			Movie newMovie = new Movie();
+			newMovie.setId(tmdbMovie.getId());
+			return movieRepository.save(newMovie);
+		});
+
+        Comment comment = new Comment();
+        comment.setMessage(dto.getMessage());
+        comment.setUser(user);
+        comment.setMovie(movie);
+
+        if (dto.getParentId() != null) {
+            Comment parent = commentRepository.getReferenceById(dto.getParentId());
+            comment.setParent(parent);
+        }
+
+        comment = commentRepository.save(comment);
+
+        return new CommentResponseDTO(comment);
+    }
+
+}

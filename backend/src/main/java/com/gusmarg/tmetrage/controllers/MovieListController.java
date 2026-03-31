@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.gusmarg.tmetrage.dto.CreateListDTO;
+import com.gusmarg.tmetrage.dto.ListCreateDTO;
 import com.gusmarg.tmetrage.dto.MovieDTO;
 import com.gusmarg.tmetrage.dto.MovieListResponseDTO;
 import com.gusmarg.tmetrage.dto.ShareListDTO;
@@ -38,7 +38,7 @@ public class MovieListController {
 	}
 
 	@PostMapping()
-	public ResponseEntity<MovieListResponseDTO> createList(@RequestBody @Valid CreateListDTO dto) {
+	public ResponseEntity<MovieListResponseDTO> createList(@RequestBody @Valid ListCreateDTO dto) {
 		MovieListResponseDTO newDTO = movieListService.createList(dto);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(newDTO.getId()).toUri();
 		return ResponseEntity.created(uri).body(newDTO);

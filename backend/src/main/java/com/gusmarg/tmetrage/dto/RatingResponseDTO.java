@@ -23,11 +23,11 @@ public class RatingResponseDTO {
     private String platform;
  
 
-    public RatingResponseDTO(Rating rating) {
-    	movieId = rating.getMovie().getId();
-    	score = rating.getScore();
-    	createdAt = rating.getCreatedAt();
-    	platform = rating.getPlatform() != null ? rating.getPlatform().getNome() : null;
+    public RatingResponseDTO(Rating entity) {
+    	movieId = entity.getMovie().getId();
+    	score = entity.getScore();
+    	createdAt = entity.getCreatedAt();
+    	platform = entity.getPlatform() != null ? entity.getPlatform().getNome() : null;
 	}
     
 }
