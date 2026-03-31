@@ -6,8 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.gusmarg.tmetrage.components.TMDBSaveData;
-import com.gusmarg.tmetrage.dto.ListCreateDTO;
+import com.gusmarg.tmetrage.dto.MovieListCreateDTO;
 import com.gusmarg.tmetrage.dto.MovieListResponseDTO;
+import com.gusmarg.tmetrage.dto.MovieListUpdateDTO;
 import com.gusmarg.tmetrage.entities.Movie;
 import com.gusmarg.tmetrage.entities.MovieList;
 import com.gusmarg.tmetrage.entities.User;
@@ -16,6 +17,7 @@ import com.gusmarg.tmetrage.repositories.MovieRepository;
 import com.gusmarg.tmetrage.repositories.UserRepository;
 import com.gusmarg.tmetrage.services.utils.TMDBService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,7 +45,7 @@ public class MovieListService {
 	}
 
 	@Transactional
-	public MovieListResponseDTO createList(ListCreateDTO dto) {
+	public MovieListResponseDTO createList(MovieListCreateDTO dto) {
 
 		User user = authService.getAuthenticatedUser();
 
@@ -57,7 +59,25 @@ public class MovieListService {
 
 		return new MovieListResponseDTO(entity);
 	}
+	
+	@Transactional
+	public MovieListResponseDTO updateList(Long listId, @Valid MovieListUpdateDTO dto) {
+		
+		User user = authService.getAuthenticatedUser();
 
+		MovieList entity = movieListRepository.getReferenceById(listId);
+
+	    validateListPermission(entity, user);
+		
+		entity.setName(dto.getName());
+		entity.setDescription(dto.getDescription());
+		entity = movieListRepository.save(entity);
+
+		log.info("Lista '{}' editada", entity.getName());
+
+		return new MovieListResponseDTO(entity);
+	}
+	
 	@Transactional
 	public MovieListResponseDTO addMovieToList(Long listId, Long movieId) {
 
@@ -127,4 +147,5 @@ public class MovieListService {
 			throw new RuntimeException("Você não tem permissão para alterar essa lista");
 		}
 	}
+
 }

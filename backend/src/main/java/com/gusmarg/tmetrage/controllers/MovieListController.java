@@ -8,15 +8,17 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.gusmarg.tmetrage.dto.ListCreateDTO;
+import com.gusmarg.tmetrage.dto.MovieListCreateDTO;
 import com.gusmarg.tmetrage.dto.MovieDTO;
 import com.gusmarg.tmetrage.dto.MovieListResponseDTO;
+import com.gusmarg.tmetrage.dto.MovieListUpdateDTO;
 import com.gusmarg.tmetrage.dto.ShareListDTO;
 import com.gusmarg.tmetrage.services.MovieListService;
 
@@ -38,12 +40,18 @@ public class MovieListController {
 	}
 
 	@PostMapping()
-	public ResponseEntity<MovieListResponseDTO> createList(@RequestBody @Valid ListCreateDTO dto) {
+	public ResponseEntity<MovieListResponseDTO> createList(@RequestBody @Valid MovieListCreateDTO dto) {
 		MovieListResponseDTO newDTO = movieListService.createList(dto);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(newDTO.getId()).toUri();
 		return ResponseEntity.created(uri).body(newDTO);
 	}
 
+	@PutMapping(value = "{listId}")
+	public ResponseEntity<MovieListResponseDTO> updateList(@PathVariable Long listId, @Valid @RequestBody MovieListUpdateDTO dto) {
+		MovieListResponseDTO newDTO = movieListService.updateList(listId, dto);
+		return ResponseEntity.ok(newDTO);
+	}
+	
 	@PostMapping("/{listId}/filmes")
 	public ResponseEntity<MovieListResponseDTO> addMovie(@PathVariable Long listId, @RequestBody MovieDTO dto) {
 		MovieListResponseDTO newDTO = movieListService.addMovieToList(listId, dto.getId());
@@ -63,4 +71,6 @@ public class MovieListController {
 
 		return ResponseEntity.ok().build();
 	}
+	
+	
 }

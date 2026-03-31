@@ -1,5 +1,7 @@
 package com.gusmarg.tmetrage.dto;
 
+import com.gusmarg.tmetrage.entities.MovieList;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -11,12 +13,17 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class ListCreateDTO {
-	
+public class MovieListUpdateDTO {
+
 	@NotBlank
 	@Size(max = 50)
     private String name;
 	@Size(max = 250)
 	private String description;
-    
+	
+	public MovieListUpdateDTO(MovieList entity) {
+		name = entity.getName();
+		description = entity.getDescription();
+	}
+	
 }
