@@ -55,8 +55,8 @@ public class UserController {
 	}
 	
 	@PutMapping("/{id}/seguir")
-	public ResponseEntity<Void> followUser(@PathVariable Long id) {
-	    userService.followUser(id);
+	public ResponseEntity<Void> toggleFollow(@PathVariable Long id) {
+	    userService.toggleFollow(id);
 	    return ResponseEntity.noContent().build();
 	}
 	

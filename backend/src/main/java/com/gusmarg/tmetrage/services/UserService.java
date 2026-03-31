@@ -128,7 +128,7 @@ public class UserService implements UserDetailsService {
 	}
 	
 	@Transactional
-	public void followUser(Long id) {
+	public void toggleFollow(Long id) {
 
 		User user = authService.getAuthenticatedUser();
 
@@ -138,12 +138,12 @@ public class UserService implements UserDetailsService {
 
 		    user.getFollowing().remove(userFollow);
 
-		    log.info("Usuário '{}' passou a seguir '{}'", user.getProfileName(), userFollow.getProfileName());
+		    log.info("Usuário '{}' deixou de seguir '{}'", user.getProfileName(), userFollow.getProfileName());
 
 		} else {
 		    user.getFollowing().add(userFollow);
 
-		    log.info("Usuário '{}' deixou de seguir '{}'", user.getProfileName(), userFollow.getProfileName());
+		    log.info("Usuário '{}' passou a seguir '{}'", user.getProfileName(), userFollow.getProfileName());
 		}
 	}
 	

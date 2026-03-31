@@ -32,7 +32,7 @@ public class CommentService {
 	public List<CommentResponseDTO> findAllMovieComments(Long movieId) {
 		List<Comment> result = commentRepository.findByMovieIdAndParentIsNullOrderByCreatedAtDesc(movieId);
 
-	    log.info("{} comentários no filme '{}'", result.size(), movieId);
+	    log.info("{} comentário(s) no filme '{}'", result.size(), movieId);
 	    
 		return result.stream().map(CommentResponseDTO::new).toList();
 	}
