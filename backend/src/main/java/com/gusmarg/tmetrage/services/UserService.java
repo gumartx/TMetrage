@@ -9,7 +9,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.gusmarg.tmetrage.dto.UserDTO;
+import com.gusmarg.tmetrage.dto.OtherUserDetailsDTO;
+import com.gusmarg.tmetrage.dto.UserRegisterResponseDTO;
 import com.gusmarg.tmetrage.dto.UserDetailsDTO;
 import com.gusmarg.tmetrage.dto.UserRegisterDTO;
 import com.gusmarg.tmetrage.dto.UserSearchDTO;
@@ -61,7 +62,7 @@ public class UserService implements UserDetailsService {
 	}
 
 	@Transactional(readOnly = true)
-	public UserDetailsDTO findByProfileName(String profileName) {
+	public OtherUserDetailsDTO findByProfileName(String profileName) {
 
 		User user = userRepository.findByProfileName(profileName);
 
@@ -73,11 +74,11 @@ public class UserService implements UserDetailsService {
 		
 		log.info("Perfil encontrado: {}", profileName);
 
-		return new UserDetailsDTO(user, avgScore);
+		return new OtherUserDetailsDTO(user, avgScore);
 	}
 
 	@Transactional
-	public UserDTO register(UserRegisterDTO dto) {
+	public UserRegisterResponseDTO register(UserRegisterDTO dto) {
 		User entity = new User();
 		entity.setName(dto.getName());
 		entity.setProfileName(dto.getProfileName());
@@ -87,7 +88,7 @@ public class UserService implements UserDetailsService {
 
 		log.info("Perfil cadastrado: {}", entity.getProfileName());
 
-		return new UserDTO(entity);
+		return new UserRegisterResponseDTO(entity);
 	}
 
 	@Transactional

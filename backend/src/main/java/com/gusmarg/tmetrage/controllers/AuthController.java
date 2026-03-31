@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.gusmarg.tmetrage.dto.UserDTO;
+import com.gusmarg.tmetrage.dto.UserRegisterResponseDTO;
 import com.gusmarg.tmetrage.dto.UserLoginDTO;
 import com.gusmarg.tmetrage.dto.UserLoginResponseDTO;
 import com.gusmarg.tmetrage.dto.UserRegisterDTO;
@@ -37,8 +37,8 @@ public class AuthController {
 	}
 	
 	@PostMapping(value = "/cadastro")
-	public ResponseEntity<UserDTO> register(@RequestBody @Valid UserRegisterDTO dto) {
-		UserDTO newDTO = userService.register(dto);
+	public ResponseEntity<UserRegisterResponseDTO> register(@RequestBody @Valid UserRegisterDTO dto) {
+		UserRegisterResponseDTO newDTO = userService.register(dto);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(newDTO.getId()).toUri();
 		return ResponseEntity.created(uri).body(newDTO);
 	}

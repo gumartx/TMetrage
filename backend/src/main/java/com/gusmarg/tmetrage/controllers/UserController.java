@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gusmarg.tmetrage.dto.OtherUserDetailsDTO;
 import com.gusmarg.tmetrage.dto.UserDetailsDTO;
 import com.gusmarg.tmetrage.dto.UserSearchDTO;
 import com.gusmarg.tmetrage.dto.UserUpdateDTO;
@@ -42,9 +43,9 @@ public class UserController {
 	}
 
 	@GetMapping(value = "/usuario/{nomePerfil}")
-	public ResponseEntity<UserDetailsDTO> findByProfileName(@PathVariable String nomePerfil) {
+	public ResponseEntity<OtherUserDetailsDTO> findByProfileName(@PathVariable String nomePerfil) {
 
-		UserDetailsDTO result = userService.findByProfileName(nomePerfil);
+		OtherUserDetailsDTO result = userService.findByProfileName(nomePerfil);
 
 		return ResponseEntity.ok(result);
 	}

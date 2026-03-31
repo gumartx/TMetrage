@@ -11,50 +11,19 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class UserDetailsDTO {
+public class UserDetailsDTO extends UserDTO {
 
-	private Long id;
-    private String name;
-    private String profileName;
     private String email;
-    private String bio;
-    private String profileImgUrl;
-    private String backgroundImgUrl;
-    private Integer amountFollowers;
-    private Integer amountFollowing;
-    private Integer amountRatedMovies;
-    private Integer amountComments;
     private Integer amountLists;
-    private Double avgScore;
-	
-    public UserDetailsDTO(User entity, Double avgScore) {
-		id = entity.getId();
-		name = entity.getName();
-		profileName = entity.getProfileName();
-		email = entity.getEmail();
-		bio = entity.getBio();
-		profileImgUrl = entity.getProfileImgUrl();
-		backgroundImgUrl = entity.getBackgroundImgUrl();
-		amountFollowers = entity.getAmountFollowers();
-		amountFollowing = entity.getAmountFollowing();
-		amountRatedMovies = entity.getAmountRatedMovies();
-		this.avgScore = avgScore;
-		amountLists = entity.getAmountLists();
-		amountComments = entity.getAmountComments();
+    
+	public UserDetailsDTO(User entity, Double avgScore) {
+		super(entity, avgScore);
+		this.email = entity.getEmail();
+		this.amountLists = entity.getAmountLists();
+	}
+
+	public UserDetailsDTO(User entity) {
+		super(entity);
 	}
     
-    public UserDetailsDTO(User entity) {
-		id = entity.getId();
-		name = entity.getName();
-		profileName = entity.getProfileName();
-		email = entity.getEmail();
-		bio = entity.getBio();
-		profileImgUrl = entity.getProfileImgUrl();
-		backgroundImgUrl = entity.getBackgroundImgUrl();
-		amountFollowers = entity.getAmountFollowers();
-		amountFollowing = entity.getAmountFollowing();
-		amountRatedMovies = entity.getAmountRatedMovies();
-		amountLists = entity.getAmountLists();
-		amountComments = entity.getAmountComments();
-	}
 }
