@@ -107,3 +107,11 @@ export function shareList(list: MovieList, sharedBy: string, sharedTo: string[])
 export function getMySharedLists(username: string): SharedList[] {
   return getSharedLists().filter((s) => s.sharedBy === username);
 }
+
+export function getSharedWithMe(username: string): SharedList[] {
+  return getSharedLists().filter((s) => s.sharedTo.includes(username));
+}
+
+export function isListShared(listId: string): boolean {
+  return getSharedLists().some((s) => s.list.id === listId);
+}

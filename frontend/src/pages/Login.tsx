@@ -15,6 +15,17 @@ interface User {
   username: string;
 }
 
+interface ProfileData {
+  name: string;
+  profileName: string;
+  username: string;
+  bio: string;
+  avatar: string;
+  cover: string;
+  followers: number;
+  following: number;
+}
+
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -28,7 +39,7 @@ const Login = () => {
       return;
     }
 
-    const users: User[] = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]") as User[];
     const user = users.find(
       (u: User) => u.email === email.trim().toLowerCase() && u.password === password
     );
@@ -40,7 +51,7 @@ const Login = () => {
 
     // Set profile in localStorage
     const existing = localStorage.getItem("tmetrage_profile");
-    let profileData: Record<string, unknown>;
+    let profileData: ProfileData | undefined;
     if (existing) {
       const parsed = JSON.parse(existing);
       // Only restore if same user
@@ -62,7 +73,45 @@ const Login = () => {
     }
     localStorage.setItem("tmetrage_profile", JSON.stringify(profileData));
 
-    toast.success("Login realizado com sucesso!");
+    // Seed mock following data if not already present
+    const followingKey = `following_${profileData.username}`;
+    if (!localStorage.getItem(followingKey)) {
+      const mockFollowing = ["cinefilo42", "filmlover", "movieguru", "cinemafan", "screenwriter01"];
+      localStorage.setItem(followingKey, JSON.stringify(mockFollowing));
+
+      // Seed mock profiles for the followed users
+      const mockProfiles = [
+        { name: "Ana Cinéfila", username: "cinefilo42", bio: "Amante de cinema clássico", avatar: "" },
+        { name: "Lucas Film", username: "filmlover", bio: "Fã de ficção científica", avatar: "" },
+        { name: "Maria Guru", username: "movieguru", bio: "Crítica de filmes independentes", avatar: "" },
+        { name: "Pedro Cinema", username: "cinemafan", bio: "Maratonista de séries e filmes", avatar: "" },
+        { name: "Julia Roteirista", username: "screenwriter01", bio: "Aspirante a roteirista", avatar: "" },
+      ];
+      mockProfiles.forEach((p) => {
+        if (!localStorage.getItem(`profile_${p.username}`)) {
+          localStorage.setItem(`profile_${p.username}`, JSON.stringify(p));
+        }
+      });
+    }
+
+    // Seed mock shared lists if not already present
+    const sharedKey = "tmetrage_shared_lists";
+    if (!localStorage.getItem(sharedKey)) {
+      const lists = JSON.parse(localStorage.getItem("tmetrage_lists") || "[]");
+      if (lists.length > 0) {
+        const mockShared = [
+          {
+            id: crypto.randomUUID(),
+            list: lists[0],
+            sharedBy: profileData.username,
+            sharedTo: ["cinefilo42", "filmlover"],
+            sharedAt: new Date().toISOString(),
+          },
+        ];
+        localStorage.setItem(sharedKey, JSON.stringify(mockShared));
+      }
+    }
+
     navigate("/");
   };
 

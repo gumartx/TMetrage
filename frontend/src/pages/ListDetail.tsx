@@ -60,7 +60,7 @@ const ListDetail = () => {
 
   // Get following list for share
   const following = useMemo(() => {
-    const currentUser = localStorage.getItem("currentUser");
+    const currentUser = localStorage.getItem("tmetrage_profile");
     if (!currentUser) return [];
     const parsed = JSON.parse(currentUser);
     const allFollowing: { username: string; name: string; avatar?: string }[] = [];
@@ -93,8 +93,8 @@ const ListDetail = () => {
 
   const handleShare = () => {
     if (selectedUsers.length === 0 || !list) return;
-    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    shareList(list, currentUser.username || "unknown", selectedUsers);
+    const profile = JSON.parse(localStorage.getItem("tmetrage_profile") || "{}");
+    shareList(list, profile.username || "unknown", selectedUsers);
     setShowShare(false);
     setSelectedUsers([]);
     setShareSearch("");
@@ -520,7 +520,6 @@ const ListDetail = () => {
                         {Array.from({ length: n }).map((_, i) => (
                           <Star key={i} className="h-3 w-3 fill-star text-star" />
                         ))}
-                        <span className="ml-1">{n}</span>
                       </span>
                     </SelectItem>
                   ))}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Trash2, Film, ListMusic, Pencil, Search, CalendarDays, ChevronLeft, ChevronRight, X, Share2 } from "lucide-react";
-import { getLists, createList, deleteList, updateList, getMySharedLists, type MovieList, type SharedList } from "@/lib/movieLists";
+import { getLists, createList, deleteList, updateList, getMySharedLists, getSharedWithMe, isListShared, type MovieList } from "@/lib/movieLists";
 import { getPosterUrl } from "@/lib/tmdb";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -52,15 +52,25 @@ const Lists = () => {
   const [search, setSearch] = useState("");
 
   const currentUser = useMemo(() => {
-    const raw = localStorage.getItem("currentUser");
+    const raw = localStorage.getItem("tmetrage_profile");
     return raw ? JSON.parse(raw) : null;
   }, []);
 
-  const sharedLists = useMemo(() => {
+  const sharedByMe = useMemo(() => {
     if (!currentUser?.username) return [];
     return getMySharedLists(currentUser.username);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, activeTab]);
+
+  const sharedWithMe = useMemo(() => {
+    if (!currentUser?.username) return [];
+    return getSharedWithMe(currentUser.username);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser, activeTab]);
+
+  const allSharedLists = useMemo(() => {
+    return [...sharedByMe, ...sharedWithMe];
+  }, [sharedByMe, sharedWithMe]);
 
   const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
@@ -76,7 +86,7 @@ const Lists = () => {
     return true;
   });
 
-  const filteredSharedLists = sharedLists.filter((s) =>
+  const filteredSharedLists = allSharedLists.filter((s) =>
     s.list.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -195,7 +205,7 @@ const Lists = () => {
           )}
         </div>
 
-        {((activeTab === "mine" && lists.length > 0) || (activeTab === "shared" && sharedLists.length > 0)) && (
+        {((activeTab === "mine" && lists.length > 0) || (activeTab === "shared" && allSharedLists.length > 0)) && (
           <div className="mt-6 flex gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -279,7 +289,12 @@ const Lists = () => {
                 {filteredLists.map((list) => (
                   <div
                     key={list.id}
-                    className="group relative rounded-lg border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+                    className={cn(
+                      "group relative rounded-lg border bg-card p-5 transition-all hover:shadow-lg hover:shadow-primary/5",
+                      isListShared(list.id)
+                        ? "border-blue-500 border-2 hover:border-blue-400"
+                        : "border-border hover:border-primary/40"
+                    )}
                   >
                     <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                       <button
@@ -349,7 +364,7 @@ const Lists = () => {
         {/* Shared Lists Tab */}
         {activeTab === "shared" && (
           <>
-            {sharedLists.length === 0 ? (
+            {allSharedLists.length === 0 ? (
               <div className="mt-20 flex flex-col items-center text-center">
                 <Share2 className="h-16 w-16 text-muted-foreground" />
                 <p className="mt-4 text-lg font-medium text-muted-foreground">
@@ -373,31 +388,57 @@ const Lists = () => {
                     key={shared.id}
                     className="group relative rounded-lg border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
                   >
-                    {/* Shared to user avatars */}
+                    {/* Shared direction label */}
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="flex -space-x-2">
-                        {shared.sharedTo.map((username) => {
-                          const profile = getUserProfile(username);
-                          return (
-                            <div
-                              key={username}
-                              className="h-8 w-8 rounded-full border-2 border-card bg-muted flex items-center justify-center overflow-hidden"
-                              title={profile.name}
-                            >
-                              {profile.avatar ? (
-                                <img src={profile.avatar} alt={profile.name} className="h-full w-full object-cover" />
-                              ) : (
-                                <span className="text-[10px] font-medium text-muted-foreground">
-                                  {profile.name.charAt(0).toUpperCase()}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {shared.sharedTo.length} {shared.sharedTo.length === 1 ? "pessoa" : "pessoas"}
-                      </span>
+                      {shared.sharedBy === currentUser?.username ? (
+                        <>
+                          <span className="text-[10px] font-medium bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full">Enviada</span>
+                          <div className="flex -space-x-2">
+                            {shared.sharedTo.map((username) => {
+                              const profile = getUserProfile(username);
+                              return (
+                                <div
+                                  key={username}
+                                  className="h-8 w-8 rounded-full border-2 border-card bg-muted flex items-center justify-center overflow-hidden"
+                                  title={profile.name}
+                                >
+                                  {profile.avatar ? (
+                                    <img src={profile.avatar} alt={profile.name} className="h-full w-full object-cover" />
+                                  ) : (
+                                    <span className="text-[10px] font-medium text-muted-foreground">
+                                      {profile.name.charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {shared.sharedTo.length} {shared.sharedTo.length === 1 ? "pessoa" : "pessoas"}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-[10px] font-medium bg-green-500/10 text-green-500 px-2 py-0.5 rounded-full">Recebida</span>
+                          {(() => {
+                            const profile = getUserProfile(shared.sharedBy);
+                            return (
+                              <div className="flex items-center gap-1.5">
+                                <div className="h-8 w-8 rounded-full border-2 border-card bg-muted flex items-center justify-center overflow-hidden" title={profile.name}>
+                                  {profile.avatar ? (
+                                    <img src={profile.avatar} alt={profile.name} className="h-full w-full object-cover" />
+                                  ) : (
+                                    <span className="text-[10px] font-medium text-muted-foreground">
+                                      {profile.name.charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-xs text-muted-foreground">de {profile.name}</span>
+                              </div>
+                            );
+                          })()}
+                        </>
+                      )}
                     </div>
 
                     <Link to={`/listas/${shared.list.id}`} className="block">
