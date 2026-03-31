@@ -8,7 +8,7 @@ function isLoggedIn(): boolean {
       const parsed = JSON.parse(saved);
       return !!(parsed.profileName || parsed.name);
     }
-  } catch { /* empty */ }
+  } catch {}
   return false;
 }
 import { Heart, MessageCircle, Send, Trash2 } from "lucide-react";
@@ -42,7 +42,7 @@ function getCurrentUsername(): string {
       if (parsed.username) return parsed.username;
       if (parsed.name) return parsed.name;
     }
-  } catch { /* empty */ }
+  } catch {}
   return "Você";
 }
 
@@ -56,9 +56,11 @@ interface CommentItemProps {
 const CommentItem = ({ comment, onRefresh, depth = 0, movieId }: CommentItemProps) => {
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState("");
+  const [showReplies, setShowReplies] = useState(false);
   const navigate = useNavigate();
   const currentUser = getCurrentUsername();
   const liked = comment.likedBy.includes(currentUser);
+  const replyCount = comment.replies?.length || 0;
 
   const handleLike = () => {
     if (!isLoggedIn()) { navigate("/login"); return; }
@@ -149,7 +151,16 @@ const CommentItem = ({ comment, onRefresh, depth = 0, movieId }: CommentItemProp
           </div>
         )}
       </div>
-      {comment.replies?.map((reply) => (
+      {depth === 0 && replyCount > 0 && (
+        <button
+          onClick={() => setShowReplies(!showReplies)}
+          className="ml-2 mb-1 flex items-center gap-1.5 text-xs font-medium text-primary hover:underline transition-colors"
+        >
+          <MessageCircle className="h-3.5 w-3.5" />
+          {showReplies ? "Ocultar respostas" : `Ver ${replyCount} resposta${replyCount > 1 ? "s" : ""}`}
+        </button>
+      )}
+      {(depth > 0 || showReplies) && comment.replies?.map((reply) => (
         <CommentItem
           key={reply.id}
           comment={reply}
