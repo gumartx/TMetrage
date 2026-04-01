@@ -25,45 +25,6 @@ const Login = () => {
     try {
       await loginAPI(email.trim().toLowerCase(), password);
 
-      // Seed mock following data if not already present
-      const profile = JSON.parse(localStorage.getItem("tmetrage_profile") || "{}");
-      const followingKey = `following_${profile.username}`;
-      if (!localStorage.getItem(followingKey)) {
-        const mockFollowing = ["cinefilo42", "filmlover", "movieguru", "cinemafan", "screenwriter01"];
-        localStorage.setItem(followingKey, JSON.stringify(mockFollowing));
-
-        const mockProfiles = [
-          { name: "Ana Cinéfila", username: "cinefilo42", bio: "Amante de cinema clássico", avatar: "" },
-          { name: "Lucas Film", username: "filmlover", bio: "Fã de ficção científica", avatar: "" },
-          { name: "Maria Guru", username: "movieguru", bio: "Crítica de filmes independentes", avatar: "" },
-          { name: "Pedro Cinema", username: "cinemafan", bio: "Maratonista de séries e filmes", avatar: "" },
-          { name: "Julia Roteirista", username: "screenwriter01", bio: "Aspirante a roteirista", avatar: "" },
-        ];
-        mockProfiles.forEach((p) => {
-          if (!localStorage.getItem(`profile_${p.username}`)) {
-            localStorage.setItem(`profile_${p.username}`, JSON.stringify(p));
-          }
-        });
-      }
-
-      // Seed mock shared lists if not already present
-      const sharedKey = "tmetrage_shared_lists";
-      if (!localStorage.getItem(sharedKey)) {
-        const lists = JSON.parse(localStorage.getItem("tmetrage_lists") || "[]");
-        if (lists.length > 0) {
-          const mockShared = [
-            {
-              id: crypto.randomUUID(),
-              list: lists[0],
-              sharedBy: profile.username,
-              sharedTo: ["cinefilo42", "filmlover"],
-              sharedAt: new Date().toISOString(),
-            },
-          ];
-          localStorage.setItem(sharedKey, JSON.stringify(mockShared));
-        }
-      }
-
       navigate("/");
     } catch (err: unknown) {
       toast.error((err instanceof Error ? err.message : String(err)) || "Email ou senha incorretos");

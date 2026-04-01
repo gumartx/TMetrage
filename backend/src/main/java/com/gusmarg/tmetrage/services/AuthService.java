@@ -66,13 +66,11 @@ public class AuthService {
 
 		entity.setPassword(encryptedPassword);
 
-		userRepository.save(entity);
-
-		log.info("Senha alterada");
-
 		emailService.sendEmail(entity.getEmail(), "TMétrage: Nova senha da sua conta",
 				"Sua nova senha é: " + newPassword);
+		
+		userRepository.save(entity);
 
-		log.info("Email enviado para: {}", entity.getEmail());
+		log.info("Email com a nova senha enviado para: {}", entity.getEmail());
 	}
 }

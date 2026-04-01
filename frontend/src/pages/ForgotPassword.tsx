@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Film, Mail } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { forgotPasswordAPI } from "@/lib/auth";
 
 const ForgotPassword = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -24,6 +25,9 @@ const ForgotPassword = () => {
       await forgotPasswordAPI(email.trim().toLowerCase());
       setSent(true);
       toast.success("Email de recuperação enviado!");
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
     } catch (err: unknown) {
       toast.error((err instanceof Error ? err.message : String(err)) || "Erro ao enviar email de recuperação");
     } finally {

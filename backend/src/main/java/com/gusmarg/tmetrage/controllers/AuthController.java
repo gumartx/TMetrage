@@ -7,14 +7,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.gusmarg.tmetrage.dto.UserRegisterResponseDTO;
+import com.gusmarg.tmetrage.dto.ForgotPasswordDTO;
 import com.gusmarg.tmetrage.dto.UserLoginDTO;
 import com.gusmarg.tmetrage.dto.UserLoginResponseDTO;
 import com.gusmarg.tmetrage.dto.UserRegisterDTO;
+import com.gusmarg.tmetrage.dto.UserRegisterResponseDTO;
 import com.gusmarg.tmetrage.dto.UserUpdatePasswordDTO;
 import com.gusmarg.tmetrage.services.AuthService;
 import com.gusmarg.tmetrage.services.UserService;
@@ -44,8 +44,8 @@ public class AuthController {
 	}
 	
 	@PostMapping("/forgot-password")
-	public ResponseEntity<Void> forgotPassword(@RequestParam String email){
-	    authService.resetPassword(email);
+	public ResponseEntity<Void> forgotPassword(@RequestBody @Valid ForgotPasswordDTO dto){
+	    authService.resetPassword(dto.getEmail());
 	    return ResponseEntity.noContent().build();
 	}
 	
