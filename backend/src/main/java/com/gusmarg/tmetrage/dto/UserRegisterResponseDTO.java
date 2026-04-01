@@ -15,13 +15,13 @@ public class UserRegisterResponseDTO {
 
 	private Long id;
     private String name;
-    private String profileName;
+    private String username;
     private String email;
 	
     public UserRegisterResponseDTO(User entity) {
 		id = entity.getId();
 		name = entity.getName();
-		profileName = entity.getProfileName();
+		username = entity.getUsername();
 		email = entity.getEmail();
 	}
     

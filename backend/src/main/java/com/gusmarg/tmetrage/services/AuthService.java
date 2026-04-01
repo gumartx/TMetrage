@@ -43,7 +43,7 @@ public class AuthService {
         
 		log.info("Login efetuado com: {}", entity.getEmail());
         
-        return new UserLoginResponseDTO(token, entity.getName(), entity.getProfileName(), entity.getProfileImgUrl());
+        return new UserLoginResponseDTO(token, entity.getName(), entity.getUsername(), entity.getAvatar());
     }
 
     @Transactional(readOnly = true)

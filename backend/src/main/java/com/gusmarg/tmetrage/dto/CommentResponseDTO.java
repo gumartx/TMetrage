@@ -27,8 +27,8 @@ public class CommentResponseDTO {
 	public CommentResponseDTO (Comment entity) {
 		id = entity.getId();
 		movieId = entity.getMovie().getId();
-		author = entity.getUser().getProfileName();
-		profileImg = entity.getUser().getProfileImgUrl();
+		author = entity.getUser().getUsername();
+		profileImg = entity.getUser().getAvatar();
 		content = entity.getMessage();
 		createdAt = entity.getCreatedAt();
     	parentId = entity.getParent() != null ? entity.getParent().getId() : null;

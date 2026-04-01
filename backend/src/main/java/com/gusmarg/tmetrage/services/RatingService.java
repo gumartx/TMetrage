@@ -91,7 +91,7 @@ public class RatingService {
 
 		rating = ratingRepository.save(rating);
 
-		log.info("Usuário '{}' avaliou filme '{}' com nota {}", user.getProfileName(), movie.getId(), dto.getScore());
+		log.info("Usuário '{}' avaliou filme '{}' com nota {}", user.getUsername(), movie.getId(), dto.getScore());
 
 		return new RatingResponseDTO(rating);
 	}
@@ -113,7 +113,7 @@ public class RatingService {
 
 		rating = ratingRepository.save(rating);
 
-		log.info("Usuário '{}' atualizou plataforma '{}' no filme '{}'", user.getProfileName(), dto.getPlatform(),
+		log.info("Usuário '{}' atualizou plataforma '{}' no filme '{}'", user.getUsername(), dto.getPlatform(),
 				movie.getId());
 
 		return new RatingResponseDTO(rating);
@@ -139,7 +139,7 @@ public class RatingService {
 
 		ratingRepository.deleteById(id);
 
-		log.info("Usuário '{}' retirou avaliação do filme '{}'", user.getProfileName(), movie.getId());
+		log.info("Usuário '{}' retirou avaliação do filme '{}'", user.getUsername(), movie.getId());
 	}
 
 }

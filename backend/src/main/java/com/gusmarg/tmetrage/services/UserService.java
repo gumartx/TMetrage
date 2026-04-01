@@ -57,7 +57,7 @@ public class UserService implements UserDetailsService {
 		log.info("Buscando por: {}", name);
 
 		return result.stream().map(
-				user -> new UserSearchDTO(user.getId(), user.getName(), user.getProfileName(), user.getProfileImgUrl()))
+				user -> new UserSearchDTO(user.getId(), user.getName(), user.getUsername(), user.getAvatar()))
 				.toList();
 	}
 
@@ -86,7 +86,7 @@ public class UserService implements UserDetailsService {
 		entity.setPassword(passwordEncoder.encode(dto.getPassword()));
 		entity = userRepository.save(entity);
 
-		log.info("Perfil cadastrado: {}", entity.getProfileName());
+		log.info("Perfil cadastrado: {}", entity.getUsername());
 
 		return new UserRegisterResponseDTO(entity);
 	}
@@ -98,11 +98,11 @@ public class UserService implements UserDetailsService {
 		currentUser.setName(dto.getName());
 		currentUser.setProfileName(dto.getProfileName());
 		currentUser.setBio(dto.getBio());
-		currentUser.setProfileImgUrl(dto.getProfileImgUrl());
+		currentUser.setAvatar(dto.getAvatar());
 		currentUser.setBackgroundImgUrl(dto.getBackgroundImgUrl());
 		currentUser = userRepository.save(currentUser);
 
-		log.info("Perfil editado: {}", currentUser.getProfileName());
+		log.info("Perfil editado: {}", currentUser.getUsername());
 
 		return new UserDetailsDTO(currentUser);
 	}
@@ -142,12 +142,12 @@ public class UserService implements UserDetailsService {
 
 		    user.getFollowing().remove(userFollow);
 
-		    log.info("Usuário '{}' deixou de seguir '{}'", user.getProfileName(), userFollow.getProfileName());
+		    log.info("Usuário '{}' deixou de seguir '{}'", user.getUsername(), userFollow.getUsername());
 
 		} else {
 		    user.getFollowing().add(userFollow);
 
-		    log.info("Usuário '{}' passou a seguir '{}'", user.getProfileName(), userFollow.getProfileName());
+		    log.info("Usuário '{}' passou a seguir '{}'", user.getUsername(), userFollow.getUsername());
 		}
 	}
 	

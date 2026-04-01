@@ -52,9 +52,15 @@ interface ProfileUser {
   avatar: string;
 }
 
-interface User {
+interface MovieComment {
+  author: string;
+  [key: string]: unknown;
+}
+
+interface StoredUser {
   email: string;
   password: string;
+  [key: string]: unknown;
 }
 
 const MOCK_USERS: ProfileUser[] = [
@@ -102,16 +108,11 @@ const Profile = () => {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const lists = getLists();
 
-  interface Comment {
-    author: string;
-    [key: string]: unknown;
-  }
-
   const totalUserComments = (() => {
     try {
-      const all = JSON.parse(localStorage.getItem("movie_comments") || "[]") as Comment[];
+      const all = JSON.parse(localStorage.getItem("movie_comments") || "[]");
       const username = profile.username || profile.name;
-      return all.filter((c: Comment) => c.author === username).length;
+      return all.filter((c: MovieComment) => c.author === username).length;
     } catch { return 0; }
   })();
 
@@ -615,8 +616,8 @@ const Profile = () => {
               disabled={!currentPassword || !newPassword || !confirmPassword}
               onClick={() => {
                 const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-                const users: User[] = JSON.parse(localStorage.getItem("users") || "[]");
-                const user = users.find((u: User) => u.email === currentUser.email);
+                const users: StoredUser[] = JSON.parse(localStorage.getItem("users") || "[]");
+                const user = users.find((u: StoredUser) => u.email === currentUser.email);
 
                 if (!user || user.password !== currentPassword) {
                   setPasswordError("Senha atual incorreta.");
@@ -631,7 +632,7 @@ const Profile = () => {
                   return;
                 }
 
-                const updatedUsers = users.map((u: User) =>
+                const updatedUsers = users.map((u: StoredUser) =>
                   u.email === currentUser.email ? { ...u, password: newPassword } : u
                 );
                 localStorage.setItem("users", JSON.stringify(updatedUsers));

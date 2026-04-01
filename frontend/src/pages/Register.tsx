@@ -1,4 +1,3 @@
-import { registerUser } from "@/lib/auth";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Film, UserPlus } from "lucide-react";
@@ -6,15 +5,7 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-
-const USERS_KEY = "tmetrage_users";
-
-interface User {
-  name: string;
-  username: string;
-  email: string;
-  password: string;
-}
+import { registerAPI } from "@/lib/auth";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -25,54 +16,35 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-
     e.preventDefault();
-
     if (!name.trim() || !username.trim() || !email.trim() || !password || !confirmPassword) {
       toast.error("Preencha todos os campos");
       return;
     }
-
     if (password !== confirmPassword) {
       toast.error("As senhas não coincidem");
       return;
     }
-
     if (password.length < 6) {
       toast.error("A senha deve ter pelo menos 6 caracteres");
       return;
     }
 
+    const formattedUsername = username.startsWith("@") ? username : `@${username}`;
+
+    setLoading(true);
     try {
-
-      const formattedUsername = username.startsWith("@")
-        ? username
-        : `@${username}`;
-
-      await registerUser(
-        name.trim(),
-        formattedUsername.toLowerCase(),
-        email.trim().toLowerCase(),
-        password
-      );
-
+      await registerAPI(name.trim(), formattedUsername.toLowerCase(), email.trim().toLowerCase(), password);
       toast.success("Conta criada com sucesso!");
-
       navigate("/login");
-
-    } catch (error) {
-      const err = error as { response?: { status: number } };
-
-      if (err.response?.status === 409) {
-        toast.error("Email ou username já cadastrado");
-      } else {
-        toast.error("Erro ao criar conta");
-      }
-
+    } catch (err: unknown) {
+      toast.error((err instanceof Error ? err.message : String(err)) || "Erro ao criar conta");
+    } finally {
+      setLoading(false);
     }
-
   };
 
   return (
@@ -183,9 +155,9 @@ const Register = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full gap-2">
+            <Button type="submit" className="w-full gap-2" disabled={loading}>
               <UserPlus className="h-4 w-4" />
-              Criar conta
+              {loading ? "Criando..." : "Criar conta"}
             </Button>
           </form>
 

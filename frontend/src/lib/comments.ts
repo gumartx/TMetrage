@@ -1,56 +1,83 @@
-import api from "../lib/api";
-
-const API = "http://localhost:8080/comentarios";
-
 export interface Comment {
-  id: number;
+  id: string;
   movieId: number;
   author: string;
   content: string;
-  profileImg: string
   createdAt: string;
   likes: number;
   likedBy: string[];
-  parentId: number | null;
+  parentId: string | null;
   replies?: Comment[];
 }
 
-export const getCommentsForMovie = async (movieId: number) => {
-  const response = await api.get(`${API}/filme/${movieId}`);
-  return response.data;
-};
+const STORAGE_KEY = "movie_comments";
 
-export const getReplies = async (parentId: number) => {
-  const response = await api.get(`${API}/${parentId}/respostas`);
-  return response.data;
-};
-
-export async function addComment(movieId: number, message: string, parentId?: number) {
-
-  const token = localStorage.getItem("token");
-
-  const response = await api.post(
-    `${API}`,
-    {
-      movieId,
-      message,
-      parentId
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }
-  );
-
-  return response.data;
+function getAllComments(): Comment[] {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  } catch {
+    return [];
+  }
 }
 
-export const toggleLike = async (commentId: number) => {
-  const response = await api.put(`${API}/${commentId}/curtir`);
-  return response.data;
-};
+function saveAllComments(comments: Comment[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(comments));
+}
 
-export const deleteComment = async (commentId: number) => {
-  await api.delete(`${API}/${commentId}`);
-};
+export function getCommentsForMovie(movieId: number): Comment[] {
+  const all = getAllComments().filter((c) => c.movieId === movieId);
+  const map = new Map<string, Comment>();
+  const roots: Comment[] = [];
+
+  all.forEach((c) => map.set(c.id, { ...c, replies: [] }));
+  map.forEach((c) => {
+    if (c.parentId && map.has(c.parentId)) {
+      map.get(c.parentId)!.replies!.push(c);
+    } else {
+      roots.push(c);
+    }
+  });
+
+  roots.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return roots;
+}
+
+export function addComment(movieId: number, author: string, content: string, parentId: string | null = null): Comment {
+  const all = getAllComments();
+  const comment: Comment = {
+    id: crypto.randomUUID(),
+    movieId,
+    author: author.trim(),
+    content: content.trim(),
+    createdAt: new Date().toISOString(),
+    likes: 0,
+    likedBy: [],
+    parentId,
+  };
+  all.push(comment);
+  saveAllComments(all);
+  return comment;
+}
+
+export function toggleLike(commentId: string, userId: string): void {
+  const all = getAllComments();
+  const comment = all.find((c) => c.id === commentId);
+  if (!comment) return;
+
+  const idx = comment.likedBy.indexOf(userId);
+  if (idx >= 0) {
+    comment.likedBy.splice(idx, 1);
+    comment.likes--;
+  } else {
+    comment.likedBy.push(userId);
+    comment.likes++;
+  }
+  saveAllComments(all);
+}
+
+export function deleteComment(commentId: string): void {
+  const all = getAllComments().filter(
+    (c) => c.id !== commentId && c.parentId !== commentId
+  );
+  saveAllComments(all);
+}

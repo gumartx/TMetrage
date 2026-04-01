@@ -160,7 +160,7 @@ public class MovieListService {
 
 		list.getSharedWith().add(user);
 
-		log.info("Lista '{}' compartilhada com '{}'", list.getName(), user.getProfileName());
+		log.info("Lista '{}' compartilhada com '{}'", list.getName(), user.getUsername());
 	}
 
 	private void validateListPermission(MovieList list, User user) {

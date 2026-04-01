@@ -25,7 +25,7 @@ public class UserUpdateDTO {
 	@Size(max = 500)
     private String bio; 
     @Pattern(regexp = "^(http(s?):)([/|.|\\w|\\s|-])*\\.(?:jpg|jpeg|png|gif)$")
-    private String profileImgUrl;
+    private String avatar;
     @Pattern(regexp = "^(http(s?):)([/|.|\\w|\\s|-])*\\.(?:jpg|jpeg|png|gif)$")
     private String backgroundImgUrl;
 	
@@ -33,7 +33,7 @@ public class UserUpdateDTO {
 		name = entity.getName();
 		profileName = entity.getProfileName();
 		bio = entity.getBio();
-		profileImgUrl = entity.getProfileImgUrl();
+		avatar = entity.getAvatar();
 		backgroundImgUrl = entity.getBackgroundImgUrl();
 	}
     

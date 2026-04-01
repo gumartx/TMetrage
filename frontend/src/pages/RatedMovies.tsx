@@ -183,7 +183,6 @@ const RatedMovies = () => {
                       {Array.from({ length: n }).map((_, i) => (
                         <Star key={i} className="h-3 w-3 fill-star text-star" />
                       ))}
-                      <span className="ml-1">{n}</span>
                     </span>
                   </SelectItem>
                 ))}

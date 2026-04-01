@@ -46,7 +46,7 @@ public class User implements UserDetails {
 	private String bio;
 	@Column(nullable = false)
 	private String password;
-	private String profileImgUrl;
+	private String avatar;
 	private String backgroundImgUrl;
 
 	@OneToMany(mappedBy = "user")

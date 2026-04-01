@@ -36,14 +36,14 @@ public class AuthController {
 		return ResponseEntity.ok(result);
 	}
 	
-	@PostMapping(value = "/cadastro")
+	@PostMapping(value = "/register")
 	public ResponseEntity<UserRegisterResponseDTO> register(@RequestBody @Valid UserRegisterDTO dto) {
 		UserRegisterResponseDTO newDTO = userService.register(dto);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(newDTO.getId()).toUri();
 		return ResponseEntity.created(uri).body(newDTO);
 	}
 	
-	@PostMapping("/esqueci-senha")
+	@PostMapping("/forgot-password")
 	public ResponseEntity<Void> forgotPassword(@RequestParam String email){
 	    authService.resetPassword(email);
 	    return ResponseEntity.noContent().build();

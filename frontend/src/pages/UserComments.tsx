@@ -39,8 +39,9 @@ function getProfile() {
 function getAllComments(): Comment[] {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  } catch { /* empty */ }
-  return [];
+  } catch {
+    return [];
+  }
 }
 
 function timeAgo(dateStr: string): string {

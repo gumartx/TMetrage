@@ -15,9 +15,9 @@ public class UserDTO {
 
 	private Long id;
     private String name;
-    private String profileName;
+    private String username;
     private String bio;
-    private String profileImgUrl;
+    private String avatar;
     private String backgroundImgUrl;
     private Integer amountFollowers;
     private Integer amountFollowing;
@@ -28,9 +28,9 @@ public class UserDTO {
     public UserDTO(User entity, Double avgScore) {
 		id = entity.getId();
 		name = entity.getName();
-		profileName = entity.getProfileName();
+		username = entity.getUsername();
 		bio = entity.getBio();
-		profileImgUrl = entity.getProfileImgUrl();
+		avatar = entity.getAvatar();
 		backgroundImgUrl = entity.getBackgroundImgUrl();
 		amountFollowers = entity.getAmountFollowers();
 		amountFollowing = entity.getAmountFollowing();
@@ -42,9 +42,9 @@ public class UserDTO {
     public UserDTO(User entity) {
 		id = entity.getId();
 		name = entity.getName();
-		profileName = entity.getProfileName();
+		username = entity.getUsername();
 		bio = entity.getBio();
-		profileImgUrl = entity.getProfileImgUrl();
+		avatar = entity.getAvatar();
 		backgroundImgUrl = entity.getBackgroundImgUrl();
 		amountFollowers = entity.getAmountFollowers();
 		amountFollowing = entity.getAmountFollowing();
