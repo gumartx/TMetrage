@@ -18,8 +18,9 @@ export async function registerUser(
   return response.data;
 }
 
-export async function loginUser(email: string, password: string) {
-  const response = await api.post(`${API}/login`, {
+export async function login(email: string, password: string) {
+
+  const response = await api.post("/auth/login", {
     email,
     password
   });
@@ -28,5 +29,5 @@ export async function loginUser(email: string, password: string) {
 
   localStorage.setItem("token", token);
 
-  return token;
+  return response.data;
 }

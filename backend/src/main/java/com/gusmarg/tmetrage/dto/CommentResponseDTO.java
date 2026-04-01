@@ -15,21 +15,21 @@ import lombok.Setter;
 @Setter
 public class CommentResponseDTO {
 	
-	private Long commentId;
-	private Long movieId;
-	private Long userId;
-	private String profileImg;
-    private String message;
-    private Integer likes;
+    private Long id;
+    private Long movieId;
+    private String author;
+    private String content;
+    private String profileImg;
     private LocalDateTime createdAt;
-	private Long parentId;
+    private Integer likes;
+    private Long parentId;
     
 	public CommentResponseDTO (Comment entity) {
-		commentId = entity.getId();
+		id = entity.getId();
 		movieId = entity.getMovie().getId();
-		userId = entity.getUser().getId();
+		author = entity.getUser().getProfileName();
 		profileImg = entity.getUser().getProfileImgUrl();
-		message = entity.getMessage();
+		content = entity.getMessage();
 		createdAt = entity.getCreatedAt();
     	parentId = entity.getParent() != null ? entity.getParent().getId() : null;
     	likes = entity.getAmountLikes();

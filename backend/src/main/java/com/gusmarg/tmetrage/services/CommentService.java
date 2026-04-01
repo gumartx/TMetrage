@@ -30,7 +30,7 @@ public class CommentService {
 
 	@Transactional
 	public List<CommentResponseDTO> findAllMovieComments(Long movieId) {
-		List<Comment> result = commentRepository.findByMovieIdAndParentIsNullOrderByCreatedAtDesc(movieId);
+		List<Comment> result = commentRepository.findByMovieIdAndParentIsNullOrderByCreatedAtAsc(movieId);
 
 	    log.info("{} comentário(s) no filme '{}'", result.size(), movieId);
 	    
@@ -52,8 +52,11 @@ public class CommentService {
 		comment.setMovie(movie);
 
 		if (dto.getParentId() != null) {
-			Comment parent = commentRepository.getReferenceById(dto.getParentId());
+	        Comment parent = commentRepository.findById(dto.getParentId())
+	                .orElseThrow();
 			comment.setParent(parent);
+			
+			log.info("Usuário '{}' respondeu comentário de '{}' no filme '{}'", user.getProfileName(), parent.getUser().getProfileName(), movie.getId());
 		}
 
 		comment = commentRepository.save(comment);
@@ -93,8 +96,9 @@ public class CommentService {
 
 	@Transactional
 	public void deleteComment(Long commentId) {
-
-		Comment comment = commentRepository.getReferenceById(commentId);
+		
+		Comment comment = commentRepository.findById(commentId)
+	            .orElseThrow(() -> new RuntimeException("Comentário não encontrado"));
 
 		User user = authService.getAuthenticatedUser();
 

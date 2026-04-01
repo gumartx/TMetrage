@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { loginUser } from "@/lib/auth";
+import { login } from "@/lib/auth";
 
 const USERS_KEY = "tmetrage_users";
 
@@ -46,7 +46,7 @@ const Login = () => {
 
     try {
 
-      const response = await loginUser(email, password);
+      const response = await login(email, password);
 
       localStorage.setItem("token", response.token);
 

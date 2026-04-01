@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Star } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const STORAGE_KEY = "tmetrage_ratings";
 
@@ -18,53 +24,87 @@ export const PLATFORMS = [
   { value: "other", label: "Outro", color: "#888888", letter: "?" },
 ] as const;
 
-export const PlatformBadge = ({ value, size = "sm" }: { value: string; size?: "sm" | "md" }) => {
+export const PlatformBadge = ({
+  value,
+  size = "sm",
+}: {
+  value: string;
+  size?: "sm" | "md";
+}) => {
   const platform = PLATFORMS.find((p) => p.value === value);
   if (!platform) return null;
+
   const dim = size === "sm" ? "h-4 w-4 text-[9px]" : "h-5 w-5 text-[10px]";
+
   return (
     <span
       className={`inline-flex items-center justify-center rounded-sm font-bold text-white shrink-0 ${dim}`}
       style={{ backgroundColor: platform.color }}
       title={platform.label}
     >
-      {platform.letter.length === 1 ? platform.letter : ""}
+      {platform.letter}
     </span>
   );
 };
 
 export interface RatingEntry {
   rating: number;
-  date: string; // ISO string
+  date: string;
   platform?: string;
 }
 
 export function getRatings(): Record<string, RatingEntry> {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return {};
+
   const parsed = JSON.parse(raw);
-  // Migrate old format (number) to new format ({rating, date})
   const result: Record<string, RatingEntry> = {};
+
   for (const [key, value] of Object.entries(parsed)) {
     if (typeof value === "number") {
-      result[key] = { rating: value, date: new Date().toISOString() };
+      result[key] = {
+        rating: value,
+        date: new Date().toISOString(),
+      };
     } else {
       result[key] = value as RatingEntry;
     }
   }
+
   return result;
 }
 
 function saveRating(movieId: number, rating: number, platform?: string) {
   const ratings = getRatings();
-  ratings[movieId] = { rating, date: new Date().toISOString(), platform };
+
+  ratings[movieId] = {
+    rating,
+    date: new Date().toISOString(),
+    platform,
+  };
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ratings));
 }
 
 function clearRating(movieId: number) {
   const ratings = getRatings();
+
   delete ratings[movieId];
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ratings));
+}
+
+function isLoggedIn(): boolean {
+  try {
+    const saved = localStorage.getItem("tmetrage_profile");
+
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return !!parsed.profileName;
+    }
+  } catch { /* empty */ }
+
+  return false;
 }
 
 interface UserRatingProps {
@@ -73,23 +113,14 @@ interface UserRatingProps {
 
 const UserRating = ({ movieId }: UserRatingProps) => {
   const navigate = useNavigate();
+
   const [rating, setRating] = useState<number>(0);
   const [hover, setHover] = useState<number>(0);
   const [platform, setPlatform] = useState<string>("");
 
-  const isLoggedIn = () => {
-    try {
-      const saved = localStorage.getItem("tmetrage_profile");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return !!parsed.profileName;
-      }
-    } catch { /* empty */ }
-    return false;
-  };
-
   useEffect(() => {
     const saved = getRatings()[movieId];
+
     if (saved) {
       setRating(saved.rating);
       setPlatform(saved.platform || "");
@@ -101,19 +132,23 @@ const UserRating = ({ movieId }: UserRatingProps) => {
       navigate("/login");
       return;
     }
+
     if (value === rating) {
       setRating(0);
       setPlatform("");
       clearRating(movieId);
-    } else {
-      setRating(value);
-      saveRating(movieId, value, platform || undefined);
+      return;
     }
+
+    setRating(value);
+    saveRating(movieId, value, platform || undefined);
   };
 
   const handlePlatformChange = (value: string) => {
     const newPlatform = value === "none" ? "" : value;
+
     setPlatform(newPlatform);
+
     if (rating > 0) {
       saveRating(movieId, rating, newPlatform || undefined);
     }
@@ -124,7 +159,10 @@ const UserRating = ({ movieId }: UserRatingProps) => {
 
   return (
     <div className="rounded-lg border border-border bg-card p-4">
-      <p className="text-sm font-semibold text-card-foreground mb-2">Sua avaliação</p>
+      <p className="mb-2 text-sm font-semibold text-card-foreground">
+        Sua avaliação
+      </p>
+
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1">
           {[1, 2, 3, 4, 5].map((s) => (
@@ -145,20 +183,28 @@ const UserRating = ({ movieId }: UserRatingProps) => {
             </button>
           ))}
         </div>
+
         {activeValue > 0 && (
-          <span className="text-sm text-muted-foreground">{labels[activeValue]}</span>
+          <span className="text-sm text-muted-foreground">
+            {labels[activeValue]}
+          </span>
         )}
       </div>
 
       {rating > 0 && (
         <div className="mt-3">
-          <p className="text-xs text-muted-foreground mb-1.5">Onde você assistiu? (opcional)</p>
+          <p className="mb-1.5 text-xs text-muted-foreground">
+            Onde você assistiu? (opcional)
+          </p>
+
           <Select value={platform || "none"} onValueChange={handlePlatformChange}>
-            <SelectTrigger className="w-full sm:w-[200px] h-8 text-xs">
+            <SelectTrigger className="h-8 w-full text-xs sm:w-[200px]">
               <SelectValue placeholder="Selecione a plataforma" />
             </SelectTrigger>
+
             <SelectContent>
               <SelectItem value="none">Não informar</SelectItem>
+
               {PLATFORMS.map((p) => (
                 <SelectItem key={p.value} value={p.value}>
                   <span className="flex items-center gap-2">
