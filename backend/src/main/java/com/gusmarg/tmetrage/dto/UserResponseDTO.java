@@ -9,8 +9,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class UserLoginResponseDTO {
+public class UserResponseDTO {
 
-	private String token;
-	private UserResponseDTO user;
+    private String name;
+    private String username;
+    private String avatar;
+    private String email;
 }

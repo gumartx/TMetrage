@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.gusmarg.tmetrage.dto.UserLoginDTO;
 import com.gusmarg.tmetrage.dto.UserLoginResponseDTO;
+import com.gusmarg.tmetrage.dto.UserResponseDTO;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.UserRepository;
 import com.gusmarg.tmetrage.services.utils.EmailService;
@@ -22,41 +23,38 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+	private final UserRepository userRepository;
+	private final PasswordEncoder passwordEncoder;
 	private final EmailService emailService;
-    private final JwtService jwtService;
+	private final JwtService jwtService;
 
-    @Transactional(readOnly = true)
-    public UserLoginResponseDTO login(UserLoginDTO dto) {
+	@Transactional(readOnly = true)
+	public UserLoginResponseDTO login(UserLoginDTO dto) {
 
-        User entity = userRepository.findByEmail(dto.getEmail());
+		User entity = userRepository.findByEmail(dto.getEmail());
 
-        boolean passwordMatches =
-                passwordEncoder.matches(dto.getPassword(), entity.getPassword());
+		boolean passwordMatches = passwordEncoder.matches(dto.getPassword(), entity.getPassword());
 
-        if (!passwordMatches) {
-            throw new RuntimeException("Senha incorreta");
-        }
+		if (!passwordMatches) {
+			throw new RuntimeException("Senha incorreta");
+		}
 
-        String token = jwtService.generateToken(entity.getEmail());
-        
+		String token = jwtService.generateToken(entity.getEmail());
+
 		log.info("Login efetuado com: {}", entity.getEmail());
-        
-        return new UserLoginResponseDTO(token, entity.getName(), entity.getUsername(), entity.getAvatar());
-    }
 
-    @Transactional(readOnly = true)
-    public User getAuthenticatedUser() {
+		return new UserLoginResponseDTO(token,new UserResponseDTO(entity.getName(), entity.getProfileName(), entity.getAvatar(), entity.getEmail()));
+	}
 
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
+	@Transactional(readOnly = true)
+	public User getAuthenticatedUser() {
 
-        String email = authentication.getName();
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        return userRepository.findByEmail(email);
-    }
+		String email = authentication.getName();
+
+		return userRepository.findByEmail(email);
+	}
 
 	@Transactional
 	public void resetPassword(String email) {
@@ -65,14 +63,15 @@ public class AuthService {
 
 		String newPassword = PasswordGenerator.generatePassword(8);
 		String encryptedPassword = passwordEncoder.encode(newPassword);
-		
+
 		entity.setPassword(encryptedPassword);
 
 		userRepository.save(entity);
 
 		log.info("Senha alterada");
-		
-		emailService.sendEmail(entity.getEmail(), "TMétrage: Nova senha da sua conta", "Sua nova senha é: " + newPassword);
+
+		emailService.sendEmail(entity.getEmail(), "TMétrage: Nova senha da sua conta",
+				"Sua nova senha é: " + newPassword);
 
 		log.info("Email enviado para: {}", entity.getEmail());
 	}
