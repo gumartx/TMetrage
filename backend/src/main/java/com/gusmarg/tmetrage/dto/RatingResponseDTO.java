@@ -17,7 +17,7 @@ import lombok.Setter;
 public class RatingResponseDTO {
 
 	private Long movieId;
-    private Double score;
+    private Double rating;
 	@JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate createdAt;
     private String platform;
@@ -25,7 +25,7 @@ public class RatingResponseDTO {
 
     public RatingResponseDTO(Rating entity) {
     	movieId = entity.getMovie().getId();
-    	score = entity.getScore();
+    	rating = entity.getScore();
     	createdAt = entity.getCreatedAt();
     	platform = entity.getPlatform() != null ? entity.getPlatform().getNome() : null;
 	}

@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.gusmarg.tmetrage.components.TMDBSaveData;
 import com.gusmarg.tmetrage.dto.RatingFilterDTO;
 import com.gusmarg.tmetrage.dto.RatingMovieDTO;
-import com.gusmarg.tmetrage.dto.RatingPlatformDTO;
+import com.gusmarg.tmetrage.dto.RatingUpdateDTO;
 import com.gusmarg.tmetrage.dto.RatingResponseDTO;
 import com.gusmarg.tmetrage.entities.Movie;
 import com.gusmarg.tmetrage.entities.Rating;
@@ -31,6 +31,18 @@ public class RatingService {
 	private final RatingRepository ratingRepository;
 	private final MovieRepository movieRepository;
 	private final TMDBService tmdbService;
+
+	@Transactional(readOnly = true)
+	public RatingResponseDTO findMovieUserRating(Long movieId) {
+
+		User user = authService.getAuthenticatedUser();
+
+		Rating rating = ratingRepository.findByUserIdAndMovieId(user.getId(), movieId);
+
+		log.info("Avaliação de usuário '{}' do filme '{}'", user.getProfileName(), movieId);
+
+		return new RatingResponseDTO(rating);
+	}
 
 	@Transactional(readOnly = true)
 	public List<RatingResponseDTO> findUserRatings(RatingFilterDTO filter) {
@@ -86,18 +98,18 @@ public class RatingService {
 
 		Rating rating = new Rating();
 		rating.setId(id);
-		rating.setScore(dto.getScore());
+		rating.setScore(dto.getRating());
 		rating.setPlatform(dto.getPlatform());
 
 		rating = ratingRepository.save(rating);
 
-		log.info("Usuário '{}' avaliou filme '{}' com nota {}", user.getUsername(), movie.getId(), dto.getScore());
+		log.info("Usuário '{}' avaliou filme '{}' com nota {}", user.getUsername(), movie.getId(), dto.getRating());
 
 		return new RatingResponseDTO(rating);
 	}
 
 	@Transactional
-	public RatingResponseDTO updatePlatform(Long movieId, RatingPlatformDTO dto) {
+	public RatingResponseDTO updateRating(Long movieId, RatingUpdateDTO dto) {
 
 		User user = authService.getAuthenticatedUser();
 
@@ -108,13 +120,12 @@ public class RatingService {
 		RatingPK id = new RatingPK(user, movie);
 
 		Rating rating = ratingRepository.getReferenceById(id);
-
+		rating.setScore(dto.getRating());
 		rating.setPlatform(dto.getPlatform());
 
 		rating = ratingRepository.save(rating);
 
-		log.info("Usuário '{}' atualizou plataforma '{}' no filme '{}'", user.getUsername(), dto.getPlatform(),
-				movie.getId());
+		log.info("Usuário '{}' atualizou dados do filme '{}'", user.getUsername(), movie.getId());
 
 		return new RatingResponseDTO(rating);
 	}

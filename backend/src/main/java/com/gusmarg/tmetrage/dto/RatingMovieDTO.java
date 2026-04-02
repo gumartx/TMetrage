@@ -21,7 +21,7 @@ public class RatingMovieDTO {
 	@NotNull
 	@Min(1)
 	@Max(5)
-    private Double score;
+    private Double rating;
     private Platform platform;
     
 }

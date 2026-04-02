@@ -11,8 +11,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class RatingPlatformDTO {
+public class RatingUpdateDTO {
 
+	private Double rating;
     private Platform platform;
     
 }

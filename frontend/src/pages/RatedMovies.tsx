@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { getRatings, PLATFORMS, PlatformBadge, type RatingEntry } from "@/components/UserRating";
+import { PLATFORMS, PlatformBadge } from "@/components/UserRating";
+import { getUserRatings } from "@/lib/ratings";
 import { getMovieDetails, getPosterUrl, type MovieDetails } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 import { Tv } from "lucide-react";
@@ -51,25 +52,29 @@ const RatedMovies = () => {
 
   useEffect(() => {
     const loadRatedMovies = async () => {
-      const ratings = getRatings();
-      const entries = Object.entries(ratings);
-      if (entries.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      const results: RatedMovie[] = [];
-      for (const [movieId, entry] of entries) {
-        try {
-          const movie = await getMovieDetails(Number(movieId));
-          results.push({ movie, rating: entry.rating, date: entry.date, platform: entry.platform });
-        } catch {
-          // skip failed fetches
+      try {
+        const ratings = await getUserRatings();
+        if (ratings.length === 0) {
+          setLoading(false);
+          return;
         }
+
+        const results: RatedMovie[] = [];
+        for (const entry of ratings) {
+          try {
+            const movie = await getMovieDetails(entry.movieId);
+            results.push({ movie, rating: entry.rating, date: entry.createdAt, platform: entry.platform });
+          } catch {
+            // skip failed fetches
+          }
+        }
+        results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setRatedMovies(results);
+      } catch (err) {
+        console.error("Erro ao carregar avaliações:", err);
+      } finally {
+        setLoading(false);
       }
-      results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setRatedMovies(results);
-      setLoading(false);
     };
 
     loadRatedMovies();

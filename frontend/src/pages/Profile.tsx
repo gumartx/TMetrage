@@ -3,7 +3,7 @@ import { getGenreColor } from "@/lib/genreColors";
 import { Link } from "react-router-dom";
 import { Search, Star, Film, List, Users, UserPlus, Camera, Pencil, X, Upload, Lock, MessageCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import { getRatings } from "@/components/UserRating";
+import { getRatings, PLATFORMS, PlatformBadge } from "@/components/UserRating";
 import { getLists } from "@/lib/movieLists";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

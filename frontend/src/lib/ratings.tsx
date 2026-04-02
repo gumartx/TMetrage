@@ -1,73 +1,53 @@
-import { apiRequest, setToken, removeToken } from "./api";
+import { apiRequest, isAuthenticated } from "./api";
 
-export interface AuthUser {
-  id: string | number;
-  name: string;
-  username: string;
-  email: string;
-  avatar?: string;
-  bio?: string;
+export interface RatingResponse {
+  movieId: number;
+  rating: number;
+  platform?: string;
+  createdAt: string;
 }
 
-interface LoginResponse {
-  token: string;
-  user: AuthUser;
+// Fetch all ratings for the authenticated user
+export async function getUserRatings(): Promise<RatingResponse[]> {
+  return apiRequest<RatingResponse[]>("/ratings", { auth: true });
 }
 
-interface RegisterResponse {
-  token: string;
-  user: AuthUser;
+// Fetch a single rating by movie
+export async function getMovieRating(movieId: number): Promise<RatingResponse | null> {
+  try {
+    return await apiRequest<RatingResponse>(`/ratings/${movieId}`, { auth: true });
+  } catch {
+    return null;
+  }
 }
 
-export async function loginAPI(email: string, password: string): Promise<AuthUser> {
-  const data = await apiRequest<LoginResponse>("/auth/login", {
+// Create or update a rating (upsert by movieId)
+export async function createRating(movieId: number, rating: number, platform?: string): Promise<RatingResponse> {
+  return apiRequest<RatingResponse>("/ratings", {
     method: "POST",
-    body: { email, password },
-  });
-
-  setToken(data.token);
-  saveProfileFromUser(data.user);
-  return data.user;
-}
-
-export async function registerAPI(
-  name: string,
-  username: string,
-  email: string,
-  password: string
-): Promise<AuthUser> {
-
-  const data = await apiRequest<RegisterResponse>("/auth/register", {
-    method: "POST",
-    body: { name, profileName: username, email, password },
-  });
-
-  return data.user;
-}
-
-export async function forgotPasswordAPI(email: string): Promise<void> {
-  await apiRequest("/auth/forgot-password", {
-    method: "POST",
-    body: { email },
+    body: { movieId, rating, platform },
+    auth: true,
   });
 }
 
-export function logoutAPI(): void {
-  removeToken();
-  localStorage.removeItem("tmetrage_profile");
+// Update an existing rating by movieId
+export async function updateRating(movieId: number, rating: number, platform?: string): Promise<RatingResponse> {
+  return apiRequest<RatingResponse>(`/ratings/${movieId}`, {
+    method: "PUT",
+    body: { rating, platform },
+    auth: true,
+  });
 }
- 
-function saveProfileFromUser(user: AuthUser): void {
-  const formattedUsername = user.username.startsWith("@") ? user.username : `@${user.username}`;
-  const profileData = {
-    name: user.name,
-    profileName: formattedUsername,
-    username: formattedUsername,
-    bio: user.bio || "",
-    avatar: user.avatar || "",
-    cover: "",
-    followers: 0,
-    following: 0,
-  };
-  localStorage.setItem("tmetrage_profile", JSON.stringify(profileData));
+
+// Delete a rating by movieId
+export async function deleteRating(movieId: number): Promise<void> {
+  await apiRequest(`/ratings/${movieId}`, {
+    method: "DELETE",
+    auth: true,
+  });
+}
+
+// Helper: check if user can rate (is authenticated)
+export function canRate(): boolean {
+  return isAuthenticated();
 }
