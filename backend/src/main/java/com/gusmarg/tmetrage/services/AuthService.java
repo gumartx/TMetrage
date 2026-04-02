@@ -56,6 +56,15 @@ public class AuthService {
 		return userRepository.findByEmail(email);
 	}
 
+	@Transactional(readOnly = true)
+	public User getAuthenticatedUserOptional() {
+	    try {
+	        return getAuthenticatedUser();
+	    } catch (Exception e) {
+	        return null;
+	    }
+	}
+
 	@Transactional
 	public void resetPassword(String email) {
 

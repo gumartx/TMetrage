@@ -20,26 +20,20 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/comentarios")
+@RequestMapping("/comments")
 public class CommentController {
 
     private final CommentService commentService;
 
-    @GetMapping(value = "/filme/{movieId}")
+    @GetMapping(value = "/movies/{movieId}")
     public ResponseEntity<List<CommentResponseDTO>> getMovieComments(@PathVariable Long movieId) {
         List<CommentResponseDTO> result = commentService.findAllMovieComments(movieId);
         return ResponseEntity.ok(result);
     }
     
-    @GetMapping(value = "/{commentId}/respostas")
-    public ResponseEntity<List<CommentResponseDTO>> getReplies(@PathVariable Long commentId) {
-        List<CommentResponseDTO> result = commentService.getReplies(commentId);
-        return ResponseEntity.ok(result);
-    }
-    
-    @PostMapping()
-    public ResponseEntity<CommentResponseDTO> createComment(@RequestBody CommentCreateDTO dto) {
-        CommentResponseDTO result = commentService.createComment(dto);
+    @PostMapping(value = "/movies/{movieId}")
+    public ResponseEntity<CommentResponseDTO> addComment(@PathVariable Long movieId, @RequestBody CommentCreateDTO dto) {
+        CommentResponseDTO result = commentService.createComment(movieId, dto);
         return ResponseEntity.ok(result);
     }
     
@@ -49,7 +43,7 @@ public class CommentController {
         return ResponseEntity.noContent().build();
     }
     
-    @PutMapping("/{commentId}/curtir")
+    @PutMapping("/{commentId}/like")
     public ResponseEntity<Void> toggleLike(@PathVariable Long commentId) {
         commentService.toggleLike(commentId);
         return ResponseEntity.noContent().build();

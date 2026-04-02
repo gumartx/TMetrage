@@ -30,24 +30,27 @@ public class CommentService {
 
 	@Transactional
 	public List<CommentResponseDTO> findAllMovieComments(Long movieId) {
+		
+		User user = authService.getAuthenticatedUserOptional();
+		
 		List<Comment> result = commentRepository.findByMovieIdAndParentIsNullOrderByCreatedAtAsc(movieId);
 
 	    log.info("{} comentário(s) no filme '{}'", result.size(), movieId);
 	    
-		return result.stream().map(CommentResponseDTO::new).toList();
+		return result.stream().map(comment -> new CommentResponseDTO(comment, user)).toList();
 	}
 
 	@Transactional
-	public CommentResponseDTO createComment(CommentCreateDTO dto) {
+	public CommentResponseDTO createComment(Long movieId, CommentCreateDTO dto) {
 
 		User user = authService.getAuthenticatedUser();
 
-		Movie movie = movieRepository.findById(dto.getMovieId()).orElseGet(() -> {
-			return TMDBSaveData.saveMovieFromTMDB(dto.getMovieId(), tmdbService, movieRepository);
+		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
+			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository);
 		});
 
 		Comment comment = new Comment();
-		comment.setMessage(dto.getMessage());
+		comment.setMessage(dto.getContent());
 		comment.setUser(user);
 		comment.setMovie(movie);
 
@@ -63,7 +66,7 @@ public class CommentService {
 
 		log.info("Usuário '{}' publicou comentário no filme '{}'", user.getUsername(), movie.getId());
 
-		return new CommentResponseDTO(comment);
+		return new CommentResponseDTO(comment, user);
 	}
 
 	@Transactional
@@ -76,22 +79,13 @@ public class CommentService {
 		if (comment.getLikes().contains(user)) {
 
 			comment.getLikes().remove(user);
-			
 		    log.info("Usuário '{}' descurtiu o comentário '{}'", user.getUsername(), comment.getId());
 
 		} else {
 			comment.getLikes().add(user);
-			
 		    log.info("Usuário '{}' curtiu o comentário '{}'", user.getUsername(), comment.getId());
 		}
-	}
-
-	@Transactional(readOnly = true)
-	public List<CommentResponseDTO> getReplies(Long commentId) {
-
-		List<Comment> replies = commentRepository.findByParentIdOrderByCreatedAtAsc(commentId);
-
-		return replies.stream().map(CommentResponseDTO::new).toList();
+		
 	}
 
 	@Transactional
@@ -106,6 +100,11 @@ public class CommentService {
 			throw new RuntimeException("Você não pode deletar esse comentário");
 		}
 
+		if (comment.getParent() != null) {
+			Comment parent = commentRepository.getReferenceById(comment.getParent().getId());
+			parent.getReplies().remove(comment);
+		}
+		
 		commentRepository.delete(comment);
 	}
 

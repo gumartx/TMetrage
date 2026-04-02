@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, Send, Trash2 } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-
 import {
   getCommentsForMovie,
   addComment,
@@ -13,10 +11,7 @@ import {
   deleteComment,
   type Comment,
 } from "@/lib/comments";
-
-function isLoggedIn(): boolean {
-  return !!localStorage.getItem("token");
-}
+import { isAuthenticated } from "@/lib/api";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -32,37 +27,53 @@ function timeAgo(dateStr: string): string {
 function getCurrentUsername(): string {
   try {
     const saved = localStorage.getItem("tmetrage_profile");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed.profileName) return parsed.profileName;
-      if (parsed.name) return parsed.name;
-    }
-  } catch { /* empty */ }
-  return "";
+
+    if (!saved) return "";
+
+    const parsed = JSON.parse(saved);
+
+    return parsed.username;
+  } catch {
+    return "";
+  }
 }
 
 interface CommentItemProps {
   comment: Comment;
+  onRefresh: () => void;
   depth?: number;
   movieId: number;
-  onUpdateCommentTree: (updatedComment: Comment) => void;
-  onDeleteComment: (commentId: number) => void;
 }
 
-const CommentItem = ({
-  comment,
-  depth = 0,
-  movieId,
-  onUpdateCommentTree,
-  onDeleteComment,
-}: CommentItemProps) => {
+const CommentItem = ({ comment, onRefresh, depth = 0, movieId }: CommentItemProps) => {
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [showReplies, setShowReplies] = useState(false);
-
   const navigate = useNavigate();
   const currentUser = getCurrentUsername();
-  const liked = comment.likedBy?.includes(currentUser);
+  const liked = comment.likedByMe;
+  const replyCount = comment.replies?.length || 0;
+
+  const handleLike = async () => {
+    if (!isAuthenticated()) { navigate("/login"); return; }
+    await toggleLike(comment.id);
+    onRefresh();
+  };
+
+  const handleReply = async () => {
+    if (!isAuthenticated()) { navigate("/login"); return; }
+    if (!replyText.trim()) return;
+    await addComment(movieId, replyText.trim(), comment.id);
+    setReplyText("");
+    setShowReply(false);
+    onRefresh();
+  };
+
+  const handleDelete = async () => {
+    console.log("deletando", comment.id);
+    await deleteComment(comment.id);
+    onRefresh();
+  };
 
   const goToProfile = () => {
     if (comment.author === currentUser) {
@@ -72,106 +83,57 @@ const CommentItem = ({
     }
   };
 
-  // ✅ Curtir instantâneo
-  const handleLike = async () => {
-    if (!isLoggedIn()) {
-      navigate("/login");
-      return;
-    }
-
-    // Atualiza instantaneamente
-    const isLiked = liked;
-    const newLikes = isLiked ? comment.likes - 1 : comment.likes + 1;
-    const newLikedBy = isLiked
-      ? comment.likedBy.filter(u => u !== currentUser)
-      : [...(comment.likedBy || []), currentUser];
-
-    const updatedComment = { ...comment, likes: newLikes, likedBy: newLikedBy };
-    onUpdateCommentTree(updatedComment);
-
-    // Persistir no back
-    await toggleLike(comment.id);
-  };
-
-  const handleReply = async () => {
-    if (!isLoggedIn()) {
-      navigate("/login");
-      return;
-    }
-    if (!replyText.trim()) return;
-
-    const newReply = await addComment(movieId, replyText.trim(), comment.id);
-    setReplyText("");
-    setShowReply(false);
-
-    // Adiciona a resposta instantaneamente
-    onUpdateCommentTree({
-      ...comment,
-      replies: [newReply, ...(comment.replies || [])],
-    });
-    setShowReplies(true);
-  };
-
-  const handleDelete = async () => {
-    await deleteComment(comment.id);
-    onDeleteComment(comment.id);
-  };
-
   return (
     <div className={`${depth > 0 ? "ml-8 border-l-2 border-border pl-4" : ""}`}>
       <div className="py-3">
         <div className="flex items-center gap-2 mb-1.5">
           <button
             onClick={goToProfile}
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary"
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary hover:ring-2 hover:ring-primary/40 transition-all cursor-pointer overflow-hidden"
           >
-            {comment.author.charAt(0).toUpperCase()}
+            {comment.avatar ? (
+              <img src={comment.avatar} alt={comment.author} className="h-full w-full object-cover" />
+            ) : (
+              comment.author.charAt(0).toUpperCase()
+            )}
           </button>
           <button
             onClick={goToProfile}
-            className="text-sm font-semibold hover:text-primary hover:underline"
+            className="text-sm font-semibold text-foreground hover:text-primary hover:underline transition-colors cursor-pointer"
           >
             {comment.author}
           </button>
-          <span className="text-xs text-muted-foreground">
-            {timeAgo(comment.createdAt)}
-          </span>
+          <span className="text-xs text-muted-foreground">{timeAgo(comment.createdAt)}</span>
         </div>
-
-        <p className="text-sm mb-2">{comment.content}</p>
-
+        <p className="text-sm leading-relaxed text-secondary-foreground mb-2">{comment.content}</p>
         <div className="flex items-center gap-3">
           <button
             onClick={handleLike}
-            className={`flex items-center gap-1 text-xs ${
-              liked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
-            }`}
+            className={`flex items-center gap-1 text-xs transition-colors ${liked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+              }`}
           >
             <Heart className={`h-3.5 w-3.5 ${liked ? "fill-current" : ""}`} />
             {comment.likes > 0 && comment.likes}
           </button>
-
-          {depth < 6 && (
+          {depth < 2 && (
             <button
               onClick={() => setShowReply(!showReply)}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               <MessageCircle className="h-3.5 w-3.5" />
               Responder
             </button>
           )}
-
           {comment.author === currentUser && (
             <button
               onClick={handleDelete}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Excluir
             </button>
           )}
         </div>
-
         {showReply && (
           <div className="mt-2 flex gap-2">
             <Input
@@ -187,36 +149,24 @@ const CommentItem = ({
           </div>
         )}
       </div>
-
-      {comment.replies && comment.replies.length > 0 && (
+      {depth === 0 && replyCount > 0 && (
         <button
           onClick={() => setShowReplies(!showReplies)}
-          className="ml-2 mb-1 flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+          className="ml-2 mb-1 flex items-center gap-1.5 text-xs font-medium text-primary hover:underline transition-colors"
         >
           <MessageCircle className="h-3.5 w-3.5" />
-          {showReplies ? "Ocultar respostas" : "Ver respostas"}
+          {showReplies ? "Ocultar respostas" : `Ver ${replyCount} resposta${replyCount > 1 ? "s" : ""}`}
         </button>
       )}
-
-      {showReplies &&
-        comment.replies?.map((reply) => (
-          <CommentItem
-            key={reply.id}
-            comment={reply}
-            depth={depth + 1}
-            movieId={movieId}
-            onUpdateCommentTree={(updatedReply) => {
-              const newReplies = comment.replies!.map((r) =>
-                r.id === updatedReply.id ? updatedReply : r
-              );
-              onUpdateCommentTree({ ...comment, replies: newReplies });
-            }}
-            onDeleteComment={(replyId) => {
-              const newReplies = comment.replies!.filter((r) => r.id !== replyId);
-              onUpdateCommentTree({ ...comment, replies: newReplies });
-            }}
-          />
-        ))}
+      {(depth > 0 || showReplies) && comment.replies?.map((reply) => (
+        <CommentItem
+          key={reply.id}
+          comment={reply}
+          onRefresh={onRefresh}
+          depth={depth + 1}
+          movieId={movieId}
+        />
+      ))}
     </div>
   );
 };
@@ -226,51 +176,28 @@ const MovieComments = ({ movieId }: { movieId: number }) => {
   const [newComment, setNewComment] = useState("");
   const navigate = useNavigate();
 
-  const loadComments = async () => {
+  const refresh = useCallback(async () => {
     const data = await getCommentsForMovie(movieId);
-    setComments([...data]);
-  };
-
-  useEffect(() => {
-    loadComments();
+    setComments(data);
   }, [movieId]);
 
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+
   const handleSubmit = async () => {
-    if (!isLoggedIn()) {
-      navigate("/login");
-      return;
-    }
+    if (!isAuthenticated()) { navigate("/login"); return; }
     if (!newComment.trim()) return;
-
-    const createdComment = await addComment(movieId, newComment.trim());
+    await addComment(movieId, newComment.trim());
     setNewComment("");
-    setComments((prev) => [createdComment, ...prev]);
-  };
-
-  const updateCommentTree = (updatedComment: Comment) => {
-    const recursiveUpdate = (commentsList: Comment[]): Comment[] => {
-      return commentsList.map((c) => {
-        if (c.id === updatedComment.id) return updatedComment;
-        if (c.replies) return { ...c, replies: recursiveUpdate(c.replies) };
-        return c;
-      });
-    };
-    setComments((prev) => recursiveUpdate(prev));
-  };
-
-  const deleteCommentFromTree = (commentId: number) => {
-    const recursiveDelete = (commentsList: Comment[]): Comment[] => {
-      return commentsList
-        .filter((c) => c.id !== commentId)
-        .map((c) => (c.replies ? { ...c, replies: recursiveDelete(c.replies) } : c));
-    };
-    setComments((prev) => recursiveDelete(prev));
+    refresh();
   };
 
   return (
     <section className="mt-12 pb-16">
       <h2 className="mb-4 text-xl font-bold text-foreground">
-        Comentários {comments?.length ? `(${comments.length})` : ""}
+        Comentários {comments.length > 0 && `(${comments.length})`}
       </h2>
 
       <div className="mb-6 rounded-lg border border-border bg-card p-4">
@@ -278,7 +205,7 @@ const MovieComments = ({ movieId }: { movieId: number }) => {
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="Escreva seu comentário sobre o filme..."
-          className="mb-3 min-h-[80px]"
+          className="mb-3 min-h-[80px] resize-none"
           maxLength={500}
         />
         <div className="flex items-center justify-between">
@@ -298,9 +225,8 @@ const MovieComments = ({ movieId }: { movieId: number }) => {
             <CommentItem
               key={comment.id}
               comment={comment}
+              onRefresh={refresh}
               movieId={movieId}
-              onUpdateCommentTree={updateCommentTree}
-              onDeleteComment={deleteCommentFromTree}
             />
           ))}
         </div>

@@ -1,8 +1,10 @@
 package com.gusmarg.tmetrage.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.gusmarg.tmetrage.entities.Comment;
+import com.gusmarg.tmetrage.entities.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,24 +16,30 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CommentResponseDTO {
-	
-    private Long id;
-    private Long movieId;
-    private String author;
-    private String content;
-    private String profileImg;
-    private LocalDateTime createdAt;
-    private Integer likes;
-    private Long parentId;
-    
-	public CommentResponseDTO (Comment entity) {
+
+	private Long id;
+	private Long movieId;
+	private String author;
+	private String content;
+	private String avatar;
+	private boolean likedByMe;
+	private LocalDateTime createdAt;
+	private int likes;
+	private Long parentId;
+	private List<CommentResponseDTO> replies;
+
+	public CommentResponseDTO(Comment entity, User currentUser) {
 		id = entity.getId();
 		movieId = entity.getMovie().getId();
-		author = entity.getUser().getUsername();
-		profileImg = entity.getUser().getAvatar();
+		author = entity.getUser().getProfileName();
+		avatar = entity.getUser().getAvatar();
 		content = entity.getMessage();
+		likedByMe = currentUser != null
+				&& entity.getLikes().stream().anyMatch(user -> user.getId().equals(currentUser.getId()));
 		createdAt = entity.getCreatedAt();
-    	parentId = entity.getParent() != null ? entity.getParent().getId() : null;
-    	likes = entity.getAmountLikes();
+		parentId = entity.getParent() != null ? entity.getParent().getId() : null;
+		likes = entity.getAmountLikes();
+		replies = entity.getReplies().stream().map(reply -> new CommentResponseDTO(reply, currentUser)).toList();
 	}
+
 }

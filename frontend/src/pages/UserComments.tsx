@@ -11,9 +11,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { type Comment, toggleLike } from "@/lib/comments";
+import { apiRequest } from "@/lib/api";
 import { getMovieDetails, getPosterUrl } from "@/lib/tmdb";
 
-const STORAGE_KEY = "movie_comments";
 const PROFILE_KEY = "tmetrage_profile";
 
 function getCurrentUsername(): string {
@@ -36,9 +36,9 @@ function getProfile() {
   return { name: "Você", avatar: "" };
 }
 
-function getAllComments(): Comment[] {
+async function getUserComments(username: string): Promise<Comment[]> {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    return await apiRequest<Comment[]>(`/users/${encodeURIComponent(username)}/comments`);
   } catch {
     return [];
   }
@@ -82,8 +82,7 @@ const UserComments = () => {
 
   useEffect(() => {
     const loadComments = async () => {
-      const all = getAllComments();
-      const userComments = all.filter((c) => c.author === currentUser);
+      const userComments = await getUserComments(currentUser);
 
       // Fetch movie details for each unique movieId
       const movieIds = [...new Set(userComments.map((c) => c.movieId))];
@@ -310,25 +309,23 @@ const UserComments = () => {
                       {/* Actions */}
                       <div className="flex items-center gap-4">
                         <button
-                          onClick={() => {
-                            toggleLike(comment.id, currentUser);
-                            // Refresh comments
-                            const all = getAllComments();
-                            const userComments = all.filter((c) => c.author === currentUser);
+                          onClick={async () => {
+                            await toggleLike(comment.id);
+                            const userComments = await getUserComments(currentUser);
                             setComments((prev) =>
                               prev.map((pc) => {
                                 const updated = userComments.find((uc) => uc.id === pc.id);
-                                return updated ? { ...pc, likes: updated.likes, likedBy: updated.likedBy } : pc;
+                                return updated ? { ...pc, likes: updated.likes, likedByMe: updated.likedByMe } : pc;
                               })
                             );
                           }}
                           className={`flex items-center gap-1 text-xs transition-colors ${
-                            comment.likedBy.includes(currentUser)
+                            comment.likedByMe
                               ? "text-red-500"
                               : "text-muted-foreground hover:text-red-500"
                           }`}
                         >
-                          <Heart className={`h-3.5 w-3.5 ${comment.likedBy.includes(currentUser) ? "fill-current" : ""}`} />
+                          <Heart className={`h-3.5 w-3.5 ${comment.likedByMe ? "fill-current" : ""}`} />
                           {comment.likes > 0 && <span>{comment.likes}</span>}
                         </button>
                         <Link
