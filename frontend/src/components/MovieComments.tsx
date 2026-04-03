@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/files";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, Send, Trash2 } from "lucide-react";
@@ -32,7 +33,7 @@ function getCurrentUsername(): string {
 
     const parsed = JSON.parse(saved);
 
-    return parsed.username;
+    return parsed.profileName;
   } catch {
     return "";
   }
@@ -92,7 +93,7 @@ const CommentItem = ({ comment, onRefresh, depth = 0, movieId }: CommentItemProp
             className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary hover:ring-2 hover:ring-primary/40 transition-all cursor-pointer overflow-hidden"
           >
             {comment.avatar ? (
-              <img src={comment.avatar} alt={comment.author} className="h-full w-full object-cover" />
+              <img src={getImageUrl(comment.avatar)} alt={comment.author} className="h-full w-full object-cover" />
             ) : (
               comment.author.charAt(0).toUpperCase()
             )}

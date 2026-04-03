@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/files";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, MessageCircle, ArrowLeft, Heart, Calendar as CalendarIcon, ExternalLink } from "lucide-react";
@@ -10,7 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { type Comment, toggleLike } from "@/lib/comments";
+import { type Comment, toggleLike, getUserComments } from "@/lib/comments";
 import { apiRequest } from "@/lib/api";
 import { getMovieDetails, getPosterUrl } from "@/lib/tmdb";
 
@@ -36,13 +37,6 @@ function getProfile() {
   return { name: "Você", avatar: "" };
 }
 
-async function getUserComments(username: string): Promise<Comment[]> {
-  try {
-    return await apiRequest<Comment[]>(`/users/${encodeURIComponent(username)}/comments`);
-  } catch {
-    return [];
-  }
-}
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -82,7 +76,7 @@ const UserComments = () => {
 
   useEffect(() => {
     const loadComments = async () => {
-      const userComments = await getUserComments(currentUser);
+      const userComments = await getUserComments();
 
       // Fetch movie details for each unique movieId
       const movieIds = [...new Set(userComments.map((c) => c.movieId))];
@@ -131,9 +125,20 @@ const UserComments = () => {
       (c.movieTitle || "").toLowerCase().includes(searchQuery.toLowerCase());
     const range = getDateRange();
     const commentDate = new Date(c.createdAt);
+    const from = range.from ? new Date(range.from) : null;
+    let to = range.to ? new Date(range.to) : null;
+
+    if (from) from.setHours(0, 0, 0, 0);
+    if (to) {
+      const nextDay = new Date(to);
+      nextDay.setDate(nextDay.getDate() + 1);
+      nextDay.setHours(0, 0, 0, 0);
+      to = nextDay;
+    }
+
     const matchesDate =
-      (!range.from || commentDate >= range.from) &&
-      (!range.to || commentDate <= new Date(range.to.getTime() + 86400000));
+      (!from || commentDate >= from) &&
+      (!to || commentDate < to);
     return matchesSearch && matchesDate;
   });
 
@@ -282,7 +287,7 @@ const UserComments = () => {
                       {/* Header: user info + movie name */}
                       <div className="flex items-center gap-2 mb-1">
                         <Avatar className="h-6 w-6">
-                          <AvatarImage src={profile.avatar} />
+                          <AvatarImage src={getImageUrl(profile.avatar)} />
                           <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
                             {profile.name?.charAt(0)?.toUpperCase() || "U"}
                           </AvatarFallback>
@@ -311,7 +316,7 @@ const UserComments = () => {
                         <button
                           onClick={async () => {
                             await toggleLike(comment.id);
-                            const userComments = await getUserComments(currentUser);
+                            const userComments = await getUserComments();
                             setComments((prev) =>
                               prev.map((pc) => {
                                 const updated = userComments.find((uc) => uc.id === pc.id);
@@ -319,11 +324,10 @@ const UserComments = () => {
                               })
                             );
                           }}
-                          className={`flex items-center gap-1 text-xs transition-colors ${
-                            comment.likedByMe
-                              ? "text-red-500"
-                              : "text-muted-foreground hover:text-red-500"
-                          }`}
+                          className={`flex items-center gap-1 text-xs transition-colors ${comment.likedByMe
+                            ? "text-red-500"
+                            : "text-muted-foreground hover:text-red-500"
+                            }`}
                         >
                           <Heart className={`h-3.5 w-3.5 ${comment.likedByMe ? "fill-current" : ""}`} />
                           {comment.likes > 0 && <span>{comment.likes}</span>}

@@ -13,11 +13,43 @@ export interface Comment {
   replies?: Comment[];
 }
 
+interface CommentFilters {
+  message?: string;
+  movieTitle?: string;
+  periodo?: string;
+  inicio?: string;
+  fim?: string;
+}
+
+
 export async function getCommentsForMovie(movieId: number): Promise<Comment[]> {
   return apiRequest<Comment[]>(`/comments/movies/${movieId}`, {
     method: "GET",
     auth: true
   });
+}
+
+export async function getUserComments(filters?: CommentFilters): Promise<Comment[]> {
+  try {
+    const params = new URLSearchParams();
+
+    if (filters?.message) params.append("message", filters.message);
+    if (filters?.movieTitle) params.append("movieTitle", filters.movieTitle);
+    if (filters?.periodo) params.append("periodo", filters.periodo);
+    if (filters?.inicio) params.append("inicio", filters.inicio);
+    if (filters?.fim) params.append("fim", filters.fim);
+
+    const query = params.toString();
+
+    return await apiRequest<Comment[]>(
+      `/comments/search${query ? `?${query}` : ""}`, {
+        method: "GET",
+        auth: true
+      }
+    );
+  } catch {
+    return [];
+  }
 }
 
 export async function addComment(

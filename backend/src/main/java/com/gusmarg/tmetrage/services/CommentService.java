@@ -1,12 +1,15 @@
 package com.gusmarg.tmetrage.services;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.gusmarg.tmetrage.components.TMDBSaveData;
 import com.gusmarg.tmetrage.dto.CommentCreateDTO;
+import com.gusmarg.tmetrage.dto.CommentFilterDTO;
 import com.gusmarg.tmetrage.dto.CommentResponseDTO;
 import com.gusmarg.tmetrage.entities.Comment;
 import com.gusmarg.tmetrage.entities.Movie;
@@ -30,13 +33,13 @@ public class CommentService {
 
 	@Transactional
 	public List<CommentResponseDTO> findAllMovieComments(Long movieId) {
-		
+
 		User user = authService.getAuthenticatedUserOptional();
-		
+
 		List<Comment> result = commentRepository.findByMovieIdAndParentIsNullOrderByCreatedAtAsc(movieId);
 
-	    log.info("{} comentário(s) no filme '{}'", result.size(), movieId);
-	    
+		log.info("{} comentário(s) no filme '{}'", result.size(), movieId);
+
 		return result.stream().map(comment -> new CommentResponseDTO(comment, user)).toList();
 	}
 
@@ -55,11 +58,11 @@ public class CommentService {
 		comment.setMovie(movie);
 
 		if (dto.getParentId() != null) {
-	        Comment parent = commentRepository.findById(dto.getParentId())
-	                .orElseThrow();
+			Comment parent = commentRepository.findById(dto.getParentId()).orElseThrow();
 			comment.setParent(parent);
-			
-			log.info("Usuário '{}' respondeu comentário de '{}' no filme '{}'", user.getProfileName(), parent.getUser().getProfileName(), movie.getTitle());
+
+			log.info("Usuário '{}' respondeu comentário de '{}' no filme '{}'", user.getProfileName(),
+					parent.getUser().getProfileName(), movie.getTitle());
 		}
 
 		comment = commentRepository.save(comment);
@@ -79,20 +82,20 @@ public class CommentService {
 		if (comment.getLikes().contains(user)) {
 
 			comment.getLikes().remove(user);
-		    log.info("Usuário '{}' descurtiu o comentário '{}'", user.getProfileName(), comment.getId());
+			log.info("Usuário '{}' descurtiu o comentário '{}'", user.getProfileName(), comment.getId());
 
 		} else {
 			comment.getLikes().add(user);
-		    log.info("Usuário '{}' curtiu o comentário '{}'", user.getProfileName(), comment.getId());
+			log.info("Usuário '{}' curtiu o comentário '{}'", user.getProfileName(), comment.getId());
 		}
-		
+
 	}
 
 	@Transactional
 	public void deleteComment(Long commentId) {
-		
+
 		Comment comment = commentRepository.findById(commentId)
-	            .orElseThrow(() -> new RuntimeException("Comentário não encontrado"));
+				.orElseThrow(() -> new RuntimeException("Comentário não encontrado"));
 
 		User user = authService.getAuthenticatedUser();
 
@@ -104,8 +107,27 @@ public class CommentService {
 			Comment parent = commentRepository.getReferenceById(comment.getParent().getId());
 			parent.getReplies().remove(comment);
 		}
-		
+
 		commentRepository.delete(comment);
+	}
+
+	@Transactional(readOnly = true)
+	public List<CommentResponseDTO> findUserComments(CommentFilterDTO filter) {
+
+		User user = authService.getAuthenticatedUser();
+		
+        LocalDateTime start = filter.getStartDate() != null ? filter.getStartDate().atStartOfDay() : null;
+        LocalDateTime end = filter.getEndDate() != null ? filter.getEndDate().atTime(23,59,59) : null;
+
+        List<Comment> comments = commentRepository.searchComments(
+            filter.getSearch(),
+            start != null ? start.toLocalDate() : null,
+            end != null ? end.toLocalDate() : null
+        );
+
+        return comments.stream()
+                       .map(comment -> new CommentResponseDTO(comment, user))
+                       .collect(Collectors.toList());
 	}
 
 }
