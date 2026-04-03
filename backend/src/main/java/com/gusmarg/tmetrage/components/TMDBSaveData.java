@@ -18,6 +18,8 @@ public class TMDBSaveData {
 		MovieDTO tmdbMovie = tmdbService.getMovieById(movieId);
 		Movie newMovie = new Movie();
 		newMovie.setId(tmdbMovie.getId());
+		newMovie.setTitle(tmdbMovie.getMovieTitle());
+		newMovie.setPosterPath(tmdbMovie.getPosterPath());
 		return movieRepository.save(newMovie);
 	};
 	

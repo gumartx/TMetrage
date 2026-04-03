@@ -15,40 +15,40 @@ public class UserDTO {
 
 	private Long id;
     private String name;
-    private String username;
+    private String profileName;
     private String bio;
     private String avatar;
-    private String backgroundImgUrl;
-    private Integer amountFollowers;
-    private Integer amountFollowing;
-    private Integer amountRatedMovies;
-    private Integer amountComments;
-    private Double avgScore;
+    private String cover;
+    private Integer followers;
+    private Integer following;
+    private Integer totalRatings;
+    private Integer totalComments;
+    private Double avgRating;
 	
     public UserDTO(User entity, Double avgScore) {
 		id = entity.getId();
 		name = entity.getName();
-		username = entity.getUsername();
+		profileName = entity.getProfileName();
 		bio = entity.getBio();
 		avatar = entity.getAvatar();
-		backgroundImgUrl = entity.getBackgroundImgUrl();
-		amountFollowers = entity.getAmountFollowers();
-		amountFollowing = entity.getAmountFollowing();
-		amountRatedMovies = entity.getAmountRatedMovies();
-		this.avgScore = avgScore;
-		amountComments = entity.getAmountComments();
+		cover = entity.getBackgroundImgUrl();
+		followers = entity.getAmountFollowers();
+		following = entity.getAmountFollowing();
+		totalRatings = entity.getAmountRatedMovies();
+		avgRating = avgScore;
+		totalComments = entity.getAmountComments();
 	}
     
     public UserDTO(User entity) {
 		id = entity.getId();
 		name = entity.getName();
-		username = entity.getUsername();
+		profileName = entity.getProfileName();
 		bio = entity.getBio();
 		avatar = entity.getAvatar();
-		backgroundImgUrl = entity.getBackgroundImgUrl();
-		amountFollowers = entity.getAmountFollowers();
-		amountFollowing = entity.getAmountFollowing();
-		amountRatedMovies = entity.getAmountRatedMovies();
-		amountComments = entity.getAmountComments();
+		cover = entity.getBackgroundImgUrl();
+		followers = entity.getAmountFollowers();
+		following = entity.getAmountFollowing();
+		totalRatings = entity.getAmountRatedMovies();
+		totalComments = entity.getAmountComments();
 	}
 }

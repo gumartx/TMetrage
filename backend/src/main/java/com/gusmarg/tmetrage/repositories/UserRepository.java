@@ -1,6 +1,7 @@
 package com.gusmarg.tmetrage.repositories;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -31,4 +32,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 		    AND f.id = :followingId
 		""")
 	boolean existsFollow(Long followerId, Long followingId);
+	
+    @Query("SELECT u.followers FROM User u WHERE u.id = :userId")
+    Set<User> findFollowersByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT u.following FROM User u WHERE u.id = :userId")
+    Set<User> findFollowingByUserId(@Param("userId") Long userId);
 }

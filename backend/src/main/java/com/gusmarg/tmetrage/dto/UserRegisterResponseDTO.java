@@ -21,7 +21,7 @@ public class UserRegisterResponseDTO {
     public UserRegisterResponseDTO(User entity) {
 		id = entity.getId();
 		name = entity.getName();
-		username = entity.getUsername();
+		username = entity.getProfileName();
 		email = entity.getEmail();
 	}
     

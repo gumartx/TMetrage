@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { getImageUrl } from "@/lib/files";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { getGenreColor } from "@/lib/genreColors";
 import { Link } from "react-router-dom";
-import { Search, Star, Film, List, Users, UserPlus, Camera, Pencil, X, Upload, Lock, MessageCircle } from "lucide-react";
+import { Search, Star, Film, List, Users, UserPlus, Camera, Pencil, X, Upload, Lock, MessageCircle, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import { getRatings, PLATFORMS, PlatformBadge } from "@/components/UserRating";
-import { getLists } from "@/lib/movieLists";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -27,154 +26,212 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-const STORAGE_KEY = "tmetrage_profile";
-
-const loadProfile = () => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch { /* empty */ }
-  return {
-    name: "Cinéfilo Anônimo",
-    username: "@cinefilo",
-    bio: "Apaixonado por cinema. Sempre em busca do próximo grande filme.",
-    avatar: "",
-    cover: "",
-    followers: 124,
-    following: 89,
-  };
-};
-
-interface ProfileUser {
-  name: string;
-  username: string;
-  avatar: string;
-}
-
-interface MovieComment {
-  author: string;
-  [key: string]: unknown;
-}
-
-interface StoredUser {
-  email: string;
-  password: string;
-  [key: string]: unknown;
-}
-
-const MOCK_USERS: ProfileUser[] = [
-  { name: "Ana Souza", username: "@anasouza", avatar: "" },
-  { name: "Carlos Lima", username: "@carloslima", avatar: "" },
-  { name: "Beatriz Rocha", username: "@bearocha", avatar: "" },
-  { name: "Diego Santos", username: "@diegosantos", avatar: "" },
-];
-
-const MOCK_FOLLOWERS: ProfileUser[] = [
-  { name: "Ana Souza", username: "@anasouza", avatar: "" },
-  { name: "Beatriz Rocha", username: "@bearocha", avatar: "" },
-  { name: "Diego Santos", username: "@diegosantos", avatar: "" },
-];
-
-const MOCK_FOLLOWING: ProfileUser[] = [
-  { name: "Carlos Lima", username: "@carloslima", avatar: "" },
-  { name: "Beatriz Rocha", username: "@bearocha", avatar: "" },
-];
-
-const fileToBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+import { toast } from "sonner";
+import {
+  getMyProfile,
+  updateProfile,
+  updateAvatar,
+  updateCover,
+  changePassword,
+  removeAvatar,
+  deleteAccount,
+  searchUsers,
+  getFollowers,
+  getFollowing,
+  UserProfile,
+} from "@/lib/profile";
+import { removeToken } from "@/lib/api";
 
 const Profile = () => {
-  const [profile, setProfile] = useState(loadProfile);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<{ name: string; profileName: string; avatar: string }[]>([]);
   const [editOpen, setEditOpen] = useState(false);
   const [followDialog, setFollowDialog] = useState<"followers" | "following" | null>(null);
   const [followSearch, setFollowSearch] = useState("");
-  const [editName, setEditName] = useState(profile.name);
-  const [editUsername, setEditUsername] = useState(profile.username);
-  const [editBio, setEditBio] = useState(profile.bio);
+  const [followList, setFollowList] = useState<{ name: string; profileName: string; avatar: string }[]>([]);
+  const [editName, setEditName] = useState("");
+  const [editProfileName, setEditProfileName] = useState("");
+  const [editBio, setEditBio] = useState("");
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [saving, setSaving] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
-  const lists = getLists();
 
-  const totalUserComments = (() => {
+  const loadProfile = useCallback(async () => {
     try {
-      const all = JSON.parse(localStorage.getItem("movie_comments") || "[]");
-      const username = profile.username || profile.name;
-      return all.filter((c: MovieComment) => c.author === username).length;
-    } catch { return 0; }
-  })();
+      const data = await getMyProfile();
+      setProfile(data);
+    } catch (err) {
+      toast.error(err.message || "Erro ao carregar perfil");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  // Persist profile to localStorage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-  }, [profile]);
+    loadProfile();
+  }, [loadProfile]);
+
+  // Search users with debounce
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const timeout = setTimeout(async () => {
+      try {
+        const results = await searchUsers(searchQuery);
+        setSearchResults(results);
+      } catch {
+        setSearchResults([]);
+      }
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const base64 = await fileToBase64(file);
-    setProfile((prev: typeof profile) => ({ ...prev, avatar: base64 }));
-    setAvatarDialogOpen(false);
+
+    try {
+      const updated = await updateAvatar(file);
+      localStorage.setItem(
+        "tmetrage_profile",
+        JSON.stringify({
+          name: updated.name,
+          profileName: updated.profileName,
+          avatar: updated.avatar,
+        })
+      );
+
+      window.dispatchEvent(new Event("profileUpdated"));
+      
+      setProfile((prev) =>
+        prev ? { ...prev, avatar: updated.avatar } : prev
+      );
+      setAvatarDialogOpen(false);
+      toast.success("Avatar atualizado!");
+    } catch (err) {
+      toast.error(err.message || "Erro ao atualizar avatar");
+    }
   };
 
   const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const base64 = await fileToBase64(file);
-    setProfile((prev: typeof profile) => ({ ...prev, cover: base64 }));
+
+    try {
+      const updated = await updateCover(file);
+      setProfile(updated);
+      toast.success("Capa atualizada!");
+    } catch (err) {
+      toast.error(err.message || "Erro ao atualizar capa");
+    }
   };
 
-  const totalMoviesInLists = lists.reduce((acc, l) => acc + l.movies.length, 0);
-
-  const genreCount: Record<number, number> = {};
-  lists.forEach((l) =>
-    l.movies.forEach((m) =>
-      m.genre_ids?.forEach((gid) => {
-        genreCount[gid] = (genreCount[gid] || 0) + 1;
-      })
-    )
-  );
-
-  const GENRE_NAMES: Record<number, string> = {
-    28: "Ação", 12: "Aventura", 16: "Animação", 35: "Comédia", 80: "Crime",
-    99: "Documentário", 18: "Drama", 10751: "Família", 14: "Fantasia",
-    36: "História", 27: "Terror", 10402: "Música", 9648: "Mistério",
-    10749: "Romance", 878: "Ficção científica", 10770: "Cinema TV",
-    53: "Thriller", 10752: "Guerra", 37: "Faroeste",
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    try {
+      const updated = await updateProfile({
+        name: editName.trim(),
+        profileName: editProfileName.trim(),
+        bio: editBio.trim(),
+      });
+      setProfile(updated);
+      // Update localStorage for navbar
+      const formattedUsername = updated.profileName.startsWith("@") ? updated.profileName : `@${updated.profileName}`;
+      localStorage.setItem("tmetrage_profile", JSON.stringify({
+        name: updated.name,
+        profileName: formattedUsername,
+        username: formattedUsername,
+        bio: updated.bio,
+        avatar: updated.avatar,
+        cover: updated.cover,
+        followers: updated.followers,
+        following: updated.following,
+      }));
+      setEditOpen(false);
+      toast.success("Perfil atualizado!");
+    } catch (err) {
+      toast.error(err.message || "Erro ao salvar perfil");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const topGenres = Object.entries(genreCount)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5)
-    .map(([id, count]) => ({ name: GENRE_NAMES[Number(id)] || `#${id}`, count }));
+  const handleChangePassword = async () => {
+    if (newPassword.length < 6) {
+      setPasswordError("A nova senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("As senhas não coincidem.");
+      return;
+    }
+    try {
+      await changePassword(currentPassword, newPassword);
+      setPasswordError("");
+      setPasswordDialogOpen(false);
+      toast.success("Senha alterada com sucesso!");
+    } catch (err) {
+      setPasswordError(err.message || "Erro ao alterar senha");
+    }
+  };
 
-  const ratings = getRatings();
-  const ratingEntries = Object.values(ratings);
-  const totalRated = ratingEntries.length;
-  const avgRating =
-    totalRated > 0
-      ? (ratingEntries.reduce((sum, e) => sum + e.rating, 0) / totalRated).toFixed(1)
-      : "—";
+  const handleDeleteAccount = async () => {
+    try {
+      await deleteAccount();
+      removeToken();
+      localStorage.removeItem("tmetrage_profile");
+      window.location.href = "/";
+    } catch (err) {
+      toast.error(err.message || "Erro ao excluir conta");
+    }
+  };
 
-  const filteredUsers = searchQuery.trim()
-    ? MOCK_USERS.filter(
-        (u) =>
-          u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          u.username.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : [];
+  const handleOpenFollowDialog = async (type: "followers" | "following") => {
+    setFollowDialog(type);
+    try {
+      const list = type === "followers" ? await getFollowers() : await getFollowing();
+      setFollowList(list);
+    } catch {
+      setFollowList([]);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container py-20 text-center">
+          <p className="text-muted-foreground">Erro ao carregar perfil. Faça login novamente.</p>
+          <Link to="/login">
+            <Button className="mt-4">Ir para login</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const displayUsername = profile.profileName.startsWith("@") ? profile.profileName : `@${profile.profileName}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -200,7 +257,7 @@ const Profile = () => {
       <div className="relative h-56 w-full bg-secondary overflow-hidden group">
         {profile.cover && (
           <img
-            src={profile.cover}
+            src={getImageUrl(profile.cover)}
             alt="Capa do perfil"
             className="absolute inset-0 h-full w-full object-cover"
           />
@@ -226,7 +283,7 @@ const Profile = () => {
             onClick={() => setAvatarDialogOpen(true)}
           >
             <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
-              <AvatarImage src={profile.avatar} />
+              <AvatarImage src={getImageUrl(profile.avatar)} />
               <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-display">
                 {profile.name.charAt(0)}
               </AvatarFallback>
@@ -240,7 +297,7 @@ const Profile = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="font-display text-2xl font-bold text-foreground">{profile.name}</h1>
-                <p className="text-sm text-muted-foreground">{profile.username}</p>
+                <p className="text-sm text-muted-foreground">{displayUsername}</p>
               </div>
               <Button
                 variant="outline"
@@ -248,7 +305,7 @@ const Profile = () => {
                 className="gap-2"
                 onClick={() => {
                   setEditName(profile.name);
-                  setEditUsername(profile.username);
+                  setEditProfileName(profile.profileName);
                   setEditBio(profile.bio);
                   setEditOpen(true);
                 }}
@@ -265,7 +322,7 @@ const Profile = () => {
         {/* Followers / Following */}
         <div className="flex gap-6 mb-8">
           <button
-            onClick={() => setFollowDialog("followers")}
+            onClick={() => handleOpenFollowDialog("followers")}
             className="flex items-center gap-2 text-sm hover:opacity-80 transition-opacity"
           >
             <Users className="h-4 w-4 text-primary" />
@@ -273,7 +330,7 @@ const Profile = () => {
             <span className="text-muted-foreground">seguidores</span>
           </button>
           <button
-            onClick={() => setFollowDialog("following")}
+            onClick={() => handleOpenFollowDialog("following")}
             className="flex items-center gap-2 text-sm hover:opacity-80 transition-opacity"
           >
             <UserPlus className="h-4 w-4 text-primary" />
@@ -288,7 +345,7 @@ const Profile = () => {
             <Card className="bg-card border-border cursor-pointer transition-colors hover:border-primary/40">
               <CardContent className="flex flex-col items-center justify-center py-6">
                 <Film className="h-6 w-6 text-primary mb-2" />
-                <span className="text-2xl font-bold text-foreground">{totalRated}</span>
+                <span className="text-2xl font-bold text-foreground">{profile.totalRatings}</span>
                 <span className="text-xs text-muted-foreground">Filmes avaliados</span>
               </CardContent>
             </Card>
@@ -296,7 +353,9 @@ const Profile = () => {
           <Card className="bg-card border-border">
             <CardContent className="flex flex-col items-center justify-center py-6">
               <Star className="h-6 w-6 text-star mb-2" />
-              <span className="text-2xl font-bold text-foreground">{avgRating}</span>
+              <span className="text-2xl font-bold text-foreground">
+                {profile.avgRating > 0 ? profile.avgRating.toFixed(1) : "—"}
+              </span>
               <span className="text-xs text-muted-foreground">Nota média</span>
             </CardContent>
           </Card>
@@ -304,7 +363,7 @@ const Profile = () => {
             <Card className="bg-card border-border cursor-pointer transition-colors hover:border-primary/40">
               <CardContent className="flex flex-col items-center justify-center py-6">
                 <List className="h-6 w-6 text-primary mb-2" />
-                <span className="text-2xl font-bold text-foreground">{lists.length}</span>
+                <span className="text-2xl font-bold text-foreground">—</span>
                 <span className="text-xs text-muted-foreground">Listas criadas</span>
               </CardContent>
             </Card>
@@ -313,7 +372,7 @@ const Profile = () => {
             <Card className="bg-card border-border cursor-pointer transition-colors hover:border-primary/40">
               <CardContent className="flex flex-col items-center justify-center py-6">
                 <MessageCircle className="h-6 w-6 text-accent mb-2" />
-                <span className="text-2xl font-bold text-foreground">{totalUserComments}</span>
+                <span className="text-2xl font-bold text-foreground">{profile.totalComments}</span>
                 <span className="text-xs text-muted-foreground">Comentários</span>
               </CardContent>
             </Card>
@@ -323,9 +382,9 @@ const Profile = () => {
         {/* Favorite Genres */}
         <div className="mb-8">
           <h2 className="font-display text-lg font-semibold text-foreground mb-3">Gêneros Favoritos</h2>
-          {topGenres.length > 0 ? (
+          {profile.topGenres?.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {topGenres.map((g) => {
+              {profile.topGenres?.map((g) => {
                 const colors = getGenreColor(g.name);
                 return (
                   <span
@@ -362,21 +421,27 @@ const Profile = () => {
 
           {searchQuery.trim() && (
             <div className="mt-3 space-y-2 max-w-md">
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((u) => (
+              {searchResults.length > 0 ? (
+                searchResults.map((u) => (
                   <Link
-                    key={u.username}
-                    to={`/usuario/${u.username.replace("@", "")}`}
+                    key={u.profileName}
+                    to={`/usuario/${u.profileName.replace("@", "")}`}
                     className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary/40"
                   >
                     <Avatar className="h-9 w-9">
-                      <AvatarFallback className="bg-secondary text-secondary-foreground text-sm">
-                        {u.name.charAt(0)}
-                      </AvatarFallback>
+                      {u.avatar ? (
+                        <AvatarImage src={getImageUrl(u.avatar)} />
+                      ) : (
+                        <AvatarFallback className="bg-secondary text-secondary-foreground text-sm">
+                          {u.name.charAt(0)}
+                        </AvatarFallback>
+                      )}
                     </Avatar>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-foreground">{u.name}</p>
-                      <p className="text-xs text-muted-foreground">{u.username}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {u.profileName.startsWith("@") ? u.profileName : `@${u.profileName}`}
+                      </p>
                     </div>
                     <span className="text-xs text-primary font-medium">Ver perfil →</span>
                   </Link>
@@ -397,7 +462,7 @@ const Profile = () => {
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-4">
             <Avatar className="h-48 w-48 border-2 border-border">
-              <AvatarImage src={profile.avatar} />
+              <AvatarImage src={getImageUrl(profile.avatar)} />
               <AvatarFallback className="bg-primary text-primary-foreground text-6xl font-display">
                 {profile.name.charAt(0)}
               </AvatarFallback>
@@ -415,9 +480,31 @@ const Profile = () => {
                 variant="ghost"
                 size="sm"
                 className="text-destructive hover:text-destructive gap-2"
-                onClick={() => {
-                  setProfile((prev: typeof profile) => ({ ...prev, avatar: "" }));
-                  setAvatarDialogOpen(false);
+                onClick={async () => {
+                  try {
+                    await removeAvatar();
+
+                    // atualizar perfil na tela
+                    setProfile((prev) =>
+                      prev ? { ...prev, avatar: null } : prev
+                    );
+
+                    // atualizar localStorage (usado pela navbar)
+                    const saved = localStorage.getItem("tmetrage_profile");
+                    if (saved) {
+                      const parsed = JSON.parse(saved);
+                      parsed.avatar = null;
+                      localStorage.setItem("tmetrage_profile", JSON.stringify(parsed));
+                    }
+
+                    // avisar navbar para atualizar
+                    window.dispatchEvent(new Event("profileUpdated"));
+
+                    setAvatarDialogOpen(false);
+                    toast.success("Avatar removido!");
+                  } catch (err) {
+                    toast.error(err.message || "Erro ao remover avatar");
+                  }
                 }}
               >
                 <X className="h-4 w-4" />
@@ -447,8 +534,8 @@ const Profile = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Usuário</label>
               <Input
-                value={editUsername}
-                onChange={(e) => setEditUsername(e.target.value)}
+                value={editProfileName}
+                onChange={(e) => setEditProfileName(e.target.value)}
                 placeholder="@usuario"
                 maxLength={30}
               />
@@ -465,17 +552,10 @@ const Profile = () => {
             </div>
             <Button
               className="w-full"
-              disabled={!editName.trim()}
-              onClick={() => {
-                setProfile((prev: typeof profile) => ({
-                  ...prev,
-                  name: editName.trim(),
-                  username: editUsername.trim(),
-                  bio: editBio.trim(),
-                }));
-                setEditOpen(false);
-              }}
+              disabled={!editName.trim() || saving}
+              onClick={handleSaveProfile}
             >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Salvar alterações
             </Button>
 
@@ -496,7 +576,7 @@ const Profile = () => {
 
             <div className="border-t border-border pt-4">
               <p className="text-xs text-muted-foreground mb-2">Zona de perigo</p>
-             <AlertDialog>
+              <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" className="w-full">
                     Excluir conta
@@ -512,10 +592,7 @@ const Profile = () => {
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={() => {
-                        localStorage.clear();
-                        window.location.href = "/";
-                      }}
+                      onClick={handleDeleteAccount}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
                       Excluir
@@ -529,7 +606,7 @@ const Profile = () => {
       </Dialog>
 
       {/* Followers / Following Dialog */}
-      <Dialog open={followDialog !== null} onOpenChange={(open) => { if (!open) { setFollowDialog(null); setFollowSearch(""); } }}>
+      <Dialog open={followDialog !== null} onOpenChange={(open) => { if (!open) { setFollowDialog(null); setFollowSearch(""); setFollowList([]); } }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -546,34 +623,44 @@ const Profile = () => {
             />
           </div>
           <div className="space-y-2 max-h-[350px] overflow-y-auto">
-            {(followDialog === "followers" ? MOCK_FOLLOWERS : MOCK_FOLLOWING)
+            {followList
               .filter((u) =>
                 !followSearch.trim() ||
                 u.name.toLowerCase().includes(followSearch.toLowerCase()) ||
-                u.username.toLowerCase().includes(followSearch.toLowerCase())
+                u.profileName.toLowerCase().includes(followSearch.toLowerCase())
               )
               .map((u) => (
-              <Link
-                key={u.username}
-                to={`/usuario/${u.username.replace("@", "")}`}
-                onClick={() => { setFollowDialog(null); setFollowSearch(""); }}
-                className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary/40"
-              >
-                <Avatar className="h-9 w-9">
-                  <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
-                    {u.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground">{u.name}</p>
-                  <p className="text-xs text-muted-foreground">{u.username}</p>
-                </div>
-                <span className="text-xs text-primary font-medium">Ver perfil →</span>
-              </Link>
-            ))}
+                <Link
+                  key={u.profileName}
+                  to={`/usuario/${u.profileName.replace("@", "")}`}
+                  onClick={() => { setFollowDialog(null); setFollowSearch(""); setFollowList([]); }}
+                  className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary/40"
+                >
+                  <Avatar className="h-9 w-9">
+                    {u.avatar ? (
+                      <AvatarImage src={getImageUrl(u.avatar)} />
+                    ) : (
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
+                        {u.name.charAt(0)}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground">{u.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {u.profileName.startsWith("@") ? u.profileName : `@${u.profileName}`}
+                    </p>
+                  </div>
+                  <span className="text-xs text-primary font-medium">Ver perfil →</span>
+                </Link>
+              ))}
+            {followList.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">Nenhum usuário encontrado.</p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
+
       {/* Change Password Dialog */}
       <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
         <DialogContent className="max-w-sm">
@@ -614,31 +701,7 @@ const Profile = () => {
             <Button
               className="w-full"
               disabled={!currentPassword || !newPassword || !confirmPassword}
-              onClick={() => {
-                const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-                const users: StoredUser[] = JSON.parse(localStorage.getItem("users") || "[]");
-                const user = users.find((u: StoredUser) => u.email === currentUser.email);
-
-                if (!user || user.password !== currentPassword) {
-                  setPasswordError("Senha atual incorreta.");
-                  return;
-                }
-                if (newPassword.length < 6) {
-                  setPasswordError("A nova senha deve ter pelo menos 6 caracteres.");
-                  return;
-                }
-                if (newPassword !== confirmPassword) {
-                  setPasswordError("As senhas não coincidem.");
-                  return;
-                }
-
-                const updatedUsers = users.map((u: StoredUser) =>
-                  u.email === currentUser.email ? { ...u, password: newPassword } : u
-                );
-                localStorage.setItem("users", JSON.stringify(updatedUsers));
-                setPasswordError("");
-                setPasswordDialogOpen(false);
-              }}
+              onClick={handleChangePassword}
             >
               Salvar nova senha
             </Button>

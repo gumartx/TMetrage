@@ -71,7 +71,7 @@ const UserRating = ({ movieId }: UserRatingProps) => {
     getMovieRating(movieId).then((r) => {
       if (r) {
         setRating(r.rating);
-        setPlatform(r.platform || "");
+        setPlatform(r.platform ?? "");
         setRatingRecord(r);
       }
     });

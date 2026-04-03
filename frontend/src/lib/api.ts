@@ -5,18 +5,20 @@ interface RequestOptions {
   body?: unknown;
   headers?: Record<string, string>;
   auth?: boolean;
+  isFormData?: boolean;
 }
 
 export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const { method = "GET", body, headers = {}, auth = false } = options;
+  const { method = "GET", body, headers = {}, auth = false, isFormData = false } = options;
 
-  const finalHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...headers,
-  };
+  const finalHeaders: Record<string, string> = { ...headers };
+
+  if (!isFormData) {
+    finalHeaders["Content-Type"] = "application/json";
+  }
 
   if (auth) {
     const token = getToken();
@@ -28,7 +30,11 @@ export async function apiRequest<T = unknown>(
   const res = await fetch(`${API_BASE_URL}${endpoint}`, {
     method,
     headers: finalHeaders,
-    body: body ? JSON.stringify(body) : undefined,
+    body: body
+      ? isFormData
+        ? (body as FormData)
+        : JSON.stringify(body)
+      : undefined,
   });
 
   if (!res.ok) {

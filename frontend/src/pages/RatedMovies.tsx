@@ -112,10 +112,16 @@ const RatedMovies = () => {
     const matchesRating = ratingFilter === "all" ||
       rm.rating === Number(ratingFilter);
     const range = getDateRange();
-    const ratingDate = new Date(rm.date);
+    const ratingDate = new Date(rm.date + "T00:00:00");
+    const from = range.from ? new Date(range.from) : null;
+    const to = range.to ? new Date(range.to) : null;
+
+    if (from) from.setHours(0, 0, 0, 0);
+    if (to) to.setHours(0, 0, 0, 0);
+
     const matchesDate =
-      (!range.from || ratingDate >= range.from) &&
-      (!range.to || ratingDate <= new Date(range.to.getTime() + 86400000));
+      (!from || ratingDate >= from) &&
+      (!to || ratingDate <= to);
     return matchesSearch && matchesGenre && matchesPlatform && matchesRating && matchesDate;
   });
 
@@ -280,7 +286,7 @@ const RatedMovies = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {filtered.map((rm) => {
               const posterUrl = getPosterUrl(rm.movie.poster_path);
-              const formattedDate = new Date(rm.date).toLocaleDateString("pt-BR", {
+              const formattedDate = new Date(rm.date + "T00:00:00").toLocaleDateString("pt-BR", {
                 day: "2-digit",
                 month: "short",
                 year: "numeric",
@@ -314,11 +320,10 @@ const RatedMovies = () => {
                       {[1, 2, 3, 4, 5].map((s) => (
                         <Star
                           key={s}
-                          className={`h-3.5 w-3.5 ${
-                            s <= rm.rating
+                          className={`h-3.5 w-3.5 ${s <= rm.rating
                               ? "fill-star text-star"
                               : "fill-transparent text-star-empty"
-                          }`}
+                            }`}
                         />
                       ))}
                     </div>

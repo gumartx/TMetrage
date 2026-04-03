@@ -2,8 +2,8 @@ package com.gusmarg.tmetrage.dto;
 
 import java.time.LocalDate;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.gusmarg.tmetrage.entities.Rating;
+import com.gusmarg.tmetrage.entities.enums.Platform;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,16 +18,15 @@ public class RatingResponseDTO {
 
 	private Long movieId;
     private Double rating;
-	@JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate createdAt;
-    private String platform;
+    private Platform platform;
  
 
     public RatingResponseDTO(Rating entity) {
     	movieId = entity.getMovie().getId();
     	rating = entity.getScore();
     	createdAt = entity.getCreatedAt();
-    	platform = entity.getPlatform() != null ? entity.getPlatform().getNome() : null;
+    	platform = entity.getPlatform();
 	}
     
 }

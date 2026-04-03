@@ -59,12 +59,12 @@ public class CommentService {
 	                .orElseThrow();
 			comment.setParent(parent);
 			
-			log.info("Usuário '{}' respondeu comentário de '{}' no filme '{}'", user.getUsername(), parent.getUser().getUsername(), movie.getId());
+			log.info("Usuário '{}' respondeu comentário de '{}' no filme '{}'", user.getProfileName(), parent.getUser().getProfileName(), movie.getTitle());
 		}
 
 		comment = commentRepository.save(comment);
 
-		log.info("Usuário '{}' publicou comentário no filme '{}'", user.getUsername(), movie.getId());
+		log.info("Usuário '{}' publicou comentário no filme '{}'", user.getProfileName(), movie.getTitle());
 
 		return new CommentResponseDTO(comment, user);
 	}
@@ -79,11 +79,11 @@ public class CommentService {
 		if (comment.getLikes().contains(user)) {
 
 			comment.getLikes().remove(user);
-		    log.info("Usuário '{}' descurtiu o comentário '{}'", user.getUsername(), comment.getId());
+		    log.info("Usuário '{}' descurtiu o comentário '{}'", user.getProfileName(), comment.getId());
 
 		} else {
 			comment.getLikes().add(user);
-		    log.info("Usuário '{}' curtiu o comentário '{}'", user.getUsername(), comment.getId());
+		    log.info("Usuário '{}' curtiu o comentário '{}'", user.getProfileName(), comment.getId());
 		}
 		
 	}

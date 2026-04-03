@@ -21,7 +21,7 @@ function getCurrentUsername(): string {
     const saved = localStorage.getItem(PROFILE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (parsed.username) return parsed.username;
+      if (parsed.profileName) return parsed.profileName;
       if (parsed.name) return parsed.name;
     }
   } catch { /* empty */ }

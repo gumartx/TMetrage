@@ -37,9 +37,13 @@ public class RatingService {
 
 		User user = authService.getAuthenticatedUser();
 
-		Rating rating = ratingRepository.findByUserIdAndMovieId(user.getId(), movieId);
+		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
+			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository);
+		});
+		
+		Rating rating = ratingRepository.findByIdUserIdAndIdMovieId(user.getId(), movie.getId()).orElseThrow();
 
-		log.info("Avaliação de usuário '{}' do filme '{}'", user.getProfileName(), movieId);
+		log.info("Avaliação de usuário '{}' do filme '{}'", user.getProfileName(), movie.getTitle());
 
 		return new RatingResponseDTO(rating);
 	}
@@ -103,7 +107,7 @@ public class RatingService {
 
 		rating = ratingRepository.save(rating);
 
-		log.info("Usuário '{}' avaliou filme '{}' com nota {}", user.getUsername(), movie.getId(), dto.getRating());
+		log.info("Usuário '{}' avaliou filme '{}' com nota {}", user.getProfileName(), movie.getTitle(), dto.getRating());
 
 		return new RatingResponseDTO(rating);
 	}
@@ -125,7 +129,7 @@ public class RatingService {
 
 		rating = ratingRepository.save(rating);
 
-		log.info("Usuário '{}' atualizou dados do filme '{}'", user.getUsername(), movie.getId());
+		log.info("Usuário '{}' atualizou dados do filme '{}'", user.getProfileName(), movie.getTitle());
 
 		return new RatingResponseDTO(rating);
 	}
@@ -150,7 +154,7 @@ public class RatingService {
 
 		ratingRepository.deleteById(id);
 
-		log.info("Usuário '{}' retirou avaliação do filme '{}'", user.getUsername(), movie.getId());
+		log.info("Usuário '{}' retirou avaliação do filme '{}'", user.getUsername(), movie.getTitle());
 	}
 
 }

@@ -28,10 +28,8 @@ public class Movie {
 	@Id
 	@Column(unique = true)
 	private Long id;
-	
-	public Movie(Long id) {
-		this.id = id;
-	}
+	private String title;
+	private String posterPath;
 	
 	@OneToMany(mappedBy = "id.movie")
 	private Set<Rating> ratings = new HashSet<>();

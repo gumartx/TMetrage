@@ -1,5 +1,7 @@
 package com.gusmarg.tmetrage.dto;
 
+import com.gusmarg.tmetrage.entities.User;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,9 +13,16 @@ import lombok.Setter;
 @Setter
 public class UserSearchDTO {
 
+
 	private Long id;
 	private String name;
 	private String profileName;
-	private String profileImgUrl;
+	private String avatar;
 	
+	public UserSearchDTO(User entity) {
+		id = entity.getId();
+		name = entity.getName();
+		profileName = entity.getProfileName();
+		avatar = entity.getAvatar();
+	}
 }

@@ -1,133 +1,66 @@
-import { useState } from "react";
+import { getImageUrl } from "@/lib/files";
+import { useState, useEffect, useCallback } from "react";
 import { getGenreColor } from "@/lib/genreColors";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Star, Film, Users, UserPlus, MessageSquare, ChevronDown, ChevronUp, Search, Heart, MessageCircle } from "lucide-react";
+import { ArrowLeft, Star, Film, Users, UserPlus, MessageSquare, ChevronDown, ChevronUp, Search, Heart, MessageCircle, Loader2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import Navbar from "@/components/Navbar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { getPosterUrl } from "@/lib/tmdb";
-
-// Mock data for other users
-const MOCK_USER_PROFILES: Record<string, {
-  name: string;
-  username: string;
-  bio: string;
-  followers: number;
-  following: number;
-  avgRating: string;
-  topGenres: { name: string; count: number }[];
-  ratings: { movieId: number; movieTitle: string; posterPath: string | null; rating: number }[];
-  reviews: { movieId: number; movieTitle: string; posterPath: string | null; content: string; date: string }[];
-}> = {
-  anasouza: {
-    name: "Ana Souza",
-    username: "@anasouza",
-    bio: "Amante de dramas e filmes independentes. Sempre com pipoca na mão 🍿",
-    followers: 312,
-    following: 145,
-    avgRating: "4.2",
-    topGenres: [
-      { name: "Drama", count: 28 },
-      { name: "Romance", count: 15 },
-      { name: "Comédia", count: 12 },
-      { name: "Thriller", count: 8 },
-      { name: "Ficção científica", count: 5 },
-    ],
-    ratings: [
-      { movieId: 1084242, movieTitle: "Zootopia 2", posterPath: "/fOCTW3D6RywUzoxpvxF7G6YM5bT.jpg", rating: 4.5 },
-      { movieId: 83533, movieTitle: "Avatar: Fogo e Cinzas", posterPath: "/9k2zKeUfcKkAz1dGt5MP6dZMm4G.jpg", rating: 4 },
-      { movieId: 1265609, movieTitle: "Máquina de Guerra", posterPath: "/48h40o6Q97hZaqH0g7bOiXOrImX.jpg", rating: 3.5 },
-      { movieId: 1236153, movieTitle: "Justiça Artificial", posterPath: "/vI7bNC07BaSEvZ9ATzV57wpAYwQ.jpg", rating: 5 },
-    ],
-    reviews: [
-      { movieId: 1084242, movieTitle: "Zootopia 2", posterPath: "/fOCTW3D6RywUzoxpvxF7G6YM5bT.jpg", content: "Superou as expectativas! A animação está incrível e a história tem camadas para todas as idades.", date: "2026-03-10" },
-      { movieId: 1236153, movieTitle: "Justiça Artificial", posterPath: "/vI7bNC07BaSEvZ9ATzV57wpAYwQ.jpg", content: "Um thriller de ficção científica que te prende do início ao fim. A atuação está impecável.", date: "2026-03-05" },
-    ],
-  },
-  carloslima: {
-    name: "Carlos Lima",
-    username: "@carloslima",
-    bio: "Fã de ação e ficção científica. Se explode, eu assisto 💥",
-    followers: 89,
-    following: 203,
-    avgRating: "3.8",
-    topGenres: [
-      { name: "Ação", count: 42 },
-      { name: "Ficção científica", count: 25 },
-      { name: "Thriller", count: 18 },
-      { name: "Aventura", count: 14 },
-      { name: "Terror", count: 7 },
-    ],
-    ratings: [
-      { movieId: 1265609, movieTitle: "Máquina de Guerra", posterPath: "/48h40o6Q97hZaqH0g7bOiXOrImX.jpg", rating: 4.5 },
-      { movieId: 1290821, movieTitle: "Missão Refúgio", posterPath: "/hSvhZRkbYD9crC4nqy8uCk9EdFH.jpg", rating: 3 },
-      { movieId: 799882, movieTitle: "O Refúgio", posterPath: "/49b7CTeJqugnpBboT6D5xGy3h4H.jpg", rating: 3.5 },
-    ],
-    reviews: [
-      { movieId: 1265609, movieTitle: "Máquina de Guerra", posterPath: "/48h40o6Q97hZaqH0g7bOiXOrImX.jpg", content: "Ação do começo ao fim! Efeitos visuais de tirar o fôlego.", date: "2026-03-12" },
-    ],
-  },
-  bearocha: {
-    name: "Beatriz Rocha",
-    username: "@bearocha",
-    bio: "Cinéfila de carteirinha. Meu coração pertence ao cinema francês 🎬",
-    followers: 567,
-    following: 321,
-    avgRating: "4.5",
-    topGenres: [
-      { name: "Drama", count: 55 },
-      { name: "Romance", count: 30 },
-      { name: "Mistério", count: 20 },
-      { name: "História", count: 12 },
-      { name: "Animação", count: 8 },
-    ],
-    ratings: [
-      { movieId: 83533, movieTitle: "Avatar: Fogo e Cinzas", posterPath: "/9k2zKeUfcKkAz1dGt5MP6dZMm4G.jpg", rating: 4 },
-      { movieId: 1084242, movieTitle: "Zootopia 2", posterPath: "/fOCTW3D6RywUzoxpvxF7G6YM5bT.jpg", rating: 5 },
-    ],
-    reviews: [
-      { movieId: 83533, movieTitle: "Avatar: Fogo e Cinzas", posterPath: "/9k2zKeUfcKkAz1dGt5MP6dZMm4G.jpg", content: "Visualmente deslumbrante, mas senti falta de mais profundidade nos personagens novos.", date: "2026-03-08" },
-    ],
-  },
-  diegosantos: {
-    name: "Diego Santos",
-    username: "@diegosantos",
-    bio: "Terror e suspense são minha praia. Não assisto comédias 🎃",
-    followers: 45,
-    following: 67,
-    avgRating: "3.5",
-    topGenres: [
-      { name: "Terror", count: 38 },
-      { name: "Thriller", count: 22 },
-      { name: "Mistério", count: 15 },
-      { name: "Ficção científica", count: 10 },
-      { name: "Crime", count: 6 },
-    ],
-    ratings: [
-      { movieId: 1193501, movieTitle: "O Som da Morte", posterPath: "/1tX11KQzujSDXdszFNRvQbbNi72.jpg", rating: 4 },
-      { movieId: 680493, movieTitle: "Terror em Silent Hill", posterPath: "/mRbdOe5vMnY3HXxLnWgRFJHbCPs.jpg", rating: 2.5 },
-    ],
-    reviews: [
-      { movieId: 1193501, movieTitle: "O Som da Morte", posterPath: "/1tX11KQzujSDXdszFNRvQbbNi72.jpg", content: "Conceito original e bem executado. Os sustos são genuínos, sem depender de jump scares baratos.", date: "2026-03-01" },
-      { movieId: 680493, movieTitle: "Terror em Silent Hill", posterPath: "/mRbdOe5vMnY3HXxLnWgRFJHbCPs.jpg", content: "Decepcionante. Esperava mais fidelidade ao jogo e menos clichês de terror genérico.", date: "2026-02-25" },
-    ],
-  },
-};
+import { toast } from "sonner";
+import { getUserProfile, toggleFollow, UserProfile as UserProfileType } from "@/lib/profile";
 
 const UserProfile = () => {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<UserProfileType | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [ratingsOpen, setRatingsOpen] = useState(false);
   const [reviewsOpen, setReviewsOpen] = useState(false);
   const [ratingSearch, setRatingSearch] = useState("");
   const [likedReviews, setLikedReviews] = useState<Record<string, boolean>>({});
 
-  const profile = username ? MOCK_USER_PROFILES[username] : undefined;
+  const loadProfile = useCallback(async () => {
+    if (!username) return;
+    try {
+      const data = await getUserProfile(username);
+      setProfile(data);
+    } catch (err) {
+      toast.error(err.message || "Erro ao carregar perfil");
+    } finally {
+      setLoading(false);
+    }
+  }, [username]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  const handleFollow = async () => {
+    if (!username) return;
+    try {
+      const result = await toggleFollow(username);
+      setIsFollowing(result.following);
+    } catch (err) {
+      toast.error(err.message || "Erro ao seguir/deixar de seguir");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   if (!profile) {
     return (
@@ -141,12 +74,21 @@ const UserProfile = () => {
     );
   }
 
+  const displayUsername = profile.profileName.startsWith("@") ? profile.profileName : `@${profile.profileName}`;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
       {/* Cover */}
       <div className="relative h-56 w-full bg-secondary overflow-hidden">
+        {profile.cover && (
+          <img
+            src={profile.cover}
+            alt="Capa"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
       </div>
 
@@ -154,21 +96,25 @@ const UserProfile = () => {
         {/* Avatar + Info */}
         <div className="relative -mt-16 mb-4 flex items-end gap-6">
           <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
-            <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-display">
-              {profile.name.charAt(0)}
-            </AvatarFallback>
+            {profile.avatar ? (
+              <AvatarImage src={getImageUrl(profile.avatar)} />
+            ) : (
+              <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-display">
+                {profile.name.charAt(0)}
+              </AvatarFallback>
+            )}
           </Avatar>
 
           <div className="pb-2 flex-1">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="font-display text-2xl font-bold text-foreground">{profile.name}</h1>
-                <p className="text-sm text-muted-foreground">{profile.username}</p>
+                <p className="text-sm text-muted-foreground">{displayUsername}</p>
               </div>
               <Button
                 variant={isFollowing ? "secondary" : "default"}
                 size="sm"
-                onClick={() => setIsFollowing(!isFollowing)}
+                onClick={handleFollow}
                 className="gap-2"
               >
                 <UserPlus className="h-4 w-4" />
@@ -199,21 +145,23 @@ const UserProfile = () => {
           <Card className="bg-card border-border">
             <CardContent className="flex flex-col items-center justify-center py-6">
               <Film className="h-6 w-6 text-primary mb-2" />
-              <span className="text-2xl font-bold text-foreground">{profile.ratings.length}</span>
+              <span className="text-2xl font-bold text-foreground">{profile.totalRatings}</span>
               <span className="text-xs text-muted-foreground">Filmes avaliados</span>
             </CardContent>
           </Card>
           <Card className="bg-card border-border">
             <CardContent className="flex flex-col items-center justify-center py-6">
               <Star className="h-6 w-6 text-star mb-2" />
-              <span className="text-2xl font-bold text-foreground">{profile.avgRating}</span>
+              <span className="text-2xl font-bold text-foreground">
+                {profile.avgRating > 0 ? profile.avgRating.toFixed(1) : "—"}
+              </span>
               <span className="text-xs text-muted-foreground">Nota média</span>
             </CardContent>
           </Card>
           <Card className="bg-card border-border">
             <CardContent className="flex flex-col items-center justify-center py-6">
               <MessageSquare className="h-6 w-6 text-primary mb-2" />
-              <span className="text-2xl font-bold text-foreground">{profile.reviews.length}</span>
+              <span className="text-2xl font-bold text-foreground">{profile.totalComments}</span>
               <span className="text-xs text-muted-foreground">Comentários</span>
             </CardContent>
           </Card>
@@ -222,20 +170,24 @@ const UserProfile = () => {
         {/* Favorite Genres */}
         <div className="mb-8">
           <h2 className="font-display text-lg font-semibold text-foreground mb-3">Gêneros Favoritos</h2>
-          <div className="flex flex-wrap gap-2">
-            {profile.topGenres.map((g) => {
-              const colors = getGenreColor(g.name);
-              return (
-                <span
-                  key={g.name}
-                  className="rounded-full px-4 py-1.5 text-sm font-medium"
-                  style={{ backgroundColor: colors.bg, color: colors.text }}
-                >
-                  {g.name} <span style={{ color: colors.text, opacity: 0.75 }}>({g.count})</span>
-                </span>
-              );
-            })}
-          </div>
+          {profile.topGenres.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {profile.topGenres.map((g) => {
+                const colors = getGenreColor(g.name);
+                return (
+                  <span
+                    key={g.name}
+                    className="rounded-full px-4 py-1.5 text-sm font-medium"
+                    style={{ backgroundColor: colors.bg, color: colors.text }}
+                  >
+                    {g.name} <span style={{ color: colors.text, opacity: 0.75 }}>({g.count})</span>
+                  </span>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Nenhum gênero favorito ainda.</p>
+          )}
         </div>
 
         {/* Recent Ratings - Collapsible */}
@@ -255,7 +207,7 @@ const UserProfile = () => {
               />
             </div>
             {(() => {
-              const filtered = profile.ratings.filter((r) =>
+              const filtered = (profile.ratings || []).filter((r) =>
                 r.movieTitle.toLowerCase().includes(ratingSearch.toLowerCase())
               );
               return filtered.length === 0 ? (
@@ -305,7 +257,7 @@ const UserProfile = () => {
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3">
             <div className="space-y-4">
-              {profile.reviews.map((review) => {
+              {(profile.reviews || []).map((review) => {
                 const reviewKey = `${review.movieId}-${review.date}`;
                 const isLiked = likedReviews[reviewKey] || false;
                 return (
@@ -361,6 +313,9 @@ const UserProfile = () => {
                   </div>
                 );
               })}
+              {(profile.reviews || []).length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">Nenhum comentário ainda.</p>
+              )}
             </div>
           </CollapsibleContent>
         </Collapsible>

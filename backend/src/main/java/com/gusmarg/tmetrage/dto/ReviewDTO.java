@@ -1,6 +1,8 @@
 package com.gusmarg.tmetrage.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,12 +13,13 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class MovieDTO {
+public class ReviewDTO {
 
-	private Long id;
-    @JsonProperty("title")
+	private Long movieId;
 	private String movieTitle;
-    @JsonProperty("poster_path")
 	private String posterPath;
-
+	private String content;
+	@JsonFormat(pattern = "dd/MM/yyyy")
+	private LocalDateTime date;
+	
 }
