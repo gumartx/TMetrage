@@ -12,6 +12,10 @@ export async function getUserRatings(): Promise<RatingResponse[]> {
   return apiRequest<RatingResponse[]>("/ratings", { auth: true });
 }
 
+export async function getMovieRatingsList(listId: string): Promise<RatingResponse[]> {
+  return apiRequest<RatingResponse[]>(`/ratings/${listId}/lists`, { auth: true });
+}
+
 // Fetch a single rating by movie
 export async function getMovieRating(movieId: number): Promise<RatingResponse | null> {
   try {

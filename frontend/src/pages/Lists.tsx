@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Trash2, Film, ListMusic, Pencil, Search, CalendarDays, ChevronLeft, ChevronRight, X, Share2 } from "lucide-react";
 import { getLists, createList, deleteList, updateList, getSharedLists, type MovieList, type SharedList } from "@/lib/movieLists";
-import { getPosterUrl } from "@/lib/tmdb";
+import { getMovieDetails, getPosterUrl, type MovieDetails } from "@/lib/tmdb";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import {

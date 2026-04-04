@@ -6,14 +6,9 @@ export interface MovieListItem {
   poster_path: string | null;
   vote_average: number;
   genre_ids: number[];
-}
-
-export interface Movie {
-  id: string;
-  title: string;
-  poster_path: string | null;
   rating?: number;
   platform?: string;
+  createdAt?: string;  
 }
 
 export interface MovieList {

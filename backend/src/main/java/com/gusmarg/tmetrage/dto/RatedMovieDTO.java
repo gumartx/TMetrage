@@ -22,13 +22,35 @@ public class RatedMovieDTO {
     private String poster_path;
     private Double rating;
     private Platform platform;
-    
+
     public RatedMovieDTO(Movie movie, List<Rating> ratings) {
-    	id = movie.getId();
-    	title = movie.getTitle();
-    	poster_path = movie.getPosterPath();
-    	rating = ratings.stream().filter(r -> r.getMovie().getId().equals(id)).map(Rating::getScore).findFirst().orElse(null);
-    	platform = ratings.stream().filter(r -> r.getMovie().getId().equals(id)).map(Rating::getPlatform).findFirst().orElse(null);
+        this.id = movie.getId();
+        this.title = movie.getTitle();
+        this.poster_path = movie.getPosterPath();
+
+        Rating userRating = ratings.stream()
+                                   .filter(r -> r.getMovie().getId().equals(id))
+                                   .findFirst()
+                                   .orElse(null);
+
+        if (userRating != null) {
+            this.rating = userRating.getScore();
+            this.platform = userRating.getPlatform();
+        } else {
+            this.rating = null;
+            this.platform = null;
+        }
+    }
+
+    public RatedMovieDTO(Movie movie, Rating rating) {
+        this.id = movie.getId();
+        this.title = movie.getTitle();
+        this.poster_path = movie.getPosterPath();
+
+        if (rating != null) {
+            this.rating = rating.getScore();
+            this.platform = rating.getPlatform();
+        }
     }
 
 }

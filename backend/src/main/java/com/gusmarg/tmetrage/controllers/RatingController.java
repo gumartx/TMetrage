@@ -14,10 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gusmarg.tmetrage.dto.RatedMovieDTO;
 import com.gusmarg.tmetrage.dto.RatingFilterDTO;
 import com.gusmarg.tmetrage.dto.RatingMovieDTO;
-import com.gusmarg.tmetrage.dto.RatingUpdateDTO;
 import com.gusmarg.tmetrage.dto.RatingResponseDTO;
+import com.gusmarg.tmetrage.dto.RatingUpdateDTO;
 import com.gusmarg.tmetrage.dto.enums.Period;
 import com.gusmarg.tmetrage.entities.enums.Platform;
 import com.gusmarg.tmetrage.services.RatingService;
@@ -38,6 +39,13 @@ public class RatingController {
 		return ResponseEntity.ok(result);
 	}
 
+	
+	@GetMapping(value = "/{listId}/lists")
+	public ResponseEntity<List<RatedMovieDTO>> getRatedMovieList(@PathVariable Long listId) {
+		List<RatedMovieDTO> result = ratingService.getRatedMovies(listId);
+		return ResponseEntity.ok(result);
+	}
+	
 	
 	@GetMapping()
 	public ResponseEntity<List<RatingResponseDTO>> getUserRatings(@RequestParam(required = false) Platform plataforma,

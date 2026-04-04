@@ -7,7 +7,8 @@ import { getList, removeMovieFromList, addMovieToList, shareList, type MovieList
 import { searchMovies, getPosterUrl, getGenres } from "@/lib/tmdb";
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-import { getRatings, PLATFORMS, PlatformBadge } from "@/components/UserRating";
+import { PLATFORMS, PlatformBadge } from "@/components/UserRating";
+import { getUserRatings, RatingResponse } from "@/lib/ratings";
 import { getFollowing } from "@/lib/profile";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ const ListDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [list, setList] = useState<MovieList | undefined>();
+  const [movieRatings, setRatings] = useState<Record<number, RatingResponse>>({});
   const [showChart, setShowChart] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [shareSearch, setShareSearch] = useState("");
@@ -65,16 +67,49 @@ const ListDetail = () => {
   };
 
   useEffect(() => {
+    if (!list?.movies) return;
+
+    async function fetchRatings() {
+      try {
+        const userRatings = await getUserRatings(); // retorna RatingResponse[]
+        // transformar em um map: movieId -> rating
+        const map: Record<number, RatingResponse> = {};
+        userRatings.forEach((r) => {
+          map[r.movieId] = r;
+        });
+        setRatings(map);
+      } catch (err) {
+        console.error("Erro ao carregar avaliações:", err);
+      }
+    }
+
+    fetchRatings();
+  }, [list]);
+
+  useEffect(() => {
     loadList();
   }, [id]);
 
   useEffect(() => {
     if (showShare) {
-      getFollowing().then(setFollowing).catch(() => {});
+      getFollowing().then(setFollowing).catch(() => { });
     }
   }, [showShare]);
 
-  const ratings = useMemo(() => getRatings(), [list]);
+  useEffect(() => {
+    async function fetchRatings() {
+      if (!list) return;
+      const allRatingsList = await getUserRatings(); // array real
+      const map: Record<number, RatingResponse> = {};
+      list.movies.forEach((movie) => {
+        const r = allRatingsList.find((x) => x.movieId === movie.id);
+        if (r) map[movie.id] = r;
+      });
+      setRatings(map);
+    }
+
+    fetchRatings();
+  }, [list]);
 
   const filteredFollowing = useMemo(() => {
     if (!shareSearch.trim()) return following;
@@ -160,11 +195,14 @@ const ListDetail = () => {
 
   const filteredMovies = useMemo(() => {
     if (!list) return [];
+
     return list.movies.filter((movie) => {
-      const rating = ratings[movie.id];
+      const rating = movieRatings[movie.id];
+
       if (genreFilter !== "all") {
         if (!(movie.genre_ids || []).includes(Number(genreFilter))) return false;
       }
+
       if (platformFilter !== "all") {
         if (platformFilter === "none") {
           if (rating?.platform) return false;
@@ -172,20 +210,35 @@ const ListDetail = () => {
           if (rating?.platform !== platformFilter) return false;
         }
       }
-      if (datePreset !== "all" && rating?.date) {
-        const range = getDateRange();
-        const ratingDate = new Date(rating.date);
-        if (range.from && ratingDate < range.from) return false;
-        if (range.to && ratingDate > new Date(range.to.getTime() + 86400000)) return false;
-      } else if (datePreset !== "all" && !rating?.date) {
+
+      if (datePreset !== "all" && rating?.createdAt) {
+        const range = getDateRange(); 
+        const [year, month, day] = rating.createdAt.split("-").map(Number);
+        const ratingDate = new Date(year, month - 1, day);
+
+        if (range.from) {
+          const from = new Date(range.from);
+          from.setHours(0, 0, 0, 0);
+          if (ratingDate < from) return false;
+        }
+
+        if (range.to) {
+          const to = new Date(range.to);
+          to.setHours(0, 0, 0, 0);
+          if (ratingDate > to) return false;
+        }
+      } else if (datePreset !== "all" && !rating?.createdAt) {
         return false;
       }
+
+      // FILTRO DE NOTA
       if (ratingFilter !== "all") {
         if (!rating || rating.rating !== Number(ratingFilter)) return false;
       }
+
       return true;
     });
-  }, [list, ratings, genreFilter, platformFilter, datePreset, dateFrom, dateTo, ratingFilter]);
+  }, [list, movieRatings, genreFilter, platformFilter, datePreset, dateFrom, dateTo, ratingFilter]);
 
   const handleSearch = () => {
     setSearchTerm(query);
@@ -401,59 +454,59 @@ const ListDetail = () => {
                   Adicionar Filme
                 </Button>
               </DialogTrigger>
-            <DialogContent className="max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Buscar filme para adicionar</DialogTitle>
-              </DialogHeader>
-              <div className="flex gap-2 pt-2">
-                <div className="flex flex-1 items-center rounded-md border border-border bg-secondary">
-                  <input
-                    type="text"
-                    placeholder="Pesquisar filme..."
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    className="flex-1 bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-                  />
+              <DialogContent className="max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Buscar filme para adicionar</DialogTitle>
+                </DialogHeader>
+                <div className="flex gap-2 pt-2">
+                  <div className="flex flex-1 items-center rounded-md border border-border bg-secondary">
+                    <input
+                      type="text"
+                      placeholder="Pesquisar filme..."
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                      className="flex-1 bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                    />
+                  </div>
+                  <Button size="sm" onClick={handleSearch}>Buscar</Button>
                 </div>
-                <Button size="sm" onClick={handleSearch}>Buscar</Button>
-              </div>
-              {searchResults && (
-                <div className="mt-4 space-y-2">
-                  {searchResults.results.slice(0, 10).map((movie) => {
-                    const alreadyAdded = list.movies.some((m) => m.id === movie.id);
-                    return (
-                      <div key={movie.id} className="flex items-center gap-3 rounded-md border border-border bg-card p-2">
-                        {getPosterUrl(movie.poster_path, "w185") ? (
-                          <img
-                            src={getPosterUrl(movie.poster_path, "w185")!}
-                            alt={movie.title}
-                            className="h-16 w-11 rounded object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-16 w-11 items-center justify-center rounded bg-muted">
-                            <Film className="h-4 w-4 text-muted-foreground" />
+                {searchResults && (
+                  <div className="mt-4 space-y-2">
+                    {searchResults.results.slice(0, 10).map((movie) => {
+                      const alreadyAdded = list.movies.some((m) => m.id === movie.id);
+                      return (
+                        <div key={movie.id} className="flex items-center gap-3 rounded-md border border-border bg-card p-2">
+                          {getPosterUrl(movie.poster_path, "w185") ? (
+                            <img
+                              src={getPosterUrl(movie.poster_path, "w185")!}
+                              alt={movie.title}
+                              className="h-16 w-11 rounded object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-16 w-11 items-center justify-center rounded bg-muted">
+                              <Film className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="truncate text-sm font-medium text-card-foreground">{movie.title}</p>
+                            <p className="text-xs text-muted-foreground">{movie.release_date?.slice(0, 4)}</p>
                           </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="truncate text-sm font-medium text-card-foreground">{movie.title}</p>
-                          <p className="text-xs text-muted-foreground">{movie.release_date?.slice(0, 4)}</p>
+                          <Button
+                            size="sm"
+                            variant={alreadyAdded ? "secondary" : "default"}
+                            disabled={alreadyAdded}
+                            onClick={() => handleAddMovie(movie)}
+                          >
+                            {alreadyAdded ? "Adicionado" : "Adicionar"}
+                          </Button>
                         </div>
-                        <Button
-                          size="sm"
-                          variant={alreadyAdded ? "secondary" : "default"}
-                          disabled={alreadyAdded}
-                          onClick={() => handleAddMovie(movie)}
-                        >
-                          {alreadyAdded ? "Adicionado" : "Adicionar"}
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </DialogContent>
-          </Dialog>
+                      );
+                    })}
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -598,9 +651,9 @@ const ListDetail = () => {
           <div className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {filteredMovies.map((movie) => {
               const url = getPosterUrl(movie.poster_path);
-              const rating = ratings[movie.id];
-              const ratingDate = rating?.date
-                ? new Date(rating.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
+              const rating = movieRatings[movie.id];
+              const ratingDate = rating?.createdAt
+                ? new Date(rating.createdAt + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
                 : null;
 
               return (
@@ -608,51 +661,56 @@ const ListDetail = () => {
                   <Link to={`/movie/${movie.id}`} className="block">
                     <div className="aspect-[2/3] overflow-hidden">
                       {url ? (
-                        <img src={url} alt={movie.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                        <img
+                          src={url}
+                          alt={movie.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-muted">
                           <Film className="h-8 w-8 text-muted-foreground" />
                         </div>
                       )}
                     </div>
+
                     <div className="p-3 space-y-1.5">
                       <h3 className="truncate text-sm font-semibold text-card-foreground">{movie.title}</h3>
+
                       {rating && (
-                        <>
+                        <div className="mt-1 space-y-1">
+                          {/* Estrelas da avaliação */}
                           <div className="flex items-center gap-0.5">
                             {[1, 2, 3, 4, 5].map((s) => (
                               <Star
                                 key={s}
-                                className={`h-3.5 w-3.5 ${
-                                  s <= rating.rating
-                                    ? "fill-star text-star"
-                                    : "fill-transparent text-star-empty"
-                                }`}
+                                className={`h-3.5 w-3.5 ${s <= rating.rating
+                                  ? "fill-star text-star"
+                                  : "fill-transparent text-star-empty"
+                                  }`}
                               />
                             ))}
                           </div>
+
+                          {/* Data da avaliação */}
                           {ratingDate && (
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <CalendarIcon className="h-3 w-3" />
                               <span>{ratingDate}</span>
                             </div>
                           )}
+
+                          {/* Plataforma */}
                           {rating.platform && (
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                               <PlatformBadge value={rating.platform} />
                               <span>{PLATFORMS.find((p) => p.value === rating.platform)?.label || rating.platform}</span>
                             </div>
                           )}
-                        </>
+                        </div>
                       )}
                     </div>
                   </Link>
-                  <button
-                    onClick={() => handleRemove(movie.id)}
-                    className="absolute right-2 top-2 rounded-full bg-background/80 p-1.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
                 </div>
               );
             })}

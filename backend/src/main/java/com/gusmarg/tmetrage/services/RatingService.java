@@ -2,19 +2,25 @@ package com.gusmarg.tmetrage.services;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.gusmarg.tmetrage.components.TMDBSaveData;
+import com.gusmarg.tmetrage.dto.RatedMovieDTO;
 import com.gusmarg.tmetrage.dto.RatingFilterDTO;
 import com.gusmarg.tmetrage.dto.RatingMovieDTO;
-import com.gusmarg.tmetrage.dto.RatingUpdateDTO;
 import com.gusmarg.tmetrage.dto.RatingResponseDTO;
+import com.gusmarg.tmetrage.dto.RatingUpdateDTO;
 import com.gusmarg.tmetrage.entities.Movie;
+import com.gusmarg.tmetrage.entities.MovieList;
 import com.gusmarg.tmetrage.entities.Rating;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.entities.pk.RatingPK;
+import com.gusmarg.tmetrage.repositories.MovieListRepository;
 import com.gusmarg.tmetrage.repositories.MovieRepository;
 import com.gusmarg.tmetrage.repositories.RatingRepository;
 import com.gusmarg.tmetrage.services.utils.TMDBService;
@@ -29,6 +35,7 @@ public class RatingService {
 
 	private final AuthService authService;
 	private final RatingRepository ratingRepository;
+	private final MovieListRepository movieListRepository;
 	private final MovieRepository movieRepository;
 	private final TMDBService tmdbService;
 
@@ -40,7 +47,7 @@ public class RatingService {
 		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
 			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository);
 		});
-		
+
 		Rating rating = ratingRepository.findByIdUserIdAndIdMovieId(user.getId(), movie.getId()).orElseThrow();
 
 		log.info("Avaliação de usuário '{}' do filme '{}'", user.getProfileName(), movie.getTitle());
@@ -107,7 +114,8 @@ public class RatingService {
 
 		rating = ratingRepository.save(rating);
 
-		log.info("Usuário '{}' avaliou filme '{}' com nota {}", user.getProfileName(), movie.getTitle(), dto.getRating());
+		log.info("Usuário '{}' avaliou filme '{}' com nota {}", user.getProfileName(), movie.getTitle(),
+				dto.getRating());
 
 		return new RatingResponseDTO(rating);
 	}
@@ -154,7 +162,31 @@ public class RatingService {
 
 		ratingRepository.deleteById(id);
 
-		log.info("Usuário '{}' retirou avaliação do filme '{}'", user.getUsername(), movie.getTitle());
+		log.info("Usuário '{}' retirou avaliação do filme '{}'", user.getProfileName(), movie.getTitle());
 	}
 
+	@Transactional(readOnly = true)
+	public List<RatedMovieDTO> getRatedMovies(Long listId) {
+
+		User user = authService.getAuthenticatedUser();
+
+		MovieList list = movieListRepository.findById(listId)
+				.orElseThrow(() -> new RuntimeException("Lista não encontrada"));
+
+		Set<Movie> movies = list.getMovies();
+
+		List<Long> movieIds = movies.stream().map(Movie::getId).toList();
+
+		if (movieIds == null || movieIds.isEmpty()) {
+		    return List.of();
+		}
+		
+		List<Rating> ratings = ratingRepository.findByUserIdAndMovieIdIn(user.getId(), movieIds);
+
+		Map<Long, Rating> ratingMap = ratings.stream().collect(Collectors.toMap(r -> r.getMovie().getId(), r -> r));
+
+		log.info("Avaliação(ões) dos filmes presentes na lista '{}'", list.getName());
+		
+		return movies.stream().map(movie -> new RatedMovieDTO(movie, ratingMap.get(movie.getId()))).toList();
+	}
 }
