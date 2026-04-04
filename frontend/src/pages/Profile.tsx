@@ -42,9 +42,13 @@ import {
   getUserProfile,
 } from "@/lib/profile";
 import { removeToken } from "@/lib/api";
+import { getMovieDetails } from "@/lib/tmdb";
+import { getLists } from "@/lib/movieLists";
+import { getUserRatings } from "@/lib/ratings";
 
 const Profile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [topGenres, setTopGenres] = useState<{ name: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<{ name: string; profileName: string; avatar: string }[]>([]);
@@ -80,7 +84,43 @@ const Profile = () => {
     loadProfile();
   }, [loadProfile]);
 
-  // Search users with debounce
+useEffect(() => {
+  const loadGenresFromRatings = async () => {
+    try {
+      const ratings = await getUserRatings();
+
+      const movieIds = new Set<number>();
+
+      ratings.forEach((rating) => {
+        movieIds.add(rating.movieId);
+      });
+
+      const movies = await Promise.all(
+        [...movieIds].map((id) => getMovieDetails(id))
+      );
+
+      const genreCount: Record<string, number> = {};
+
+      movies.forEach((movie) => {
+        movie.genres?.forEach((g) => {
+          genreCount[g.name] = (genreCount[g.name] || 0) + 1;
+        });
+      });
+
+      const sorted = Object.entries(genreCount)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+      setTopGenres(sorted);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  loadGenresFromRatings();
+}, []);
+
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
@@ -113,7 +153,7 @@ const Profile = () => {
       );
 
       window.dispatchEvent(new Event("profileUpdated"));
-      
+
       setProfile((prev) =>
         prev ? { ...prev, avatar: updated.avatar } : prev
       );
@@ -364,7 +404,9 @@ const Profile = () => {
             <Card className="bg-card border-border cursor-pointer transition-colors hover:border-primary/40">
               <CardContent className="flex flex-col items-center justify-center py-6">
                 <List className="h-6 w-6 text-primary mb-2" />
-                <span className="text-2xl font-bold text-foreground">—</span>
+                <span className="text-2xl font-bold text-foreground">
+                  {profile.totalLists > 0 ? profile.totalLists : "—"}
+                </span>
                 <span className="text-xs text-muted-foreground">Listas criadas</span>
               </CardContent>
             </Card>
@@ -383,9 +425,9 @@ const Profile = () => {
         {/* Favorite Genres */}
         <div className="mb-8">
           <h2 className="font-display text-lg font-semibold text-foreground mb-3">Gêneros Favoritos</h2>
-          {profile.topGenres?.length > 0 ? (
+          {topGenres?.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {profile.topGenres?.map((g) => {
+              {topGenres?.map((g) => {
                 const colors = getGenreColor(g.name);
                 return (
                   <span

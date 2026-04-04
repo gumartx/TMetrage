@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Trash2, Film, ListMusic, Pencil, Search, CalendarDays, ChevronLeft, ChevronRight, X, Share2 } from "lucide-react";
 import { getLists, createList, deleteList, updateList, getSharedLists, type MovieList, type SharedList } from "@/lib/movieLists";
-import { getMovieDetails, getPosterUrl, type MovieDetails } from "@/lib/tmdb";
+import { getPosterUrl } from "@/lib/tmdb";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import {
@@ -299,31 +299,39 @@ const Lists = () => {
                         </p>
                       )}
 
-                      <div className="mt-4 flex gap-2">
+                      <div className="mt-4 flex items-center overflow-hidden">
                         {list.movies.length === 0 ? (
                           <div className="flex h-[100px] w-full items-center justify-center rounded-md bg-muted">
                             <Film className="h-8 w-8 text-muted-foreground" />
                           </div>
                         ) : (
-                          list.movies.slice(0, 5).map((m) => {
-                            const url = getPosterUrl(m.poster_path, "w185");
-                            return url ? (
-                              <img
-                                key={m.id}
-                                src={url}
-                                alt={m.title}
-                                className="h-[100px] w-[67px] shrink-0 rounded-md object-cover border border-border"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div
-                                key={m.id}
-                                className="flex h-[100px] w-[67px] shrink-0 items-center justify-center rounded-md bg-muted border border-border"
-                              >
-                                <Film className="h-4 w-4 text-muted-foreground" />
+                          <>
+                            {list.movies.slice(0, 7).map((m) => {
+                              const url = getPosterUrl(m.poster_path, "w185");
+
+                              return url ? (
+                                <img
+                                  key={m.id}
+                                  src={url}
+                                  alt={m.title}
+                                  className="h-[100px] w-[67px] shrink-0 -ml-8 first:ml-0 rounded-md object-cover border border-border"
+                                />
+                              ) : (
+                                <div
+                                  key={m.id}
+                                  className="flex h-[100px] w-[67px] shrink-0 -ml-8 first:ml-0 items-center justify-center rounded-md bg-muted border border-border"
+                                >
+                                  <Film className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                              );
+                            })}
+
+                            {list.movies.length > 4 && (
+                              <div className="flex h-[100px] w-[67px] shrink-0 -ml-8 items-center justify-center rounded-md bg-muted border border-border text-xs font-semibold">
+                                +{list.movies.length - 4}
                               </div>
-                            );
-                          })
+                            )}
+                          </>
                         )}
                       </div>
 
@@ -409,31 +417,39 @@ const Lists = () => {
                         </p>
                       )}
 
-                      <div className="mt-4 flex gap-2">
+                      <div className="mt-4 flex items-center overflow-hidden">
                         {shared.list.movies.length === 0 ? (
                           <div className="flex h-[100px] w-full items-center justify-center rounded-md bg-muted">
                             <Film className="h-8 w-8 text-muted-foreground" />
                           </div>
                         ) : (
-                          shared.list.movies.slice(0, 5).map((m) => {
-                            const url = getPosterUrl(m.poster_path, "w185");
-                            return url ? (
-                              <img
-                                key={m.id}
-                                src={url}
-                                alt={m.title}
-                                className="h-[100px] w-[67px] shrink-0 rounded-md object-cover border border-border"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div
-                                key={m.id}
-                                className="flex h-[100px] w-[67px] shrink-0 items-center justify-center rounded-md bg-muted border border-border"
-                              >
-                                <Film className="h-4 w-4 text-muted-foreground" />
+                          <>
+                            {shared.list.movies.slice(0, 7).map((m) => {
+                              const url = getPosterUrl(m.poster_path, "w185");
+
+                              return url ? (
+                                <img
+                                  key={m.id}
+                                  src={url}
+                                  alt={m.title}
+                                  className="h-[100px] w-[67px] shrink-0 -ml-8 first:ml-0 rounded-md object-cover border border-border"
+                                />
+                              ) : (
+                                <div
+                                  key={m.id}
+                                  className="flex h-[100px] w-[67px] shrink-0 -ml-8 first:ml-0 items-center justify-center rounded-md bg-muted border border-border"
+                                >
+                                  <Film className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                              );
+                            })}
+
+                            {shared.list.movies.length > 4 && (
+                              <div className="flex h-[100px] w-[67px] shrink-0 -ml-8 items-center justify-center rounded-md bg-muted border border-border text-xs font-semibold">
+                                +{shared.list.movies.length - 4}
                               </div>
-                            );
-                          })
+                            )}
+                          </>
                         )}
                       </div>
 

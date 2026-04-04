@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { getPosterUrl } from "@/lib/tmdb";
+import { getMovieDetails } from "@/lib/tmdb";
 import { toast } from "sonner";
 import { getUserProfile, toggleFollow, UserProfile as UserProfileType } from "@/lib/profile";
 import { toggleLike } from "@/lib/comments";
@@ -19,6 +20,7 @@ const UserProfile = () => {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfileType | null>(null);
+  const [topGenres, setTopGenres] = useState<{ name: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [ratingsOpen, setRatingsOpen] = useState(false);
@@ -41,6 +43,42 @@ const UserProfile = () => {
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
+
+  useEffect(() => {
+    if (!profile?.ratings?.length) {
+      setTopGenres([]);
+      return;
+    }
+
+    const loadGenres = async () => {
+      try {
+        const movieIds = [...new Set(profile.ratings.map(r => r.movieId))];
+
+        const movies = await Promise.all(
+          movieIds.map(id => getMovieDetails(id))
+        );
+
+        const genreCount: Record<string, number> = {};
+
+        movies.forEach(movie => {
+          movie.genres?.forEach((g: { name: string }) => {
+            genreCount[g.name] = (genreCount[g.name] || 0) + 1;
+          });
+        });
+
+        const sorted = Object.entries(genreCount)
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5);
+
+        setTopGenres(sorted);
+      } catch (err) {
+        console.error("Erro ao carregar gêneros:", err);
+      }
+    };
+
+    loadGenres();
+  }, [profile]);
 
   const handleFollow = async () => {
     if (!username) return;
@@ -171,9 +209,9 @@ const UserProfile = () => {
         {/* Favorite Genres */}
         <div className="mb-8">
           <h2 className="font-display text-lg font-semibold text-foreground mb-3">Gêneros Favoritos</h2>
-          {profile.topGenres.length > 0 ? (
+          {topGenres.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {profile.topGenres.map((g) => {
+              {topGenres.map((g) => {
                 const colors = getGenreColor(g.name);
                 return (
                   <span
