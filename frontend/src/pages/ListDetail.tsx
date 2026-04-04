@@ -4,11 +4,10 @@ import { ArrowLeft, Trash2, Film, Search, BarChart3, Star, Calendar as CalendarI
 import { Tv } from "lucide-react";
 import { format } from "date-fns";
 import { getList, removeMovieFromList, addMovieToList, shareList, type MovieList, type MovieListItem } from "@/lib/movieLists";
-import { searchMovies, getPosterUrl, getGenres } from "@/lib/tmdb";
+import { getMovieDetails, searchMovies, getPosterUrl, getGenres } from "@/lib/tmdb";
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-import { PLATFORMS, PlatformBadge } from "@/components/UserRating";
-import { getUserRatings, RatingResponse } from "@/lib/ratings";
+import { getRatings, PLATFORMS, PlatformBadge } from "@/components/UserRating";
 import { getFollowing } from "@/lib/profile";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { getUserRatings, RatingResponse } from "@/lib/ratings";
 
 const DATE_PRESETS = [
   { label: "Todos", value: "all" },
@@ -38,6 +38,7 @@ const ListDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [list, setList] = useState<MovieList | undefined>();
+  const [movieGenres, setMovieGenres] = useState<Record<number, number[]>>({});
   const [movieRatings, setRatings] = useState<Record<number, RatingResponse>>({});
   const [showChart, setShowChart] = useState(false);
   const [showShare, setShowShare] = useState(false);
@@ -67,6 +68,15 @@ const ListDetail = () => {
   };
 
   useEffect(() => {
+    loadList();
+  }, [id]);
+
+  useEffect(() => {
+    if (showShare) {
+      getFollowing().then(setFollowing).catch(() => { });
+    }
+  }, [showShare]);
+  useEffect(() => {
     if (!list?.movies) return;
 
     async function fetchRatings() {
@@ -87,28 +97,26 @@ const ListDetail = () => {
   }, [list]);
 
   useEffect(() => {
-    loadList();
-  }, [id]);
+    if (!list?.movies) return;
 
-  useEffect(() => {
-    if (showShare) {
-      getFollowing().then(setFollowing).catch(() => { });
-    }
-  }, [showShare]);
+    async function fetchGenres() {
+      const map: Record<number, number[]> = {};
 
-  useEffect(() => {
-    async function fetchRatings() {
-      if (!list) return;
-      const allRatingsList = await getUserRatings(); // array real
-      const map: Record<number, RatingResponse> = {};
-      list.movies.forEach((movie) => {
-        const r = allRatingsList.find((x) => x.movieId === movie.id);
-        if (r) map[movie.id] = r;
-      });
-      setRatings(map);
+      await Promise.all(
+        list.movies.map(async (movie) => {
+          try {
+            const data = await getMovieDetails(movie.id);
+            map[movie.id] = data.genres?.map((g: { id: number; name: string }) => g.id) || [];
+          } catch (err) {
+            console.error("Erro ao buscar gêneros:", movie.id, err);
+          }
+        })
+      );
+
+      setMovieGenres(map);
     }
 
-    fetchRatings();
+    fetchGenres();
   }, [list]);
 
   const filteredFollowing = useMemo(() => {
@@ -153,21 +161,24 @@ const ListDetail = () => {
 
   const allGenres = useMemo(() => {
     if (!list || !genres) return new Map<number, string>();
+
     const map = new Map<number, string>();
+
     list.movies.forEach((m) =>
-      (m.genre_ids || []).forEach((gid) => {
+      (movieGenres[m.id] || []).forEach((gid) => {
         const g = genres.find((g) => g.id === gid);
         if (g) map.set(gid, g.name);
       })
     );
+
     return map;
-  }, [list, genres]);
+  }, [list, genres, movieGenres]);
 
   const genreChartData = useMemo(() => {
     if (!list || !genres || list.movies.length === 0) return [];
     const counts: Record<number, number> = {};
     list.movies.forEach((m) => {
-      (m.genre_ids || []).forEach((gid) => {
+      (movieGenres[m.id] || []).forEach((gid) => {
         counts[gid] = (counts[gid] || 0) + 1;
       });
     });
@@ -195,14 +206,11 @@ const ListDetail = () => {
 
   const filteredMovies = useMemo(() => {
     if (!list) return [];
-
     return list.movies.filter((movie) => {
       const rating = movieRatings[movie.id];
-
       if (genreFilter !== "all") {
-        if (!(movie.genre_ids || []).includes(Number(genreFilter))) return false;
+        if (!(movieGenres[movie.id] || []).includes(Number(genreFilter))) return false;
       }
-
       if (platformFilter !== "all") {
         if (platformFilter === "none") {
           if (rating?.platform) return false;
@@ -210,11 +218,9 @@ const ListDetail = () => {
           if (rating?.platform !== platformFilter) return false;
         }
       }
-
       if (datePreset !== "all" && rating?.createdAt) {
-        const range = getDateRange(); 
-        const [year, month, day] = rating.createdAt.split("-").map(Number);
-        const ratingDate = new Date(year, month - 1, day);
+        const range = getDateRange();
+        const ratingDate = new Date(rating.createdAt + "T00:00:00");
 
         if (range.from) {
           const from = new Date(range.from);
@@ -230,12 +236,9 @@ const ListDetail = () => {
       } else if (datePreset !== "all" && !rating?.createdAt) {
         return false;
       }
-
-      // FILTRO DE NOTA
       if (ratingFilter !== "all") {
         if (!rating || rating.rating !== Number(ratingFilter)) return false;
       }
-
       return true;
     });
   }, [list, movieRatings, genreFilter, platformFilter, datePreset, dateFrom, dateTo, ratingFilter]);
@@ -661,25 +664,17 @@ const ListDetail = () => {
                   <Link to={`/movie/${movie.id}`} className="block">
                     <div className="aspect-[2/3] overflow-hidden">
                       {url ? (
-                        <img
-                          src={url}
-                          alt={movie.title}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          loading="lazy"
-                        />
+                        <img src={url} alt={movie.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-muted">
                           <Film className="h-8 w-8 text-muted-foreground" />
                         </div>
                       )}
                     </div>
-
                     <div className="p-3 space-y-1.5">
                       <h3 className="truncate text-sm font-semibold text-card-foreground">{movie.title}</h3>
-
                       {rating && (
-                        <div className="mt-1 space-y-1">
-                          {/* Estrelas da avaliação */}
+                        <>
                           <div className="flex items-center gap-0.5">
                             {[1, 2, 3, 4, 5].map((s) => (
                               <Star
@@ -691,26 +686,28 @@ const ListDetail = () => {
                               />
                             ))}
                           </div>
-
-                          {/* Data da avaliação */}
                           {ratingDate && (
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <CalendarIcon className="h-3 w-3" />
                               <span>{ratingDate}</span>
                             </div>
                           )}
-
-                          {/* Plataforma */}
                           {rating.platform && (
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                               <PlatformBadge value={rating.platform} />
                               <span>{PLATFORMS.find((p) => p.value === rating.platform)?.label || rating.platform}</span>
                             </div>
                           )}
-                        </div>
+                        </>
                       )}
                     </div>
                   </Link>
+                  <button
+                    onClick={() => handleRemove(movie.id)}
+                    className="absolute right-2 top-2 rounded-full bg-background/80 p-1.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               );
             })}
