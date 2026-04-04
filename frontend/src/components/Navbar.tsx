@@ -1,6 +1,7 @@
+// navbar.tsx
 import { getImageUrl } from "@/lib/files";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut, Menu as MenuIcon } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
 import {
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { logoutAPI } from "@/lib/auth";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProfileData {
   profileName?: string;
@@ -22,21 +24,16 @@ interface ProfileData {
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
 
   const loadProfile = () => {
     try {
       const saved = localStorage.getItem("tmetrage_profile");
-
       if (saved) {
         const parsed = JSON.parse(saved);
-
-        if (parsed.profileName || parsed.email) {
-          setProfileData(parsed);
-        } else {
-          setProfileData(null);
-        }
+        setProfileData(parsed.profileName || parsed.email ? parsed : null);
       } else {
         setProfileData(null);
       }
@@ -45,23 +42,12 @@ const Navbar = () => {
     }
   };
 
-  useEffect(() => {
-    loadProfile();
-
-    // Atualiza quando navegar
-  }, [location]);
+  useEffect(() => loadProfile(), [location]);
 
   useEffect(() => {
-    // Atualiza quando perfil mudar (ex: avatar atualizado)
-    const handleProfileUpdate = () => {
-      loadProfile();
-    };
-
+    const handleProfileUpdate = () => loadProfile();
     window.addEventListener("profileUpdated", handleProfileUpdate);
-
-    return () => {
-      window.removeEventListener("profileUpdated", handleProfileUpdate);
-    };
+    return () => window.removeEventListener("profileUpdated", handleProfileUpdate);
   }, []);
 
   const isLoggedIn = !!profileData;
@@ -70,9 +56,7 @@ const Navbar = () => {
     logoutAPI();
     localStorage.removeItem("tmetrage_profile");
     setProfileData(null);
-
     toast.success("Você saiu da sua conta");
-
     navigate("/");
   };
 
@@ -83,6 +67,51 @@ const Navbar = () => {
         : "text-navbar-foreground"
     }`;
 
+  const menuItems = (
+    <>
+      <DropdownMenuItem onClick={() => navigate("/")} className="cursor-pointer">
+        Menu
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => navigate(isLoggedIn ? "/listas" : "/login")}
+        className="cursor-pointer"
+      >
+        Listas
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => navigate(isLoggedIn ? "/filmes-avaliados" : "/login")}
+        className="cursor-pointer"
+      >
+        Avaliações
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => navigate(isLoggedIn ? "/comentarios" : "/login")}
+        className="cursor-pointer"
+      >
+        Comentários
+      </DropdownMenuItem>
+      {isLoggedIn ? (
+        <>
+          <DropdownMenuItem onClick={() => navigate("/perfil")} className="cursor-pointer">
+            Perfil
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
+            <LogOut className="h-4 w-4 mr-2" />
+            Sair
+          </DropdownMenuItem>
+        </>
+      ) : (
+        <DropdownMenuItem
+          onClick={() => navigate("/login")}
+          className="cursor-pointer flex items-center gap-1.5"
+        >
+          <LogIn className="h-4 w-4" />
+          Login
+        </DropdownMenuItem>
+      )}
+    </>
+  );
+
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-navbar">
       <div className="container flex h-14 items-center justify-between">
@@ -90,69 +119,75 @@ const Navbar = () => {
           TMétrage
         </Link>
 
-        <div className="flex items-center gap-8">
-          <Link to="/" className={linkClass("/")}>
-            Menu
-          </Link>
-
-          <Link to={isLoggedIn ? "/listas" : "/login"} className={linkClass("/listas")}>
-            Listas
-          </Link>
-
-          <Link to={isLoggedIn ? "/filmes-avaliados" : "/login"} className={linkClass("/filmes-avaliados")}>
-            Avaliações
-          </Link>
-
-          <Link to={isLoggedIn ? "/comentarios" : "/login"} className={linkClass("/comentarios")}>
-            Comentários
-          </Link>
-
-          {isLoggedIn ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center focus:outline-none">
-                  <Avatar className="h-8 w-8 ring-2 ring-primary/30 hover:ring-primary transition-all cursor-pointer">
-                    {profileData?.avatar ? (
-                      <AvatarImage
-                        src={getImageUrl(profileData.avatar)}
-                        alt="Perfil"
-                      />
-                    ) : (
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                        {profileData?.name?.[0]?.toUpperCase() || "U"}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                </button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem
-                  onClick={() => navigate("/perfil")}
-                  className="cursor-pointer"
-                >
-                  Perfil
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="cursor-pointer text-destructive"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sair
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Link
-              to="/login"
-              className={`${linkClass("/login")} flex items-center gap-1.5`}
-            >
-              <LogIn className="h-4 w-4" />
-              Login
+        {isMobile ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="h-10 w-10 flex items-center justify-center border rounded-md focus:outline-none">
+                <MenuIcon className="h-6 w-6" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {menuItems}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="flex items-center gap-8">
+            <Link to="/" className={linkClass("/")}>
+              Menu
             </Link>
-          )}
-        </div>
+
+            <Link to={isLoggedIn ? "/listas" : "/login"} className={linkClass("/listas")}>
+              Listas
+            </Link>
+
+            <Link
+              to={isLoggedIn ? "/filmes-avaliados" : "/login"}
+              className={linkClass("/filmes-avaliados")}
+            >
+              Avaliações
+            </Link>
+
+            <Link to={isLoggedIn ? "/comentarios" : "/login"} className={linkClass("/comentarios")}>
+              Comentários
+            </Link>
+
+            {isLoggedIn ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center focus:outline-none">
+                    <Avatar className="h-8 w-8 ring-2 ring-primary/30 hover:ring-primary transition-all cursor-pointer">
+                      {profileData?.avatar ? (
+                        <AvatarImage src={getImageUrl(profileData.avatar)} alt="Perfil" />
+                      ) : (
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                          {profileData?.name?.[0]?.toUpperCase() || "U"}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem onClick={() => navigate("/perfil")} className="cursor-pointer">
+                    Perfil
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link
+                to="/login"
+                className={`${linkClass("/login")} flex items-center gap-1.5`}
+              >
+                <LogIn className="h-4 w-4" />
+                Login
+              </Link>
+            )}
+          </div>
+        )}
       </div>
     </nav>
   );
