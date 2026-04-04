@@ -85,7 +85,7 @@ const CommentItem = ({ comment, onRefresh, depth = 0, movieId }: CommentItemProp
   };
 
   return (
-    <div className={`${depth > 0 ? "ml-8 border-l-2 border-border pl-4" : ""}`}>
+    <div id={`comment-${comment.id}`} className={`${depth > 0 ? "ml-8 border-l-2 border-border pl-4" : ""}`}>
       <div className="py-3">
         <div className="flex items-center gap-2 mb-1.5">
           <button

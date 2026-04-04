@@ -13,6 +13,7 @@ import { Link } from "react-router-dom";
 import { getPosterUrl } from "@/lib/tmdb";
 import { toast } from "sonner";
 import { getUserProfile, toggleFollow, UserProfile as UserProfileType } from "@/lib/profile";
+import {  toggleLike  } from "@/lib/comments";
 
 const UserProfile = () => {
   const { username } = useParams<{ username: string }>();
@@ -257,8 +258,8 @@ const UserProfile = () => {
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3">
             <div className="space-y-4">
-              {(profile.reviews || []).map((review) => {
-                const reviewKey = `${review.movieId}-${review.date}`;
+              {(profile.reviews || []).map((review, index) => {
+                const reviewKey = `${review.movieId}-${index}`;
                 const isLiked = likedReviews[reviewKey] || false;
                 return (
                   <div
@@ -292,10 +293,9 @@ const UserProfile = () => {
                         </p>
                         <div className="mt-3 flex items-center gap-4">
                           <button
-                            onClick={() => setLikedReviews((prev) => ({ ...prev, [reviewKey]: !prev[reviewKey] }))}
-                            className={`flex items-center gap-1.5 text-xs transition-colors ${
-                              isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
-                            }`}
+                            onClick={() => navigate(`/movie/${review.movieId}`)}
+                            className={`flex items-center gap-1.5 text-xs transition-colors ${isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+                              }`}
                           >
                             <Heart className={`h-3.5 w-3.5 ${isLiked ? "fill-current" : ""}`} />
                             Curtir

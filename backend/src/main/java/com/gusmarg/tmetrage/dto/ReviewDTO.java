@@ -15,6 +15,7 @@ import lombok.Setter;
 @Setter
 public class ReviewDTO {
 
+	private Long id;
 	private Long movieId;
 	private String movieTitle;
 	private String posterPath;

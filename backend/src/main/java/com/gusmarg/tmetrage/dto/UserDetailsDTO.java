@@ -31,7 +31,7 @@ public class UserDetailsDTO extends UserDTO {
 				.getRatings().stream().map(r -> new RatingDTO(r.getMovie().getId(), r.getMovie().getTitle(),
 						r.getMovie().getPosterPath(), r.getScore(), r.getCreatedAt()))
 				.toList();
-		reviews = entity.getComments().stream().map(c -> new ReviewDTO(c.getMovie().getId(), c.getMovie().getTitle(),
+		reviews = entity.getComments().stream().map(c -> new ReviewDTO(c.getId(), c.getMovie().getId(), c.getMovie().getTitle(),
 				c.getMovie().getPosterPath(), c.getMessage(), c.getCreatedAt())).toList();
 	}
 

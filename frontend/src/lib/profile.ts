@@ -16,7 +16,7 @@ export interface UserProfile {
     totalComments: number;
     topGenres?: { name: string; count: number }[];
     ratings: { movieId: number; movieTitle: string; posterPath: string | null; rating: number; date: string }[];
-    reviews: { movieId: number; movieTitle: string; posterPath: string | null; content: string; date: string }[];
+    reviews: { id: number; movieId: number; movieTitle: string; posterPath: string | null; content: string; date: string }[];
 }
 
 export async function getMyProfile(): Promise<UserProfile> {
