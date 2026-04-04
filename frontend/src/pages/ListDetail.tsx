@@ -159,36 +159,43 @@ const ListDetail = () => {
     "hsl(60, 70%, 50%)",
   ];
 
-  const allGenres = useMemo(() => {
-    if (!list || !genres) return new Map<number, string>();
+const allGenres = useMemo(() => {
+  if (!list || !genres) return new Map<number, string>();
 
-    const map = new Map<number, string>();
+  const map = new Map<number, string>();
 
-    list.movies.forEach((m) =>
-      (movieGenres[m.id] || []).forEach((gid) => {
-        const g = genres.find((g) => g.id === gid);
-        if (g) map.set(gid, g.name);
-      })
-    );
+  list.movies.forEach((movie) => {
+    const gIds = movieGenres[movie.id] || [];
 
-    return map;
-  }, [list, genres, movieGenres]);
+    gIds.forEach((gid) => {
+      const g = genres.find((g) => g.id === gid);
+      if (g) map.set(gid, g.name);
+    });
+  });
+
+  return map;
+}, [list, genres, movieGenres]);
 
   const genreChartData = useMemo(() => {
-    if (!list || !genres || list.movies.length === 0) return [];
+    if (!list || !genres) return [];
+
     const counts: Record<number, number> = {};
-    list.movies.forEach((m) => {
-      (movieGenres[m.id] || []).forEach((gid) => {
+
+    list.movies.forEach((movie) => {
+      const gIds = movieGenres[movie.id] || [];
+
+      gIds.forEach((gid) => {
         counts[gid] = (counts[gid] || 0) + 1;
       });
     });
+
     return Object.entries(counts)
       .map(([id, count]) => ({
         name: genres.find((g) => g.id === Number(id))?.name || `ID ${id}`,
         value: count,
       }))
       .sort((a, b) => b.value - a.value);
-  }, [list, genres]);
+  }, [list, genres, movieGenres]);
 
   const getDateRange = (): { from?: Date; to?: Date } => {
     if (datePreset === "custom") return { from: dateFrom, to: dateTo };
@@ -209,7 +216,8 @@ const ListDetail = () => {
     return list.movies.filter((movie) => {
       const rating = movieRatings[movie.id];
       if (genreFilter !== "all") {
-        if (!(movieGenres[movie.id] || []).includes(Number(genreFilter))) return false;
+        const gIds = movieGenres[movie.id] || [];
+        if (!gIds.includes(Number(genreFilter))) return false;
       }
       if (platformFilter !== "all") {
         if (platformFilter === "none") {
@@ -254,7 +262,7 @@ const ListDetail = () => {
       title: movie.title,
       poster_path: movie.poster_path,
       vote_average: movie.vote_average,
-      genre_ids: movie.genre_ids || [],
+      genre_ids: movieGenres[movie.id] || [],
     };
     await addMovieToList(id, item);
     await loadList();
