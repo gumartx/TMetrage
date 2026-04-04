@@ -165,7 +165,6 @@ public class UserService implements UserDetailsService {
 	
 	@Transactional
 	public void toggleFollow(String profileName) {
-
 		User user = authService.getAuthenticatedUser();
 
 	    if (user.getProfileName().equals(profileName)) {

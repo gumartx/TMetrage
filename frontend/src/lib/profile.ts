@@ -100,8 +100,9 @@ export async function getFollowing(): Promise<{ name: string; profileName: strin
 }
 
 export async function toggleFollow(profileName: string): Promise<{ following: boolean }> {
+    profileName = profileName.startsWith("@") ? profileName : `@${profileName}`;
     return apiRequest(`/users/${profileName}/follow`, {
-        method: "POST",
+        method: "PUT",
         auth: true,
     });
 }

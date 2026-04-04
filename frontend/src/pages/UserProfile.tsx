@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
 import { getPosterUrl } from "@/lib/tmdb";
 import { toast } from "sonner";
 import { getUserProfile, toggleFollow, UserProfile as UserProfileType } from "@/lib/profile";
-import {  toggleLike  } from "@/lib/comments";
+import { toggleLike } from "@/lib/comments";
 
 const UserProfile = () => {
   const { username } = useParams<{ username: string }>();
@@ -45,8 +45,8 @@ const UserProfile = () => {
   const handleFollow = async () => {
     if (!username) return;
     try {
-      const result = await toggleFollow(username);
-      setIsFollowing(result.following);
+      await toggleFollow(username);
+      setIsFollowing(prev => !prev);
     } catch (err) {
       toast.error(err.message || "Erro ao seguir/deixar de seguir");
     }
