@@ -16,13 +16,12 @@ import lombok.Setter;
 public class UserUpdateDTO {
 
 	@Size(min = 3)
-	@Size(max = 50)
+	@Size(max = 100)
     private String name;
-	@Size(max = 25)
+	@Size(max = 30)
 	@Size(min = 3)
     private String profileName;
-	@Size(min = 1)
-	@Size(max = 500)
+	@Size(max = 200)
     private String bio; 
     @Pattern(regexp = "^(http(s?):)([/|.|\\w|\\s|-])*\\.(?:jpg|jpeg|png|gif)$")
     private String avatar;
