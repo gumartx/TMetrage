@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { searchMovies, discoverMovies, getGenres, getTrendingMovies, getBackdropUrl, getPosterUrl } from "@/lib/tmdb";
@@ -45,6 +45,18 @@ const Index = () => {
     setPage(1);
   };
 
+  const nextRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!trending || trending.length === 0) return;
+
+    const interval = setInterval(() => {
+      nextRef.current?.click(); 
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [trending]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -85,7 +97,10 @@ const Index = () => {
               ))}
             </CarouselContent>
             <CarouselPrevious className="left-4 top-1/2 z-10 bg-background/60 border-border hover:bg-background/80" />
-            <CarouselNext className="right-4 top-1/2 z-10 bg-background/60 border-border hover:bg-background/80" />
+            <CarouselNext
+              ref={nextRef}
+              className="right-4 top-1/2 z-10 bg-background/60 border-border hover:bg-background/80"
+            />
           </Carousel>
           <div className="container mt-4 mb-2">
             <p className="text-xs uppercase tracking-widest text-muted-foreground">🔥 Mais avaliados do mês</p>
