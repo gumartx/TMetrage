@@ -65,7 +65,11 @@ export async function removeAvatar(): Promise<void> {
 }
 
 export async function getUserProfile(profileName: string): Promise<UserProfile> {
-    return apiRequest<UserProfile>(`/users/profile/${profileName}`, { auth: true });
+    profileName = profileName.startsWith("@") ? profileName : `@${profileName}`;
+    return apiRequest<UserProfile>(`/users/profile/${profileName}`, {
+        method: "GET",
+        auth: true
+    });
 }
 
 export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {

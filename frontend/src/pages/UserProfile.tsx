@@ -84,7 +84,7 @@ const UserProfile = () => {
       <div className="relative h-56 w-full bg-secondary overflow-hidden">
         {profile.cover && (
           <img
-            src={profile.cover}
+            src={getImageUrl(profile.cover)}
             alt="Capa"
             className="absolute inset-0 h-full w-full object-cover"
           />

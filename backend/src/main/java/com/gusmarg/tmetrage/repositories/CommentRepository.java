@@ -24,11 +24,12 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
 	@Query("""
 			    SELECT c FROM Comment c
-			    WHERE (:search IS NULL
+			    WHERE c.user.id = :userId 
+			    	   AND (:search IS NULL
 			           OR LOWER(c.message) LIKE LOWER(CONCAT('%', :search, '%'))
 			           OR LOWER(c.movie.title) LIKE LOWER(CONCAT('%', :search, '%')))
 			      AND (:startDate IS NULL OR c.createdAt >= :startDate)
 			      AND (:endDate IS NULL OR c.createdAt <= :endDate)
 			""")
-	List<Comment> searchComments(String search, LocalDate startDate, LocalDate endDate);
+	List<Comment> searchComments(Long userId, String search, LocalDate startDate, LocalDate endDate);
 }

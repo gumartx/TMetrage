@@ -120,6 +120,7 @@ public class CommentService {
         LocalDateTime end = filter.getEndDate() != null ? filter.getEndDate().atTime(23,59,59) : null;
 
         List<Comment> comments = commentRepository.searchComments(
+        	user.getId(),
             filter.getSearch(),
             start != null ? start.toLocalDate() : null,
             end != null ? end.toLocalDate() : null

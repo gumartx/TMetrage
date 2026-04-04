@@ -39,6 +39,7 @@ import {
   getFollowers,
   getFollowing,
   UserProfile,
+  getUserProfile,
 } from "@/lib/profile";
 import { removeToken } from "@/lib/api";
 

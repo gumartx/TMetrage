@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.gusmarg.tmetrage.dto.OtherUserDetailsDTO;
 import com.gusmarg.tmetrage.dto.UserDetailsDTO;
 import com.gusmarg.tmetrage.dto.UserRegisterDTO;
 import com.gusmarg.tmetrage.dto.UserRegisterResponseDTO;
@@ -90,8 +89,7 @@ public class UserService implements UserDetailsService {
 	}
 
 	@Transactional(readOnly = true)
-	public OtherUserDetailsDTO findByProfileName(String profileName) {
-
+	public UserDetailsDTO findByProfileName(String profileName) {
 		User user = userRepository.findByProfileName(profileName);
 
 		Double avgScore = ratingRepository.findAvgScoreByUserId(user.getId());
@@ -102,7 +100,7 @@ public class UserService implements UserDetailsService {
 		
 		log.info("Perfil encontrado: {}", profileName);
 
-		return new OtherUserDetailsDTO(user, avgScore);
+		return new UserDetailsDTO(user, avgScore);
 	}
 
 	@Transactional
