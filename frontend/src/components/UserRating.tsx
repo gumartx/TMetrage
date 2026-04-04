@@ -38,7 +38,6 @@ export interface RatingEntry {
   platform?: string;
 }
 
-// Keep getRatings for backward compatibility (used by other pages during migration)
 export function getRatings(): Record<string, RatingEntry> {
   const raw = localStorage.getItem("tmetrage_ratings");
   if (!raw) return {};

@@ -7,6 +7,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.gusmarg.tmetrage.entities.Movie;
 import com.gusmarg.tmetrage.entities.MovieList;
+import com.gusmarg.tmetrage.entities.Rating;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,7 +18,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class MovieListResponseDTO {
+public class MovieListDetailsDTO {
 
 	private Long id;
 	private String name;
@@ -25,18 +26,17 @@ public class MovieListResponseDTO {
 	@JsonFormat(pattern = "dd/MM/yyyy")
 	private LocalDate createdAt;
 	private Integer totalMovies;
-	private List<MovieDTO> movies = new ArrayList<>();
+	private List<RatedMovieDTO> movies = new ArrayList<>();
 	
-	public MovieListResponseDTO(MovieList entity) {
+	public MovieListDetailsDTO(MovieList entity, List<Rating> ratings) {
 		id = entity.getId();
 		name = entity.getName();
 		description = entity.getDescription();
 		createdAt = entity.getCreatedAt();
 		totalMovies = entity.getAmountMovies();
 		
-		for (Movie movie : entity.getMovies()) {
-			movies.add(new MovieDTO(movie.getId(), movie.getPosterPath(), movie.getPosterPath()));
+		for (Movie m : entity.getMovies()) {
+			movies.add(new RatedMovieDTO(m, ratings));
 		}
 	}
-	
 }

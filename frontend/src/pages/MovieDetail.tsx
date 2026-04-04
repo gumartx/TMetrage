@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getGenreColor } from "@/lib/genreColors";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -12,7 +12,7 @@ import {
   getProfileUrl,
 } from "@/lib/tmdb";
 import MovieComments from "@/components/MovieComments";
-import { getLists, addMovieToList, type MovieListItem } from "@/lib/movieLists";
+import { getLists, addMovieToList, type MovieListItem, type MovieList } from "@/lib/movieLists";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,9 +49,13 @@ function getAgeRating(lang: string): string {
 
 
 const AddToListButton = ({ movie }: { movie: { id: number; title: string; poster_path: string | null; vote_average: number; genres: { id: number }[] } }) => {
-  const [lists, setLists] = useState(getLists());
+  const [lists, setLists] = useState<MovieList[]>([]);
 
-  const handleAdd = (listId: string) => {
+  useEffect(() => {
+    getLists().then(setLists).catch(() => {});
+  }, []);
+
+  const handleAdd = async (listId: string) => {
     const item: MovieListItem = {
       id: movie.id,
       title: movie.title,
@@ -59,9 +63,10 @@ const AddToListButton = ({ movie }: { movie: { id: number; title: string; poster
       vote_average: movie.vote_average,
       genre_ids: movie.genres.map((g) => g.id),
     };
-    addMovieToList(listId, item);
-    setLists(getLists());
     const listName = lists.find((l) => l.id === listId)?.name;
+    await addMovieToList(listId, item);
+    const updated = await getLists();
+    setLists(updated);
     toast.success(`Adicionado a "${listName}"`);
   };
 

@@ -1,5 +1,6 @@
 package com.gusmarg.tmetrage.services;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -7,13 +8,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.gusmarg.tmetrage.components.TMDBSaveData;
 import com.gusmarg.tmetrage.dto.MovieListCreateDTO;
+import com.gusmarg.tmetrage.dto.MovieListDetailsDTO;
 import com.gusmarg.tmetrage.dto.MovieListResponseDTO;
 import com.gusmarg.tmetrage.dto.MovieListUpdateDTO;
+import com.gusmarg.tmetrage.dto.ShareListToDTO;
+import com.gusmarg.tmetrage.dto.SharedListsDTO;
 import com.gusmarg.tmetrage.entities.Movie;
 import com.gusmarg.tmetrage.entities.MovieList;
+import com.gusmarg.tmetrage.entities.Rating;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.MovieListRepository;
 import com.gusmarg.tmetrage.repositories.MovieRepository;
+import com.gusmarg.tmetrage.repositories.RatingRepository;
 import com.gusmarg.tmetrage.repositories.UserRepository;
 import com.gusmarg.tmetrage.services.utils.TMDBService;
 
@@ -28,19 +34,31 @@ public class MovieListService {
 
 	private final AuthService authService;
 	private final TMDBService tmdbService;
+	private final RatingRepository ratingRepository;
 	private final MovieRepository movieRepository;
 	private final MovieListRepository movieListRepository;
 	private final UserRepository userRepository;
 
 	@Transactional(readOnly = true)
-	public MovieListResponseDTO findById(Long listId) {
+	public MovieListDetailsDTO findById(Long listId) {
 		User user = authService.getAuthenticatedUser();
-		
+
 		MovieList list = movieListRepository.findByListId(listId, user.getId());
 
-		return new MovieListResponseDTO(list);
+		List<Rating> ratings = new ArrayList<>();
+		
+		for (Movie movie : list.getMovies()) {
+			Rating rating = ratingRepository.findByIdUserIdAndIdMovieId(user.getId(), movie.getId()).orElse(null);
+			if (rating != null) {
+				ratings.add(rating);
+			}
+		}
+		
+		log.info("Detalhes da lista '{}'", list.getName());
+		
+		return new MovieListDetailsDTO(list, ratings);
 	}
-	
+
 	@Transactional(readOnly = true)
 	public List<MovieListResponseDTO> findLists(String name, Integer month, Integer year) {
 
@@ -68,16 +86,16 @@ public class MovieListService {
 
 		return new MovieListResponseDTO(entity);
 	}
-	
+
 	@Transactional
 	public MovieListResponseDTO updateList(Long listId, @Valid MovieListUpdateDTO dto) {
-		
+
 		User user = authService.getAuthenticatedUser();
 
 		MovieList entity = movieListRepository.getReferenceById(listId);
 
-	    validateListPermission(entity, user);
-		
+		validateListPermission(entity, user);
+
 		entity.setName(dto.getName());
 		entity.setDescription(dto.getDescription());
 		entity = movieListRepository.save(entity);
@@ -86,7 +104,7 @@ public class MovieListService {
 
 		return new MovieListResponseDTO(entity);
 	}
-	
+
 	@Transactional
 	public void deleteList(Long listId) {
 		User user = authService.getAuthenticatedUser();
@@ -96,21 +114,21 @@ public class MovieListService {
 		if (!user.getId().equals(entity.getUser().getId())) {
 			throw new RuntimeException("Você não pode deletar essa lista");
 		}
-		
-	    movieListRepository.deleteById(listId);
+
+		movieListRepository.deleteById(listId);
 
 		log.info("Lista '{}' deletada", entity.getName());
 
 	}
-	
+
 	@Transactional
-	public MovieListResponseDTO addMovieToList(Long listId, Long movieId) {
+	public void addMovieToList(Long listId, Long movieId) {
 
 		User user = authService.getAuthenticatedUser();
 
 		MovieList entity = movieListRepository.getReferenceById(listId);
 
-	    validateListPermission(entity, user);
+		validateListPermission(entity, user);
 
 		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
 			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository);
@@ -118,9 +136,8 @@ public class MovieListService {
 
 		entity.getMovies().add(movie);
 
-		log.info("Filme '{}' adicionado a lista '{}'", movie.getId(), entity.getName());
+		log.info("Filme '{}' adicionado a lista '{}'", movie.getTitle(), entity.getName());
 
-		return new MovieListResponseDTO(entity);
 	}
 
 	@Transactional
@@ -130,16 +147,16 @@ public class MovieListService {
 
 		MovieList entity = movieListRepository.getReferenceById(listId);
 
-	    validateListPermission(entity, user);
+		validateListPermission(entity, user);
 
 		entity.getMovies().removeIf(movie -> movie.getId().equals(movieId));
 
-		log.info("Filme '{}' removido da lista '{}'", entity.getId(), entity.getName());
+		log.info("Filme '{}' removido da lista '{}'", movieId, entity.getName());
 
 	}
 
 	@Transactional
-	public void shareList(Long listId, Long userId) {
+	public void shareList(Long listId, ShareListToDTO shareTo) {
 
 		User currentUser = authService.getAuthenticatedUser();
 
@@ -149,18 +166,33 @@ public class MovieListService {
 			throw new RuntimeException("Você não pode compartilhar essa lista");
 		}
 
-		User user = userRepository.getReferenceById(userId);
+		for (String i : shareTo.getSharedTo()) {
+			User user = userRepository.findByProfileName(i);
 
-		boolean currentUserFollows = userRepository.existsFollow(currentUser.getId(), userId);
-		boolean userFollowsBack = userRepository.existsFollow(userId, currentUser.getId());
+			boolean currentUserFollows = userRepository.existsFollow(currentUser.getId(), user.getId());
+			boolean userFollowsBack = userRepository.existsFollow(user.getId(), currentUser.getId());
 
-		if (!currentUserFollows || !userFollowsBack) {
-			throw new RuntimeException("A lista só pode ser compartilhada com usuários que se seguem mutuamente");
+			if (!currentUserFollows || !userFollowsBack) {
+				throw new RuntimeException("A lista só pode ser compartilhada com usuários que se seguem mutuamente");
+			}
+
+			list.getSharedWith().add(user);
+
+			log.info("Lista '{}' compartilhada com '{}'", list.getName(), user.getProfileName());
 		}
 
-		list.getSharedWith().add(user);
+	}
 
-		log.info("Lista '{}' compartilhada com '{}'", list.getName(), user.getUsername());
+	@Transactional(readOnly = true)
+	public List<SharedListsDTO> findSharedLists(String nome, Integer mes, Integer ano) {
+
+		User user = authService.getAuthenticatedUser();
+
+		List<MovieList> userLists = movieListRepository.searchUserLists(user.getId(), nome, mes, ano);
+
+		List<MovieList> sharedLists = userLists.stream().filter(list -> !list.getSharedWith().isEmpty()).toList();
+
+		return sharedLists.stream().map(list -> new SharedListsDTO(list, user)).toList();
 	}
 
 	private void validateListPermission(MovieList list, User user) {

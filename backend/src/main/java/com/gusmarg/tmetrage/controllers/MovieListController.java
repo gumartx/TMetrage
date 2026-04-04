@@ -15,11 +15,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.gusmarg.tmetrage.dto.MovieListCreateDTO;
 import com.gusmarg.tmetrage.dto.MovieDTO;
+import com.gusmarg.tmetrage.dto.MovieListCreateDTO;
+import com.gusmarg.tmetrage.dto.MovieListDetailsDTO;
 import com.gusmarg.tmetrage.dto.MovieListResponseDTO;
 import com.gusmarg.tmetrage.dto.MovieListUpdateDTO;
-import com.gusmarg.tmetrage.dto.ShareListDTO;
+import com.gusmarg.tmetrage.dto.ShareListToDTO;
+import com.gusmarg.tmetrage.dto.SharedListsDTO;
 import com.gusmarg.tmetrage.services.MovieListService;
 
 import jakarta.validation.Valid;
@@ -27,14 +29,14 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/listas")
+@RequestMapping("/lists")
 public class MovieListController {
 
 	private final MovieListService movieListService;
 
 	@GetMapping(value = "/{listId}")
-	public ResponseEntity<MovieListResponseDTO> findListById(@PathVariable Long listId) {
-		MovieListResponseDTO newDTO = movieListService.findById(listId);
+	public ResponseEntity<MovieListDetailsDTO> findListById(@PathVariable Long listId) {
+		MovieListDetailsDTO newDTO = movieListService.findById(listId);
 		return ResponseEntity.ok(newDTO);
 	}
 	
@@ -64,25 +66,31 @@ public class MovieListController {
 		return ResponseEntity.noContent().build();
 	}
 	
-	@PostMapping("/{listId}/filmes")
-	public ResponseEntity<MovieListResponseDTO> addMovie(@PathVariable Long listId, @RequestBody MovieDTO dto) {
-		MovieListResponseDTO newDTO = movieListService.addMovieToList(listId, dto.getId());
-		return ResponseEntity.ok(newDTO);
-	}
-
-	@DeleteMapping("/{listId}/filmes")
-	public ResponseEntity<Void> removeMovie(@PathVariable Long listId, @RequestBody MovieDTO dto) {
-		movieListService.removeMovieFromList(listId, dto.getId());
+	@PostMapping("/{listId}/movies")
+	public ResponseEntity<Void> addMovie(@PathVariable Long listId, @RequestBody MovieDTO dto) {
+		movieListService.addMovieToList(listId, dto.getId());
 		return ResponseEntity.noContent().build();
 	}
 
-	@PostMapping("/{listId}/compartilhar")
-	public ResponseEntity<Void> shareList(@PathVariable Long listId, @RequestBody ShareListDTO dto) {
+	@DeleteMapping("/{listId}/movies/{movieId}")
+	public ResponseEntity<Void> removeMovie(@PathVariable Long listId, @PathVariable Long movieId) {
+		movieListService.removeMovieFromList(listId, movieId);
+		return ResponseEntity.noContent().build();
+	}
 
-		movieListService.shareList(listId, dto.getUserId());
+	@PostMapping("/{listId}/share")
+	public ResponseEntity<Void> shareList(@PathVariable Long listId, @RequestBody ShareListToDTO dto) {
+
+		movieListService.shareList(listId, dto);
 
 		return ResponseEntity.ok().build();
 	}
 	
+	@GetMapping(value = "/shared")
+	public ResponseEntity<List<SharedListsDTO>> getSharedLists(@RequestParam(required = false) String nome,
+			@RequestParam(required = false) Integer mes, @RequestParam(required = false) Integer ano) {
+		List<SharedListsDTO> result = movieListService.findSharedLists(nome, mes, ano);
+		return ResponseEntity.ok(result);
+	}
 	
 }

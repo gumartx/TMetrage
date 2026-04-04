@@ -1,6 +1,7 @@
 package com.gusmarg.tmetrage.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import com.gusmarg.tmetrage.entities.User;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,8 +12,15 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ShareListDTO {
-	
-	@NotBlank
-	private Long userId;
-    
+
+	private String profileName;
+	private String name;
+	private String avatar;
+
+	public ShareListDTO(User entity) {
+		profileName = entity.getProfileName();
+		name = entity.getName();
+		avatar = entity.getAvatar();
+	}
+
 }

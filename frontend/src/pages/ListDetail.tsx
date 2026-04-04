@@ -8,6 +8,7 @@ import { searchMovies, getPosterUrl, getGenres } from "@/lib/tmdb";
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { getRatings, PLATFORMS, PlatformBadge } from "@/components/UserRating";
+import { getFollowing } from "@/lib/profile";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,7 @@ const ListDetail = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [following, setFollowing] = useState<{ name: string; profileName: string; avatar: string }[]>([]);
 
   // Filters
   const [genreFilter, setGenreFilter] = useState("all");
@@ -52,49 +54,45 @@ const ListDetail = () => {
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [ratingFilter, setRatingFilter] = useState("all");
 
+  const loadList = async () => {
+    if (!id) return;
+    try {
+      const data = await getList(id);
+      setList(data);
+    } catch {
+      setList(undefined);
+    }
+  };
+
   useEffect(() => {
-    if (id) setList(getList(id));
+    loadList();
   }, [id]);
 
-  const ratings = useMemo(() => getRatings(), [list]);
-
-  // Get following list for share
-  const following = useMemo(() => {
-    const currentUser = localStorage.getItem("tmetrage_profile");
-    if (!currentUser) return [];
-    const parsed = JSON.parse(currentUser);
-    const allFollowing: { username: string; name: string; avatar?: string }[] = [];
-    const followingData = JSON.parse(localStorage.getItem(`following_${parsed.username}`) || "[]");
-    followingData.forEach((username: string) => {
-      const profile = localStorage.getItem(`profile_${username}`);
-      if (profile) {
-        const p = JSON.parse(profile);
-        allFollowing.push({ username, name: p.name || username, avatar: p.avatar });
-      } else {
-        allFollowing.push({ username, name: username });
-      }
-    });
-    return allFollowing;
+  useEffect(() => {
+    if (showShare) {
+      getFollowing().then(setFollowing).catch(() => {});
+    }
   }, [showShare]);
+
+  const ratings = useMemo(() => getRatings(), [list]);
 
   const filteredFollowing = useMemo(() => {
     if (!shareSearch.trim()) return following;
     const q = shareSearch.toLowerCase();
     return following.filter(
-      (u) => u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q)
+      (u) => u.name.toLowerCase().includes(q) || u.profileName.toLowerCase().includes(q)
     );
   }, [following, shareSearch]);
 
-  const toggleUserSelection = (username: string) => {
+  const toggleUserSelection = (profileName: string) => {
     setSelectedUsers((prev) =>
-      prev.includes(username) ? prev.filter((u) => u !== username) : [...prev, username]
+      prev.includes(profileName) ? prev.filter((u) => u !== profileName) : [...prev, profileName]
     );
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (selectedUsers.length === 0 || !list) return;
-    const profile = JSON.parse(localStorage.getItem("tmetrage_profile") || "{}");
-    shareList(list, profile.username || "unknown", selectedUsers);
+    await shareList(list.id, selectedUsers);
     setShowShare(false);
     setSelectedUsers([]);
     setShareSearch("");
@@ -118,7 +116,6 @@ const ListDetail = () => {
     "hsl(60, 70%, 50%)",
   ];
 
-  // Collect all genres from list movies
   const allGenres = useMemo(() => {
     if (!list || !genres) return new Map<number, string>();
     const map = new Map<number, string>();
@@ -165,13 +162,9 @@ const ListDetail = () => {
     if (!list) return [];
     return list.movies.filter((movie) => {
       const rating = ratings[movie.id];
-
-      // Genre filter
       if (genreFilter !== "all") {
         if (!(movie.genre_ids || []).includes(Number(genreFilter))) return false;
       }
-
-      // Platform filter
       if (platformFilter !== "all") {
         if (platformFilter === "none") {
           if (rating?.platform) return false;
@@ -179,22 +172,17 @@ const ListDetail = () => {
           if (rating?.platform !== platformFilter) return false;
         }
       }
-
-      // Date filter (based on rating date)
       if (datePreset !== "all" && rating?.date) {
         const range = getDateRange();
         const ratingDate = new Date(rating.date);
         if (range.from && ratingDate < range.from) return false;
         if (range.to && ratingDate > new Date(range.to.getTime() + 86400000)) return false;
       } else if (datePreset !== "all" && !rating?.date) {
-        return false; // no rating date means exclude when filtering by date
+        return false;
       }
-
-      // Rating filter
       if (ratingFilter !== "all") {
         if (!rating || rating.rating !== Number(ratingFilter)) return false;
       }
-
       return true;
     });
   }, [list, ratings, genreFilter, platformFilter, datePreset, dateFrom, dateTo, ratingFilter]);
@@ -203,7 +191,7 @@ const ListDetail = () => {
     setSearchTerm(query);
   };
 
-  const handleAddMovie = (movie: { id: number; title: string; poster_path: string | null; vote_average: number; genre_ids: number[] }) => {
+  const handleAddMovie = async (movie: { id: number; title: string; poster_path: string | null; vote_average: number; genre_ids: number[] }) => {
     if (!id) return;
     const item: MovieListItem = {
       id: movie.id,
@@ -212,14 +200,14 @@ const ListDetail = () => {
       vote_average: movie.vote_average,
       genre_ids: movie.genre_ids || [],
     };
-    addMovieToList(id, item);
-    setList(getList(id));
+    await addMovieToList(id, item);
+    await loadList();
   };
 
-  const handleRemove = (movieId: number) => {
+  const handleRemove = async (movieId: number) => {
     if (!id) return;
-    removeMovieFromList(id, movieId);
-    setList(getList(id));
+    await removeMovieFromList(id, movieId);
+    await loadList();
   };
 
   if (!list) {
@@ -352,11 +340,11 @@ const ListDetail = () => {
                   {filteredFollowing.length > 0 ? (
                     filteredFollowing.map((user) => (
                       <div
-                        key={user.username}
-                        onClick={() => toggleUserSelection(user.username)}
+                        key={user.profileName}
+                        onClick={() => toggleUserSelection(user.profileName)}
                         className={cn(
                           "flex items-center gap-3 rounded-md border p-2.5 cursor-pointer transition-colors",
-                          selectedUsers.includes(user.username)
+                          selectedUsers.includes(user.profileName)
                             ? "border-primary bg-primary/10"
                             : "border-border bg-card hover:bg-accent"
                         )}
@@ -372,15 +360,15 @@ const ListDetail = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-card-foreground truncate">{user.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">@{user.username}</p>
+                          <p className="text-xs text-muted-foreground truncate">@{user.profileName}</p>
                         </div>
                         <div className={cn(
                           "h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0",
-                          selectedUsers.includes(user.username)
+                          selectedUsers.includes(user.profileName)
                             ? "border-primary bg-primary"
                             : "border-muted-foreground"
                         )}>
-                          {selectedUsers.includes(user.username) && (
+                          {selectedUsers.includes(user.profileName) && (
                             <div className="h-2 w-2 rounded-full bg-primary-foreground" />
                           )}
                         </div>
