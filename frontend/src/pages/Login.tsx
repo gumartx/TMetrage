@@ -1,11 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Film, LogIn } from "lucide-react";
+import { Eye, EyeOff, Film, LogIn, Clock } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { loginAPI } from "@/lib/auth";
+
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 10 * 60 * 1000; // 10 minutes
+const STORAGE_KEY = "tmetrage_login_attempts";
+function getAttemptData(): { count: number; lockedUntil: number | null } {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* empty */ }
+  return { count: 0, lockedUntil: null };
+}
+function saveAttemptData(count: number, lockedUntil: number | null) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ count, lockedUntil }));
+}
+
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,9 +28,38 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [remainingTime, setRemainingTime] = useState(0);
+
+  useEffect(() => {
+    const { lockedUntil } = getAttemptData();
+    if (lockedUntil && Date.now() < lockedUntil) {
+      setRemainingTime(Math.ceil((lockedUntil - Date.now()) / 1000));
+    }
+  }, []);
+  useEffect(() => {
+    if (remainingTime <= 0) return;
+    const interval = setInterval(() => {
+      setRemainingTime((prev) => {
+        if (prev <= 1) {
+          saveAttemptData(0, null);
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [remainingTime]);
+  const isLocked = remainingTime > 0;
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLocked) {
+      toast.error(`Aguarde ${formatTime(remainingTime)} para tentar novamente`);
+      return;
+    }
     if (!email.trim() || !password) {
       toast.error("Preencha todos os campos");
       return;
@@ -24,10 +68,22 @@ const Login = () => {
     setLoading(true);
     try {
       await loginAPI(email.trim().toLowerCase(), password);
+      saveAttemptData(0, null);
 
       navigate("/");
-    } catch (err: unknown) {
-      toast.error((err instanceof Error ? err.message : String(err)) || "Email ou senha incorretos");
+    } catch (err) {
+      const data = getAttemptData();
+      const newCount = data.count + 1;
+      if (newCount >= MAX_ATTEMPTS) {
+        const lockedUntil = Date.now() + LOCKOUT_MS;
+        saveAttemptData(newCount, lockedUntil);
+        setRemainingTime(Math.ceil(LOCKOUT_MS / 1000));
+        toast.error("Muitas tentativas. Tente novamente em 10 minutos.");
+      } else {
+        saveAttemptData(newCount, null);
+        const remaining = MAX_ATTEMPTS - newCount;
+        toast.error(`${err.message || "Email ou senha incorretos"} (${remaining} tentativa${remaining !== 1 ? "s" : ""} restante${remaining !== 1 ? "s" : ""})`);
+      }
     } finally {
       setLoading(false);
     }
@@ -93,9 +149,15 @@ const Login = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full gap-2" disabled={loading}>
+            {isLocked && (
+              <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                <Clock className="h-4 w-4 shrink-0" />
+                <span>Conta bloqueada. Tente novamente em <strong>{formatTime(remainingTime)}</strong></span>
+              </div>
+            )}
+            <Button type="submit" className="w-full gap-2" disabled={loading || isLocked}>
               <LogIn className="h-4 w-4" />
-              {loading ? "Entrando..." : "Entrar"}
+               {isLocked ? `Bloqueado (${formatTime(remainingTime)})` : loading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
 
