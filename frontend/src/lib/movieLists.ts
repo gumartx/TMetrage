@@ -8,7 +8,7 @@ export interface MovieListItem {
   genre_ids: number[];
   rating?: number;
   platform?: string;
-  createdAt?: string;  
+  createdAt?: string;
 }
 
 export interface MovieList {
@@ -16,6 +16,8 @@ export interface MovieList {
   name: string;
   description: string;
   movies: MovieListItem[];
+  owner?: boolean;
+  ownerUser?: { profileName: string; name: string; avatar: string | null };
   createdAt: string;
 }
 

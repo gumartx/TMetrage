@@ -61,6 +61,10 @@ const Lists = () => {
     } catch { /* */ }
   };
 
+  const isShared = (listId: string) => {
+    return sharedLists.some((s) => s.list.id === listId);
+  };
+
   useEffect(() => {
     loadLists();
     loadShared();
@@ -118,8 +122,23 @@ const Lists = () => {
 
   const handleEdit = async () => {
     if (!editId || !editName.trim()) return;
+
     await updateList(editId, editName.trim(), editDescription.trim());
-    await loadLists();
+
+    setLists((prev) =>
+      prev.map((l) =>
+        l.id === editId ? { ...l, name: editName, description: editDescription } : l
+      )
+    );
+
+    setSharedLists((prev) =>
+      prev.map((s) =>
+        s.list.id === editId
+          ? { ...s, list: { ...s.list, name: editName, description: editDescription } }
+          : s
+      )
+    );
+
     setEditOpen(false);
   };
 
@@ -272,7 +291,10 @@ const Lists = () => {
                 {filteredLists.map((list) => (
                   <div
                     key={list.id}
-                    className="group relative rounded-lg border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+                    className={cn(
+                      "group relative rounded-lg border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5",
+                      isShared(list.id) ? "border-blue-500" : "border-border"
+                    )}
                   >
                     <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                       <button
@@ -337,7 +359,7 @@ const Lists = () => {
 
                       <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                         <span>{list.movies.length} {list.movies.length === 1 ? "filme" : "filmes"}</span>
-                        <span>{new Date(list.createdAt).toLocaleDateString("pt-BR")}</span>
+                        <span>{new Date(list.createdAt + "T00:00:00").toLocaleDateString("pt-BR")}</span>
                       </div>
                     </Link>
                   </div>
@@ -372,42 +394,50 @@ const Lists = () => {
                 {filteredSharedLists.map((shared) => (
                   <div
                     key={shared.id}
-                    className="group relative rounded-lg border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+                    className={cn(
+                      "group relative rounded-lg border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5",
+                      isShared(shared.list.id) ? "border-blue-500" : "border-border"
+                    )}
                   >
-                    <div className="flex items-center gap-2 mb-3">
-                      {shared.direction === "sent" ? (
+                    <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+
+                      <button
+                        onClick={(e) => { e.preventDefault(); openEdit(shared.list); }}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      {shared.list.owner && (
                         <>
-                          <span className="text-[10px] font-medium bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full">Enviada</span>
-                          <div className="flex -space-x-2">
-                            {shared.sharedTo.map((user) => (
-                              <div
-                                key={user.profileName}
-                                className="h-8 w-8 rounded-full border-2 border-card bg-muted flex items-center justify-center overflow-hidden"
-                                title={user.name}
-                              >
-                                {user.avatar ? (
-                                  <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
-                                ) : (
-                                  <span className="text-[10px] font-medium text-muted-foreground">
-                                    {user.name.charAt(0).toUpperCase()}
-                                  </span>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {shared.sharedTo.length} {shared.sharedTo.length === 1 ? "pessoa" : "pessoas"}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-[10px] font-medium bg-green-500/10 text-green-500 px-2 py-0.5 rounded-full">Recebida</span>
-                          <span className="text-xs text-muted-foreground">de {shared.sharedBy}</span>
+                          <button
+                            onClick={(e) => { e.preventDefault(); setDeleteId(shared.list.id); }}
+                            className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </>
                       )}
                     </div>
 
                     <Link to={`/listas/${shared.list.id}`} className="block">
+                      {/* Owner indicator for received shared lists */}
+                      {shared.list.owner && !shared.list.owner && (
+                        <div className="flex items-center gap-2 mb-3 px-2 py-1.5 rounded-md bg-muted/50">
+                          <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                            {shared.list.ownerUser?.avatar ? (
+                              <img src={shared.list.ownerUser.avatar} alt={shared.list.ownerUser.name} className="h-full w-full object-cover" />
+                            ) : (
+                              <span className="text-[10px] font-medium text-muted-foreground">
+                                {shared.list.ownerUser?.name.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-muted-foreground truncate">
+                            Criada por <span className="font-medium text-foreground">{shared.list.ownerUser?.name}</span>
+                          </span>
+                        </div>
+                      )}
+
                       <h3 className="text-lg font-semibold text-card-foreground pr-8">
                         {shared.list.name}
                       </h3>
@@ -417,7 +447,7 @@ const Lists = () => {
                         </p>
                       )}
 
-                      <div className="mt-4 flex items-center overflow-hidden">
+                      <div className="mt-4 flex gap-2">
                         {shared.list.movies.length === 0 ? (
                           <div className="flex h-[100px] w-full items-center justify-center rounded-md bg-muted">
                             <Film className="h-8 w-8 text-muted-foreground" />
@@ -455,7 +485,7 @@ const Lists = () => {
 
                       <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                         <span>{shared.list.movies.length} {shared.list.movies.length === 1 ? "filme" : "filmes"}</span>
-                        <span>Compartilhada em {new Date(shared.sharedAt).toLocaleDateString("pt-BR")}</span>
+                        <span>{new Date(shared.list.createdAt + "T00:00:00").toLocaleDateString("pt-BR")}</span>
                       </div>
                     </Link>
                   </div>

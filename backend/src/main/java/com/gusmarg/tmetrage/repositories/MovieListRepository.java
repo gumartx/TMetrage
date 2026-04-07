@@ -1,6 +1,7 @@
 package com.gusmarg.tmetrage.repositories;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -28,5 +29,14 @@ public interface MovieListRepository extends JpaRepository<MovieList, Long> {
 			AND l.id = :listId
 			""")
 	MovieList findByListId(Long listId, Long userId);
-	
+
+	@Query("""
+			SELECT l
+			FROM MovieList l
+			LEFT JOIN ListShare s ON s.list.id = l.id
+			WHERE l.id = :listId
+			AND (l.user.id = :userId OR s.sharedTo.id = :userId)
+			""")
+	Optional<MovieList> findAccessibleList(Long listId, Long userId);
+
 }

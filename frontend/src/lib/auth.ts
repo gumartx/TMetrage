@@ -32,14 +32,14 @@ export async function loginAPI(email: string, password: string): Promise<AuthUse
 
 export async function registerAPI(
   name: string,
-  username: string,
+  profileName: string,
   email: string,
   password: string
 ): Promise<AuthUser> {
 
   const data = await apiRequest<RegisterResponse>("/auth/register", {
     method: "POST",
-    body: { name, profileName: username, email, password },
+    body: { name, profileName, email, password },
   });
 
   return data.user;

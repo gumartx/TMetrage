@@ -159,22 +159,22 @@ const ListDetail = () => {
     "hsl(60, 70%, 50%)",
   ];
 
-const allGenres = useMemo(() => {
-  if (!list || !genres) return new Map<number, string>();
+  const allGenres = useMemo(() => {
+    if (!list || !genres) return new Map<number, string>();
 
-  const map = new Map<number, string>();
+    const map = new Map<number, string>();
 
-  list.movies.forEach((movie) => {
-    const gIds = movieGenres[movie.id] || [];
+    list.movies.forEach((movie) => {
+      const gIds = movieGenres[movie.id] || [];
 
-    gIds.forEach((gid) => {
-      const g = genres.find((g) => g.id === gid);
-      if (g) map.set(gid, g.name);
+      gIds.forEach((gid) => {
+        const g = genres.find((g) => g.id === gid);
+        if (g) map.set(gid, g.name);
+      });
     });
-  });
 
-  return map;
-}, [list, genres, movieGenres]);
+    return map;
+  }, [list, genres, movieGenres]);
 
   const genreChartData = useMemo(() => {
     if (!list || !genres) return [];
@@ -375,89 +375,119 @@ const allGenres = useMemo(() => {
                 </DialogContent>
               </Dialog>
             )}
-            <Dialog open={showShare} onOpenChange={(v) => { setShowShare(v); if (!v) { setShareSearch(""); setSelectedUsers([]); } }}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline">
-                  <Share2 className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[450px]">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Share2 className="h-5 w-5 text-primary" />
-                    Compartilhar Lista
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="flex gap-2 pt-2">
-                  <div className="flex flex-1 items-center rounded-md border border-border bg-secondary">
-                    <Search className="ml-3 h-4 w-4 text-muted-foreground" />
-                    <input
-                      type="text"
-                      placeholder="Buscar por nome ou usuário..."
-                      value={shareSearch}
-                      onChange={(e) => setShareSearch(e.target.value)}
-                      className="flex-1 bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-                    />
+            {list.owner && (
+              <Dialog
+                open={showShare}
+                onOpenChange={(v) => {
+                  setShowShare(v);
+                  if (!v) {
+                    setShareSearch("");
+                    setSelectedUsers([]);
+                  }
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline">
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+
+                <DialogContent className="sm:max-w-[450px]">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Share2 className="h-5 w-5 text-primary" />
+                      Compartilhar Lista
+                    </DialogTitle>
+                  </DialogHeader>
+
+                  <div className="flex gap-2 pt-2">
+                    <div className="flex flex-1 items-center rounded-md border border-border bg-secondary">
+                      <Search className="ml-3 h-4 w-4 text-muted-foreground" />
+                      <input
+                        type="text"
+                        placeholder="Buscar por nome ou usuário..."
+                        value={shareSearch}
+                        onChange={(e) => setShareSearch(e.target.value)}
+                        className="flex-1 bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="mt-2 max-h-[300px] overflow-y-auto space-y-1">
-                  {filteredFollowing.length > 0 ? (
-                    filteredFollowing.map((user) => (
-                      <div
-                        key={user.profileName}
-                        onClick={() => toggleUserSelection(user.profileName)}
-                        className={cn(
-                          "flex items-center gap-3 rounded-md border p-2.5 cursor-pointer transition-colors",
-                          selectedUsers.includes(user.profileName)
-                            ? "border-primary bg-primary/10"
-                            : "border-border bg-card hover:bg-accent"
-                        )}
+
+                  <div className="mt-2 max-h-[300px] overflow-y-auto space-y-1">
+                    {filteredFollowing.length > 0 ? (
+                      filteredFollowing.map((user) => (
+                        <div
+                          key={user.profileName}
+                          onClick={() => toggleUserSelection(user.profileName)}
+                          className={cn(
+                            "flex items-center gap-3 rounded-md border p-2.5 cursor-pointer transition-colors",
+                            selectedUsers.includes(user.profileName)
+                              ? "border-primary bg-primary/10"
+                              : "border-border bg-card hover:bg-accent"
+                          )}
+                        >
+                          <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                            {user.avatar ? (
+                              <img
+                                src={user.avatar}
+                                alt={user.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-sm font-medium text-muted-foreground">
+                                {user.name.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-card-foreground truncate">
+                              {user.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {user.profileName}
+                            </p>
+                          </div>
+
+                          <div
+                            className={cn(
+                              "h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0",
+                              selectedUsers.includes(user.profileName)
+                                ? "border-primary bg-primary"
+                                : "border-muted-foreground"
+                            )}
+                          >
+                            {selectedUsers.includes(user.profileName) && (
+                              <div className="h-2 w-2 rounded-full bg-primary-foreground" />
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-6">
+                        {following.length === 0
+                          ? "Você ainda não segue ninguém."
+                          : "Nenhum usuário encontrado."}
+                      </p>
+                    )}
+                  </div>
+
+                  {following.length > 0 && (
+                    <div className="flex justify-end pt-2">
+                      <Button
+                        size="sm"
+                        disabled={selectedUsers.length === 0}
+                        onClick={handleShare}
                       >
-                        <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                          {user.avatar ? (
-                            <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
-                          ) : (
-                            <span className="text-sm font-medium text-muted-foreground">
-                              {user.name.charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-card-foreground truncate">{user.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">@{user.profileName}</p>
-                        </div>
-                        <div className={cn(
-                          "h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0",
-                          selectedUsers.includes(user.profileName)
-                            ? "border-primary bg-primary"
-                            : "border-muted-foreground"
-                        )}>
-                          {selectedUsers.includes(user.profileName) && (
-                            <div className="h-2 w-2 rounded-full bg-primary-foreground" />
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-6">
-                      {following.length === 0 ? "Você ainda não segue ninguém." : "Nenhum usuário encontrado."}
-                    </p>
+                        <Share2 className="mr-1.5 h-4 w-4" />
+                        Compartilhar
+                        {selectedUsers.length > 0 ? ` (${selectedUsers.length})` : ""}
+                      </Button>
+                    </div>
                   )}
-                </div>
-                {following.length > 0 && (
-                  <div className="flex justify-end pt-2">
-                    <Button
-                      size="sm"
-                      disabled={selectedUsers.length === 0}
-                      onClick={handleShare}
-                    >
-                      <Share2 className="mr-1.5 h-4 w-4" />
-                      Compartilhar{selectedUsers.length > 0 ? ` (${selectedUsers.length})` : ""}
-                    </Button>
-                  </div>
-                )}
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            )}
             <Dialog open={searchOpen} onOpenChange={(v) => { setSearchOpen(v); if (!v) { setQuery(""); setSearchTerm(""); } }}>
               <DialogTrigger asChild>
                 <Button size="sm">

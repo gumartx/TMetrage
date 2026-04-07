@@ -86,11 +86,10 @@ public class MovieListController {
 		return ResponseEntity.ok().build();
 	}
 	
-	@GetMapping(value = "/shared")
-	public ResponseEntity<List<SharedListsDTO>> getSharedLists(@RequestParam(required = false) String nome,
-			@RequestParam(required = false) Integer mes, @RequestParam(required = false) Integer ano) {
-		List<SharedListsDTO> result = movieListService.findSharedLists(nome, mes, ano);
-		return ResponseEntity.ok(result);
+	@GetMapping("/shared")
+	public ResponseEntity<List<SharedListsDTO>> getSharedLists(){
+	    List<SharedListsDTO> result = movieListService.findSharedLists();
+	    return ResponseEntity.ok(result);
 	}
 	
 }

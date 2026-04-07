@@ -124,8 +124,6 @@ public class UserService implements UserDetailsService {
 		currentUser.setName(dto.getName());
 		currentUser.setProfileName(dto.getProfileName());
 		currentUser.setBio(dto.getBio());
-		currentUser.setAvatar(dto.getAvatar());
-		currentUser.setBackgroundImgUrl(dto.getCover());
 		currentUser = userRepository.save(currentUser);
 
 		log.info("Perfil editado: {}", currentUser.getUsername());
