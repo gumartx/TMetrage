@@ -1,3 +1,4 @@
+import { getImageUrl } from "@/lib/files";
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Trash2, Film, Search, BarChart3, Star, Calendar as CalendarIcon, Filter, Share2 } from "lucide-react";
@@ -429,7 +430,7 @@ const ListDetail = () => {
                           <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
                             {user.avatar ? (
                               <img
-                                src={user.avatar}
+                                src={getImageUrl(user.avatar)}
                                 alt={user.name}
                                 className="h-full w-full object-cover"
                               />

@@ -30,6 +30,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { getImageUrl } from "@/lib/files";
 
 const Lists = () => {
   const [lists, setLists] = useState<MovieList[]>([]);
@@ -82,7 +83,25 @@ const Lists = () => {
     return true;
   });
 
-  const filteredSharedLists = sharedLists.filter((s) =>
+
+  const groupedSharedLists = Object.values(
+    sharedLists.reduce((acc, item) => {
+      const listId = item.list.id;
+
+      if (!acc[listId]) {
+        acc[listId] = {
+          ...item,
+          sharedTo: [...item.sharedTo],
+        };
+      } else {
+        acc[listId].sharedTo.push(...item.sharedTo);
+      }
+
+      return acc;
+    }, {} as Record<string, SharedList>)
+  );
+
+  const filteredSharedLists = groupedSharedLists.filter((s) =>
     s.list.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -108,8 +127,15 @@ const Lists = () => {
 
   const handleDelete = async () => {
     if (!deleteId) return;
+
     await deleteList(deleteId);
-    await loadLists();
+
+    setLists((prev) => prev.filter((l) => l.id !== deleteId));
+
+    setSharedLists((prev) =>
+      prev.filter((s) => s.list.id !== deleteId)
+    );
+
     setDeleteId(null);
   };
 
@@ -435,6 +461,35 @@ const Lists = () => {
                           <span className="text-xs text-muted-foreground truncate">
                             Criada por <span className="font-medium text-foreground">{shared.list.ownerUser?.name}</span>
                           </span>
+                        </div>
+                      )}
+                      {/* Avatares de quem participa da lista */}
+                      {shared.sharedTo && shared.sharedTo.length > 0 && (
+                        <div className="flex items-center gap-1 mb-2">
+                          {shared.sharedTo.slice(0, 5).map((user, index) => (
+                            <div
+                              key={index}
+                              className="h-7 w-7 rounded-full border border-background overflow-hidden bg-muted flex items-center justify-center"
+                            >
+                              {user.avatar ? (
+                                <img
+                                  src={getImageUrl(user.avatar)}
+                                  alt={user.name}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-[10px] font-medium text-muted-foreground">
+                                  {user.name.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+
+                          {shared.sharedTo.length > 5 && (
+                            <span className="text-xs text-muted-foreground ml-1">
+                              +{shared.sharedTo.length - 5}
+                            </span>
+                          )}
                         </div>
                       )}
 
