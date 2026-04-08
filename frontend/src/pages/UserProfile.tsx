@@ -23,8 +23,8 @@ const UserProfile = () => {
   const [topGenres, setTopGenres] = useState<{ name: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [ratingsOpen, setRatingsOpen] = useState(false);
-  const [reviewsOpen, setReviewsOpen] = useState(false);
+  const [ratingsOpen, setRatingsOpen] = useState(true);
+  const [reviewsOpen, setReviewsOpen] = useState(true);
   const [ratingSearch, setRatingSearch] = useState("");
   const [likedReviews, setLikedReviews] = useState<Record<string, boolean>>({});
 
@@ -54,13 +54,9 @@ const UserProfile = () => {
     const loadGenres = async () => {
       try {
         const movieIds = [...new Set(profile.ratings.map(r => r.movieId))];
-
-        const movies = await Promise.all(
-          movieIds.map(id => getMovieDetails(id))
-        );
+        const movies = await Promise.all(movieIds.map(id => getMovieDetails(id)));
 
         const genreCount: Record<string, number> = {};
-
         movies.forEach(movie => {
           movie.genres?.forEach((g: { name: string }) => {
             genreCount[g.name] = (genreCount[g.name] || 0) + 1;
@@ -85,21 +81,7 @@ const UserProfile = () => {
     if (!username) return;
     try {
       await toggleFollow(username);
-
-      setIsFollowing(prev => {
-        const newValue = !prev;
-
-        setProfile(p => {
-          if (!p) return p;
-
-          return {
-            ...p,
-            followers: newValue ? p.followers + 1 : p.followers - 1
-          };
-        });
-
-        return newValue;
-      });
+      setIsFollowing(prev => !prev);
     } catch (err) {
       toast.error(err.message || "Erro ao seguir/deixar de seguir");
     }
@@ -129,6 +111,11 @@ const UserProfile = () => {
   }
 
   const displayUsername = profile.profileName.startsWith("@") ? profile.profileName : `@${profile.profileName}`;
+
+  // Filtragem de avaliações
+  const filteredRatings = (profile.ratings || []).filter(r =>
+    r.movieTitle.toLowerCase().includes(ratingSearch.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -184,7 +171,7 @@ const UserProfile = () => {
         <div className="flex gap-6 mb-8">
           <div className="flex items-center gap-2 text-sm">
             <Users className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-foreground">{profile.followers}</span>
+            <span className="font-semibold text-foreground">{profile.followers + (isFollowing ? 1 : 0)}</span>
             <span className="text-muted-foreground">seguidores</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
@@ -244,36 +231,27 @@ const UserProfile = () => {
           )}
         </div>
 
-        {/* Recent Ratings - Collapsible */}
-        <Collapsible open={ratingsOpen} onOpenChange={setRatingsOpen} className="mb-4">
-          <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-accent">
-            <h2 className="font-display text-lg font-semibold text-foreground">Avaliações Recentes</h2>
-            {ratingsOpen ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-3">
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        {/* Dropdowns lado a lado */}
+        <div className="flex gap-4 mb-10">
+          {/* Avaliações */}
+          <Collapsible open={ratingsOpen} onOpenChange={setRatingsOpen} className="flex-1">
+            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-accent">
+              <h2 className="font-display text-lg font-semibold text-foreground">Avaliações</h2>
+              {ratingsOpen ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-3">
               <Input
                 value={ratingSearch}
                 onChange={(e) => setRatingSearch(e.target.value)}
-                placeholder="Pesquisar filme avaliado..."
-                className="pl-9"
+                placeholder="Pesquisar filme..."
+                className="mb-3"
               />
-            </div>
-            {(() => {
-              const filtered = (profile.ratings || []).filter((r) =>
-                r.movieTitle.toLowerCase().includes(ratingSearch.toLowerCase())
-              );
-              return filtered.length === 0 ? (
+              {filteredRatings.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-4 text-center">Nenhum filme encontrado.</p>
               ) : (
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                  {filtered.map((r) => (
-                    <Link
-                      key={r.movieId}
-                      to={`/movie/${r.movieId}`}
-                      className="group rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
-                    >
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {filteredRatings.map((r) => (
+                    <Link key={r.movieId} to={`/movie/${r.movieId}`} className="group rounded-lg overflow-hidden border border-border bg-card hover:shadow-lg">
                       <div className="aspect-[2/3] overflow-hidden">
                         {getPosterUrl(r.posterPath) ? (
                           <img
@@ -284,94 +262,69 @@ const UserProfile = () => {
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-muted">
-                            <Film className="h-8 w-8 text-muted-foreground" />
+                            <Film className="h-6 w-6 text-muted-foreground" />
                           </div>
                         )}
                       </div>
-                      <div className="p-3">
-                        <h3 className="truncate text-sm font-semibold text-card-foreground">{r.movieTitle}</h3>
+                      <div className="p-2">
+                        <h3 className="truncate text-xs font-semibold text-card-foreground">{r.movieTitle}</h3>
                         <div className="mt-1 flex items-center gap-1">
-                          <Star className="h-3.5 w-3.5 fill-star text-star" />
+                          <Star className="h-3 w-3 fill-star text-star" />
                           <span className="text-xs font-medium text-foreground">{r.rating}</span>
                         </div>
                       </div>
                     </Link>
                   ))}
                 </div>
-              );
-            })()}
-          </CollapsibleContent>
-        </Collapsible>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
 
-        {/* Recent Reviews - Collapsible */}
-        <Collapsible open={reviewsOpen} onOpenChange={setReviewsOpen} className="mb-10">
-          <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-accent">
-            <h2 className="font-display text-lg font-semibold text-foreground">Comentários Recentes</h2>
-            {reviewsOpen ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-3">
-            <div className="space-y-4">
-              {(profile.reviews || []).map((review, index) => {
-                const reviewKey = `${review.movieId}-${index}`;
-                const isLiked = likedReviews[reviewKey] || false;
-                return (
-                  <div
-                    key={reviewKey}
-                    className="rounded-lg border border-border bg-card p-4"
-                  >
-                    <div className="flex items-start gap-4">
-                      <Link to={`/movie/${review.movieId}`} className="shrink-0">
-                        {getPosterUrl(review.posterPath, "w185") ? (
-                          <img
-                            src={getPosterUrl(review.posterPath, "w185")!}
-                            alt={review.movieTitle}
-                            className="h-20 w-14 rounded object-cover"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="flex h-20 w-14 items-center justify-center rounded bg-muted">
-                            <Film className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                        )}
-                      </Link>
-                      <div className="flex-1 min-w-0">
-                        <Link to={`/movie/${review.movieId}`} className="hover:underline">
-                          <h3 className="text-sm font-semibold text-card-foreground">{review.movieTitle}</h3>
+          {/* Comentários */}
+          <Collapsible open={reviewsOpen} onOpenChange={setReviewsOpen} className="flex-1">
+            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-accent">
+              <h2 className="font-display text-lg font-semibold text-foreground">Comentários</h2>
+              {reviewsOpen ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-3 space-y-3">
+              {(profile.reviews || []).length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">Nenhum comentário ainda.</p>
+              ) : (
+                profile.reviews.map((review, index) => {
+                  const reviewKey = `${review.movieId}-${index}`;
+                  const isLiked = likedReviews[reviewKey] || false;
+                  return (
+                    <div key={reviewKey} className="rounded-lg border border-border bg-card p-3">
+                      <div className="flex items-start gap-3">
+                        <Link to={`/movie/${review.movieId}`} className="shrink-0">
+                          {getPosterUrl(review.posterPath, "w185") ? (
+                            <img
+                              src={getPosterUrl(review.posterPath, "w185")!}
+                              alt={review.movieTitle}
+                              className="h-16 w-12 rounded object-cover"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="flex h-16 w-12 items-center justify-center rounded bg-muted">
+                              <Film className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          )}
                         </Link>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {new Date(review.date).toLocaleDateString("pt-BR")}
-                        </p>
-                        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                          {review.content}
-                        </p>
-                        <div className="mt-3 flex items-center gap-4">
-                          <button
-                            onClick={() => navigate(`/movie/${review.movieId}`)}
-                            className={`flex items-center gap-1.5 text-xs transition-colors ${isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
-                              }`}
-                          >
-                            <Heart className={`h-3.5 w-3.5 ${isLiked ? "fill-current" : ""}`} />
-                            Curtir
-                          </button>
-                          <button
-                            onClick={() => navigate(`/movie/${review.movieId}`)}
-                            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            <MessageCircle className="h-3.5 w-3.5" />
-                            Responder
-                          </button>
+                        <div className="flex-1 min-w-0">
+                          <Link to={`/movie/${review.movieId}`} className="hover:underline">
+                            <h3 className="text-xs font-semibold text-card-foreground">{review.movieTitle}</h3>
+                          </Link>
+                          <p className="mt-0.5 text-[10px] text-muted-foreground">{new Date(review.date).toLocaleDateString("pt-BR")}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{review.content}</p>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-              {(profile.reviews || []).length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">Nenhum comentário ainda.</p>
+                  );
+                })
               )}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
       </div>
     </div>
   );
