@@ -84,42 +84,42 @@ const Profile = () => {
     loadProfile();
   }, [loadProfile]);
 
-useEffect(() => {
-  const loadGenresFromRatings = async () => {
-    try {
-      const ratings = await getUserRatings();
+  useEffect(() => {
+    const loadGenresFromRatings = async () => {
+      try {
+        const ratings = await getUserRatings();
 
-      const movieIds = new Set<number>();
+        const movieIds = new Set<number>();
 
-      ratings.forEach((rating) => {
-        movieIds.add(rating.movieId);
-      });
-
-      const movies = await Promise.all(
-        [...movieIds].map((id) => getMovieDetails(id))
-      );
-
-      const genreCount: Record<string, number> = {};
-
-      movies.forEach((movie) => {
-        movie.genres?.forEach((g) => {
-          genreCount[g.name] = (genreCount[g.name] || 0) + 1;
+        ratings.forEach((rating) => {
+          movieIds.add(rating.movieId);
         });
-      });
 
-      const sorted = Object.entries(genreCount)
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
+        const movies = await Promise.all(
+          [...movieIds].map((id) => getMovieDetails(id))
+        );
 
-      setTopGenres(sorted);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+        const genreCount: Record<string, number> = {};
 
-  loadGenresFromRatings();
-}, []);
+        movies.forEach((movie) => {
+          movie.genres?.forEach((g) => {
+            genreCount[g.name] = (genreCount[g.name] || 0) + 1;
+          });
+        });
+
+        const sorted = Object.entries(genreCount)
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5);
+
+        setTopGenres(sorted);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    loadGenresFromRatings();
+  }, []);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -129,7 +129,14 @@ useEffect(() => {
     const timeout = setTimeout(async () => {
       try {
         const results = await searchUsers(searchQuery);
-        setSearchResults(results);
+
+        const filtered = results.filter(
+          (u) =>
+            u.profileName.replace("@", "").toLowerCase() !==
+            profile?.profileName.replace("@", "").toLowerCase()
+        );
+
+        setSearchResults(filtered);
       } catch {
         setSearchResults([]);
       }

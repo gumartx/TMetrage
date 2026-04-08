@@ -33,6 +33,7 @@ const UserProfile = () => {
     try {
       const data = await getUserProfile(username);
       setProfile(data);
+      setIsFollowing(data.isFollowing);
     } catch (err) {
       toast.error(err.message || "Erro ao carregar perfil");
     } finally {
@@ -84,7 +85,21 @@ const UserProfile = () => {
     if (!username) return;
     try {
       await toggleFollow(username);
-      setIsFollowing(prev => !prev);
+
+      setIsFollowing(prev => {
+        const newValue = !prev;
+
+        setProfile(p => {
+          if (!p) return p;
+
+          return {
+            ...p,
+            followers: newValue ? p.followers + 1 : p.followers - 1
+          };
+        });
+
+        return newValue;
+      });
     } catch (err) {
       toast.error(err.message || "Erro ao seguir/deixar de seguir");
     }
@@ -169,7 +184,7 @@ const UserProfile = () => {
         <div className="flex gap-6 mb-8">
           <div className="flex items-center gap-2 text-sm">
             <Users className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-foreground">{profile.followers + (isFollowing ? 1 : 0)}</span>
+            <span className="font-semibold text-foreground">{profile.followers}</span>
             <span className="text-muted-foreground">seguidores</span>
           </div>
           <div className="flex items-center gap-2 text-sm">

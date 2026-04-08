@@ -10,6 +10,7 @@ export interface UserProfile {
     cover?: string;
     followers: number;
     following: number;
+    isFollowing?: boolean;
     totalRatings: number;
     totalLists: number;
     avgRating: number;

@@ -92,17 +92,26 @@ public class UserService implements UserDetailsService {
 
 	@Transactional(readOnly = true)
 	public UserDetailsDTO findByProfileName(String profileName) {
-		User user = userRepository.findByProfileName(profileName);
 
-		Double avgScore = ratingRepository.findAvgScoreByUserId(user.getId());
+		User profileUser = userRepository.findByProfileName(profileName);
 
-		if(avgScore == null) {
+		Double avgScore = ratingRepository.findAvgScoreByUserId(profileUser.getId());
+
+		if (avgScore == null) {
 			avgScore = 0.0;
 		}
-		
+
+		UserDetailsDTO dto = new UserDetailsDTO(profileUser, avgScore);
+
+		User currentUser = authService.getAuthenticatedUser();
+
+		boolean isFollowing = currentUser.getFollowing().contains(profileUser);
+
+		dto.setIsFollowing(isFollowing);
+
 		log.info("Perfil encontrado: {}", profileName);
 
-		return new UserDetailsDTO(user, avgScore);
+		return dto;
 	}
 
 	@Transactional

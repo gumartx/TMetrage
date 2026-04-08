@@ -21,6 +21,7 @@ public class UserDetailsDTO extends UserDTO {
 	private List<TopGenreDTO> topGenres;
 	private List<RatingDTO> ratings;
 	private List<ReviewDTO> reviews;
+	private Boolean isFollowing;
 
 	public UserDetailsDTO(User entity, Double avgScore) {
 		super(entity, avgScore);
