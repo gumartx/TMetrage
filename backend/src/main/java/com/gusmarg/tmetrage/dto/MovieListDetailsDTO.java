@@ -28,6 +28,7 @@ public class MovieListDetailsDTO {
 	private Integer totalMovies;
 	private List<RatedMovieDTO> movies = new ArrayList<>();
 	private boolean owner;
+	private UserSearchDTO ownerUser;
 	
 	public MovieListDetailsDTO(MovieList entity, List<Rating> ratings, boolean owner) {
 		id = entity.getId();
@@ -36,7 +37,7 @@ public class MovieListDetailsDTO {
 		createdAt = entity.getCreatedAt();
 		totalMovies = entity.getAmountMovies();
 		this.owner = owner;
-		
+		ownerUser = new UserSearchDTO(entity.getUser());
 		for (Movie m : entity.getMovies()) {
 			movies.add(new RatedMovieDTO(m, ratings));
 		}

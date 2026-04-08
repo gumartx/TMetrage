@@ -4,7 +4,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Trash2, Film, Search, BarChart3, Star, Calendar as CalendarIcon, Filter, Share2 } from "lucide-react";
 import { Tv } from "lucide-react";
 import { format } from "date-fns";
-import { getList, removeMovieFromList, addMovieToList, shareList, type MovieList, type MovieListItem } from "@/lib/movieLists";
+import { getList, getSharedLists, removeMovieFromList, addMovieToList, shareList, type MovieList, type MovieListItem, SharedList } from "@/lib/movieLists";
 import { getMovieDetails, searchMovies, getPosterUrl, getGenres } from "@/lib/tmdb";
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
@@ -39,6 +39,7 @@ const ListDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [list, setList] = useState<MovieList | undefined>();
+  const [sharedLists, setSharedLists] = useState<SharedList[]>([]);
   const [movieGenres, setMovieGenres] = useState<Record<number, number[]>>({});
   const [movieRatings, setRatings] = useState<Record<number, RatingResponse>>({});
   const [showChart, setShowChart] = useState(false);
@@ -82,8 +83,7 @@ const ListDetail = () => {
 
     async function fetchRatings() {
       try {
-        const userRatings = await getUserRatings(); // retorna RatingResponse[]
-        // transformar em um map: movieId -> rating
+        const userRatings = await getUserRatings();
         const map: Record<number, RatingResponse> = {};
         userRatings.forEach((r) => {
           map[r.movieId] = r;
@@ -120,26 +120,78 @@ const ListDetail = () => {
     fetchGenres();
   }, [list]);
 
-  const filteredFollowing = useMemo(() => {
-    if (!shareSearch.trim()) return following;
-    const q = shareSearch.toLowerCase();
-    return following.filter(
-      (u) => u.name.toLowerCase().includes(q) || u.profileName.toLowerCase().includes(q)
-    );
-  }, [following, shareSearch]);
+  useEffect(() => {
+    const loadShared = async () => {
+      try {
+        const data = await getSharedLists();
+        setSharedLists(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    loadShared();
+  }, []);
 
   const toggleUserSelection = (profileName: string) => {
-    setSelectedUsers((prev) =>
-      prev.includes(profileName) ? prev.filter((u) => u !== profileName) : [...prev, profileName]
-    );
+    setSelectedUsers((prev) => {
+      if (prev.includes(profileName)) {
+        return prev.filter((u) => u !== profileName);
+      } else {
+        return [...prev, profileName];
+      }
+    });
   };
+
+  const sharedUsers = useMemo(() => {
+    return sharedLists
+      .filter(sl => sl.list.id === list?.id)
+      .flatMap(sl => sl.sharedTo);
+  }, [sharedLists, list]);
+
+  const filteredFollowing = useMemo(() => {
+    if (!list) return [];
+
+    const sharedSet = new Set(sharedUsers.map(u => u.profileName));
+
+    const availableUsers = following.filter(
+      u => !sharedSet.has(u.profileName)
+    );
+
+    if (!shareSearch.trim()) return availableUsers;
+
+    const q = shareSearch.toLowerCase();
+
+    return availableUsers.filter(
+      u =>
+        u.name.toLowerCase().includes(q) ||
+        u.profileName.toLowerCase().includes(q)
+    );
+  }, [following, shareSearch, list, sharedUsers]);
+
+
 
   const handleShare = async () => {
     if (selectedUsers.length === 0 || !list) return;
-    await shareList(list.id, selectedUsers);
-    setShowShare(false);
-    setSelectedUsers([]);
-    setShareSearch("");
+
+    try {
+      // chama a API de compartilhamento
+      await shareList(list.id, selectedUsers);
+
+      // limpa seleção
+      setSelectedUsers([]);
+      setShareSearch("");
+
+      // fecha modal
+      setShowShare(false);
+
+      // recarrega listas compartilhadas
+      const updatedSharedLists = await getSharedLists();
+      setSharedLists(updatedSharedLists);
+
+    } catch (err) {
+      console.error("Erro ao compartilhar lista:", err);
+    }
   };
 
   const { data: searchResults } = useQuery({
@@ -303,6 +355,27 @@ const ListDetail = () => {
 
         <div className="flex items-start justify-between gap-4">
           <div>
+            {list.ownerUser && (
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                  {list.ownerUser.avatar ? (
+                    <img
+                      src={getImageUrl(list.ownerUser.avatar)}
+                      alt={list.ownerUser.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {list.ownerUser.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">{list.ownerUser.profileName}</span>
+                </div>
+              </div>
+            )}
+
             <h1 className="font-display text-2xl font-bold text-foreground">{list.name}</h1>
             {list.description && (
               <p className="mt-1 text-sm text-muted-foreground">{list.description}</p>

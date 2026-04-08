@@ -74,12 +74,17 @@ const Lists = () => {
   const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
   const filteredLists = lists.filter((list) => {
-    const matchesSearch = list.name.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch =
+      list.name.toLowerCase().includes(search.toLowerCase()) ||
+      list.ownerUser?.profileName.toLowerCase().includes(search.toLowerCase()); // <-- aqui
     if (!matchesSearch) return false;
+
     if (filterYear === null && filterMonth === null) return true;
+
     const created = new Date(list.createdAt);
     if (filterYear !== null && created.getFullYear() !== filterYear) return false;
     if (filterMonth !== null && created.getMonth() !== filterMonth) return false;
+
     return true;
   });
 
@@ -101,9 +106,10 @@ const Lists = () => {
     }, {} as Record<string, SharedList>)
   );
 
-  const filteredSharedLists = groupedSharedLists.filter((s) =>
-    s.list.name.toLowerCase().includes(search.toLowerCase())
-  );
+const filteredSharedLists = groupedSharedLists.filter((s) =>
+  s.list.name.toLowerCase().includes(search.toLowerCase()) ||
+  s.list.ownerUser?.profileName.toLowerCase().includes(search.toLowerCase())
+);
 
   const clearDateFilter = () => {
     setFilterMonth(null);
@@ -447,19 +453,23 @@ const Lists = () => {
 
                     <Link to={`/listas/${shared.list.id}`} className="block">
                       {/* Owner indicator for received shared lists */}
-                      {shared.list.owner && !shared.list.owner && (
+                      {shared.list.ownerUser && (
                         <div className="flex items-center gap-2 mb-3 px-2 py-1.5 rounded-md bg-muted/50">
-                          <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                            {shared.list.ownerUser?.avatar ? (
-                              <img src={shared.list.ownerUser.avatar} alt={shared.list.ownerUser.name} className="h-full w-full object-cover" />
+                          <div className="h-6 w-6 rounded-full border-2 bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                            {shared.list.ownerUser.avatar ? (
+                              <img
+                                src={getImageUrl(shared.list.ownerUser.avatar)}
+                                alt={shared.list.ownerUser.name}
+                                className="h-full w-full object-cover"
+                              />
                             ) : (
                               <span className="text-[10px] font-medium text-muted-foreground">
-                                {shared.list.ownerUser?.name.charAt(0).toUpperCase()}
+                                {shared.list.ownerUser.name.charAt(0).toUpperCase()}
                               </span>
                             )}
                           </div>
                           <span className="text-xs text-muted-foreground truncate">
-                            Criada por <span className="font-medium text-foreground">{shared.list.ownerUser?.name}</span>
+                            Criada por <span className="font-medium text-foreground">{shared.list.ownerUser.profileName}</span>
                           </span>
                         </div>
                       )}
