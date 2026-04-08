@@ -34,5 +34,6 @@ public interface RatingRepository extends JpaRepository<Rating, RatingPK> {
 	Double findAvgScoreByUserId(Long userId);
 	
     List<Rating> findByUserIdAndMovieIdIn(Long userId, List<Long> movieIds);
+
 	
 }

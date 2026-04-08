@@ -16,6 +16,7 @@ import com.gusmarg.tmetrage.entities.Movie;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.CommentRepository;
 import com.gusmarg.tmetrage.repositories.MovieRepository;
+import com.gusmarg.tmetrage.services.exceptions.ResourceNotFoundException;
 import com.gusmarg.tmetrage.services.utils.TMDBService;
 
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,8 @@ public class CommentService {
 
 		User user = authService.getAuthenticatedUserOptional();
 
-		List<Comment> result = commentRepository.findByMovieIdAndParentIsNullOrderByCreatedAtAsc(movieId);
+		List<Comment> result = commentRepository.findByMovieIdAndParentIsNullOrderByCreatedAtAsc(movieId)
+				.orElseThrow(() -> new ResourceNotFoundException("Filme não contém comentário(s)"));
 
 		log.info("{} comentário(s) no filme '{}'", result.size(), movieId);
 
@@ -115,20 +117,14 @@ public class CommentService {
 	public List<CommentResponseDTO> findUserComments(CommentFilterDTO filter) {
 
 		User user = authService.getAuthenticatedUser();
-		
-        LocalDateTime start = filter.getStartDate() != null ? filter.getStartDate().atStartOfDay() : null;
-        LocalDateTime end = filter.getEndDate() != null ? filter.getEndDate().atTime(23,59,59) : null;
 
-        List<Comment> comments = commentRepository.searchComments(
-        	user.getId(),
-            filter.getSearch(),
-            start != null ? start.toLocalDate() : null,
-            end != null ? end.toLocalDate() : null
-        );
+		LocalDateTime start = filter.getStartDate() != null ? filter.getStartDate().atStartOfDay() : null;
+		LocalDateTime end = filter.getEndDate() != null ? filter.getEndDate().atTime(23, 59, 59) : null;
 
-        return comments.stream()
-                       .map(comment -> new CommentResponseDTO(comment, user))
-                       .collect(Collectors.toList());
+		List<Comment> comments = commentRepository.searchComments(user.getId(), filter.getSearch(),
+				start != null ? start.toLocalDate() : null, end != null ? end.toLocalDate() : null);
+
+		return comments.stream().map(comment -> new CommentResponseDTO(comment, user)).collect(Collectors.toList());
 	}
 
 }

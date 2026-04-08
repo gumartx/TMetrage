@@ -48,11 +48,12 @@ public class RatingService {
 			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository);
 		});
 
-		Rating rating = ratingRepository.findByIdUserIdAndIdMovieId(user.getId(), movie.getId()).orElseThrow();
+		log.info("Avaliação de usuário '{}' no filme '{}'", user.getProfileName(), movie.getTitle());
 
-		log.info("Avaliação de usuário '{}' do filme '{}'", user.getProfileName(), movie.getTitle());
-
-		return new RatingResponseDTO(rating);
+	    return ratingRepository
+	            .findByIdUserIdAndIdMovieId(user.getId(), movie.getId())
+	            .map(RatingResponseDTO::new)
+	            .orElse(null);
 	}
 
 	@Transactional(readOnly = true)

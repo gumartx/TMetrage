@@ -2,6 +2,7 @@ package com.gusmarg.tmetrage.repositories;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,7 +21,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
 	List<Comment> findByMovieIdOrderByCreatedAtAsc(Long movieId);
 
-	List<Comment> findByMovieIdAndParentIsNullOrderByCreatedAtAsc(Long movieId);
+	Optional<List<Comment>> findByMovieIdAndParentIsNullOrderByCreatedAtAsc(Long movieId);
 
 	@Query("""
 			    SELECT c FROM Comment c

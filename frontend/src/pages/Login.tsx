@@ -82,7 +82,12 @@ const Login = () => {
       } else {
         saveAttemptData(newCount, null);
         const remaining = MAX_ATTEMPTS - newCount;
-        toast.error(`${err.message || "Email ou senha incorretos"} (${remaining} tentativa${remaining !== 1 ? "s" : ""} restante${remaining !== 1 ? "s" : ""})`);
+        const message =
+          err?.response?.data?.message || "Email ou senha incorretos";
+
+        toast.error(
+          `${message} (${remaining} tentativa${remaining !== 1 ? "s" : ""} restante${remaining !== 1 ? "s" : ""})`
+        );
       }
     } finally {
       setLoading(false);
@@ -157,7 +162,7 @@ const Login = () => {
             )}
             <Button type="submit" className="w-full gap-2" disabled={loading || isLocked}>
               <LogIn className="h-4 w-4" />
-               {isLocked ? `Bloqueado (${formatTime(remainingTime)})` : loading ? "Entrando..." : "Entrar"}
+              {isLocked ? `Bloqueado (${formatTime(remainingTime)})` : loading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
 
