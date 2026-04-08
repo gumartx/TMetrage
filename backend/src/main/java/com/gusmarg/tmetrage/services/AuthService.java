@@ -11,6 +11,7 @@ import com.gusmarg.tmetrage.dto.UserLoginResponseDTO;
 import com.gusmarg.tmetrage.dto.UserResponseDTO;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.UserRepository;
+import com.gusmarg.tmetrage.services.exceptions.ResourceNotFoundException;
 import com.gusmarg.tmetrage.services.utils.EmailService;
 import com.gusmarg.tmetrage.services.utils.JwtService;
 import com.gusmarg.tmetrage.services.utils.PasswordGenerator;
@@ -31,7 +32,7 @@ public class AuthService {
 	@Transactional(readOnly = true)
 	public UserLoginResponseDTO login(UserLoginDTO dto) {
 
-		User entity = userRepository.findByEmail(dto.getEmail());
+		User entity = userRepository.findByEmail(dto.getEmail()).orElseThrow(() -> new ResourceNotFoundException("Email não cadastrado"));
 
 		boolean passwordMatches = passwordEncoder.matches(dto.getPassword(), entity.getPassword());
 
@@ -53,7 +54,7 @@ public class AuthService {
 
 		String email = authentication.getName();
 
-		return userRepository.findByEmail(email);
+		return userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Email não cadastrado"));
 	}
 
 	@Transactional(readOnly = true)
@@ -68,7 +69,7 @@ public class AuthService {
 	@Transactional
 	public void resetPassword(String email) {
 
-		User entity = userRepository.findByEmail(email);
+		User entity = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Email não cadastrado"));
 
 		String newPassword = PasswordGenerator.generatePassword(8);
 		String encryptedPassword = passwordEncoder.encode(newPassword);

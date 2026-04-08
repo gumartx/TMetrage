@@ -25,6 +25,8 @@ import com.gusmarg.tmetrage.dto.UserUpdatePasswordDTO;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.RatingRepository;
 import com.gusmarg.tmetrage.repositories.UserRepository;
+import com.gusmarg.tmetrage.services.exceptions.EmailAlreadyExistsException;
+import com.gusmarg.tmetrage.services.exceptions.ResourceNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -105,6 +107,11 @@ public class UserService implements UserDetailsService {
 
 	@Transactional
 	public UserRegisterResponseDTO register(UserRegisterDTO dto) {
+		
+		if(userRepository.existsByEmail(dto.getEmail())) {
+		    throw new EmailAlreadyExistsException("Email já cadastrado");
+		}
+		
 		User entity = new User();
 		entity.setName(dto.getName());
 		entity.setProfileName(dto.getProfileName());
@@ -268,7 +275,7 @@ public class UserService implements UserDetailsService {
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		return userRepository.findByEmail(username);
+		return userRepository.findByEmail(username).orElseThrow(() -> new ResourceNotFoundException("Email não cadastrado"));
 	}
 
 

@@ -37,10 +37,15 @@ export async function apiRequest<T = unknown>(
       : undefined,
   });
 
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Erro desconhecido" }));
-    throw new Error(error.message || `Erro ${res.status}`);
-  }
+if (!res.ok) {
+  const error = await res.json().catch(() => ({ message: "Erro desconhecido" }));
+
+  throw {
+    response: {
+      data: error
+    }
+  };
+}
   if (res.status === 204) {
     return undefined as T;
   }

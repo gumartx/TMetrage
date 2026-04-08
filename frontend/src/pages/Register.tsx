@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Film, UserPlus } from "lucide-react";
@@ -7,9 +8,21 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { registerAPI } from "@/lib/auth";
 
+type ValidationError = {
+  fieldName: string;
+  message: string;
+};
+
+type ApiErrorResponse = {
+  error: string;
+  message: string;
+  errors?: ValidationError[];
+};
+
 const Register = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,14 +47,30 @@ const Register = () => {
     }
 
     const formattedUsername = username.startsWith("@") ? username : `@${username}`;
-
+    setErrors({});
     setLoading(true);
     try {
       await registerAPI(name.trim(), formattedUsername.toLowerCase(), email.trim().toLowerCase(), password);
       toast.success("Conta criada com sucesso!");
       navigate("/login");
-    } catch (err: unknown) {
-      toast.error((err instanceof Error ? err.message : String(err)) || "Erro ao criar conta");
+    } catch (err) {
+
+      const error = err as AxiosError<ApiErrorResponse>;
+
+      if (error.response?.data?.errors) {
+
+        const fieldErrors: Record<string, string> = {};
+
+        error.response.data.errors.forEach((e) => {
+          fieldErrors[e.fieldName] = e.message;
+        });
+
+        setErrors(fieldErrors);
+
+      } else {
+        toast.error(error.response?.data?.message || "Erro ao criar conta");
+      }
+
     } finally {
       setLoading(false);
     }
@@ -92,7 +121,12 @@ const Register = () => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 maxLength={30}
+                className={errors.profileName ? "border-red-500" : ""}
               />
+
+              {errors.profileName && (
+                <p className="text-sm text-red-500">{errors.profileName}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -106,7 +140,12 @@ const Register = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 maxLength={255}
+                className={errors.email ? "border-red-500" : ""}
               />
+
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email}</p>
+              )}
             </div>
 
             <div className="space-y-2">
