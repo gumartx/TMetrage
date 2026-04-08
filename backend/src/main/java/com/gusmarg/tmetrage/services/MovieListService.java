@@ -191,7 +191,7 @@ public class MovieListService {
 			ListShare share = new ListShare();
 			share.setList(list);
 			share.setSharedBy(currentUser);
-			share.setSharedTo(user);
+			share.getSharedTo().add(user);
 
 			list.getShares().add(share);
 
@@ -213,14 +213,16 @@ public class MovieListService {
 
 	private void validateListPermission(MovieList list, User user) {
 
-		boolean isOwner = list.getUser().getId().equals(user.getId());
+	    boolean isOwner = list.getUser().getId().equals(user.getId());
 
-		boolean isSharedUser = list.getShares().stream()
-				.anyMatch(share -> share.getSharedTo().getId().equals(user.getId()));
+	    boolean isSharedUser = list.getShares().stream()
+	            .anyMatch(share -> share.getSharedTo().stream()
+	                    .anyMatch(sharedUser -> sharedUser.getId().equals(user.getId()))
+	            );
 
-		if (!isOwner && !isSharedUser) {
-			throw new RuntimeException("Você não tem permissão para alterar essa lista");
-		}
+	    if (!isOwner && !isSharedUser) {
+	        throw new RuntimeException("Você não tem permissão para alterar essa lista");
+	    }
 	}
 
 }

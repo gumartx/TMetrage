@@ -21,23 +21,36 @@ public class SharedListsDTO {
 	private MovieListResponseDTO list;
 	private UserSearchDTO sharedBy;
 	private List<UserSearchDTO> sharedTo;
+	private List<UsersRatingsDTO> ratings;
 	private LocalDateTime sharedAt;
 	private String direction;
 
 	public SharedListsDTO(ListShare share, User user) {
 
-		this.id = share.getId();
+	    this.id = share.getId();
 
-		boolean owner = share.getSharedBy().getId().equals(user.getId());
+	    boolean owner = share.getSharedBy().getId().equals(user.getId());
 
-		this.list = new MovieListResponseDTO(share.getList(), user, owner);
+	    this.list = new MovieListResponseDTO(share.getList(), user, owner);
 
-		this.sharedBy = new UserSearchDTO(share.getSharedBy());
+	    this.sharedBy = new UserSearchDTO(share.getSharedBy());
 
-		this.sharedTo = List.of(new UserSearchDTO(share.getSharedTo()));
+	    this.sharedTo = share.getSharedTo().stream()
+	                          .map(UserSearchDTO::new)
+	                          .toList();
 
-		this.sharedAt = share.getSharedAt();
+	    this.sharedAt = share.getSharedAt();
 
-		this.direction = owner ? "sent" : "received";
+	    this.direction = owner ? "sent" : "received";
+
+	    this.ratings = share.getList().getMovies().stream()
+	        .flatMap(movie -> this.sharedTo.stream().map(userDto -> {
+	            User sharedUser = share.getSharedTo().stream()
+	                                   .filter(u -> u.getProfileName().equals(userDto.getProfileName()))
+	                                   .findFirst()
+	                                   .orElse(null);
+	            return new UsersRatingsDTO(sharedUser, movie);
+	        }))
+	        .toList();
 	}
 }

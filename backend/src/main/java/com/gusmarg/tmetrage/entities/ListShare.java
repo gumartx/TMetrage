@@ -1,12 +1,16 @@
 package com.gusmarg.tmetrage.entities;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -35,9 +39,13 @@ public class ListShare {
     @JoinColumn(name = "shared_by")
     private User sharedBy;
 
-    @ManyToOne
-    @JoinColumn(name = "shared_to")
-    private User sharedTo;
+    @ManyToMany
+    @JoinTable(
+        name = "tb_list_share_users",
+        joinColumns = @JoinColumn(name = "share_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<User> sharedTo = new ArrayList<>();;
 
     private LocalDateTime sharedAt;
 

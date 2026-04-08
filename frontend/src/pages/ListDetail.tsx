@@ -1,14 +1,13 @@
-import { getImageUrl } from "@/lib/files";
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Trash2, Film, Search, BarChart3, Star, Calendar as CalendarIcon, Filter, Share2 } from "lucide-react";
+import { ArrowLeft, Trash2, Film, Search, BarChart3, Star, Calendar as CalendarIcon, Filter, Share2, User } from "lucide-react";
 import { Tv } from "lucide-react";
 import { format } from "date-fns";
-import { getList, getSharedLists, removeMovieFromList, addMovieToList, shareList, type MovieList, type MovieListItem, SharedList } from "@/lib/movieLists";
+import { getList, getSharedLists, removeMovieFromList, addMovieToList, shareList, type MovieList, type MovieListItem, type SharedList, type UserMovieRating } from "@/lib/movieLists";
 import { getMovieDetails, searchMovies, getPosterUrl, getGenres } from "@/lib/tmdb";
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-import { getRatings, PLATFORMS, PlatformBadge } from "@/components/UserRating";
+import { PLATFORMS, PlatformBadge } from "@/components/UserRating";
 import { getFollowing } from "@/lib/profile";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getUserRatings, RatingResponse } from "@/lib/ratings";
+import { getUserRatings, type RatingResponse } from "@/lib/ratings";
+import { getImageUrl } from "@/lib/files";
 
 const DATE_PRESETS = [
   { label: "Todos", value: "all" },
@@ -45,6 +45,7 @@ const ListDetail = () => {
   const [showChart, setShowChart] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [shareSearch, setShareSearch] = useState("");
+  const [sharedRatings, setSharedRatings] = useState<Record<number, UserMovieRating[]>>({});
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -58,6 +59,7 @@ const ListDetail = () => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [ratingFilter, setRatingFilter] = useState("all");
+  const [userFilter, setUserFilter] = useState("all");
 
   const loadList = async () => {
     if (!id) return;
@@ -78,6 +80,34 @@ const ListDetail = () => {
       getFollowing().then(setFollowing).catch(() => { });
     }
   }, [showShare]);
+
+  useEffect(() => {
+    if (!list || sharedLists.length === 0) return;
+
+    const listShared = sharedLists.filter(sl => sl.list.id === list.id);
+
+    const map: Record<number, UserMovieRating[]> = {};
+
+    list.movies.forEach(movie => {
+      map[movie.id] = [];
+
+      listShared.forEach(sl => {
+        sl.ratings?.forEach(r => {
+          if (r.movieId === movie.id && r.rating != null && r.rating > 0) {
+            map[movie.id].push({
+              profileName: r.profileName,
+              avatar: r.avatar,
+              rating: r.rating,
+              movieId: r.movieId,
+            });
+          }
+        });
+      });
+    });
+
+    setSharedRatings(map);
+  }, [list, sharedLists]);
+
   useEffect(() => {
     if (!list?.movies) return;
 
@@ -104,7 +134,7 @@ const ListDetail = () => {
       const map: Record<number, number[]> = {};
 
       await Promise.all(
-        list.movies.map(async (movie) => {
+        list!.movies.map(async (movie) => {
           try {
             const data = await getMovieDetails(movie.id);
             map[movie.id] = data.genres?.map((g: { id: number; name: string }) => g.id) || [];
@@ -134,20 +164,39 @@ const ListDetail = () => {
   }, []);
 
   const toggleUserSelection = (profileName: string) => {
-    setSelectedUsers((prev) => {
-      if (prev.includes(profileName)) {
-        return prev.filter((u) => u !== profileName);
-      } else {
-        return [...prev, profileName];
-      }
-    });
+    setSelectedUsers((prev) =>
+      prev.includes(profileName) ? prev.filter((u) => u !== profileName) : [...prev, profileName]
+    );
   };
 
   const sharedUsers = useMemo(() => {
-    return sharedLists
-      .filter(sl => sl.list.id === list?.id)
-      .flatMap(sl => sl.sharedTo);
-  }, [sharedLists, list]);
+    if (!list) return [];
+
+    const map = new Map<string, { profileName: string; name: string; avatar: string | null }>();
+
+    // Usuários que a lista foi compartilhada
+    sharedLists
+      .filter(sl => sl.list.id === list.id)
+      .flatMap(sl => sl.sharedTo)
+      .forEach(u => {
+        if (!map.has(u.profileName)) map.set(u.profileName, u);
+      });
+
+    // Usuários que deram notas (incluindo a nova conta)
+    list.movies.forEach(movie => {
+      (sharedRatings[movie.id] || []).forEach(r => {
+        if (!map.has(r.profileName)) {
+          map.set(r.profileName, {
+            profileName: r.profileName,
+            name: r.profileName,
+            avatar: r.avatar ?? null
+          });
+        }
+      });
+    });
+
+    return Array.from(map.values());
+  }, [list, sharedLists, sharedRatings]);
 
   const filteredFollowing = useMemo(() => {
     if (!list) return [];
@@ -169,26 +218,17 @@ const ListDetail = () => {
     );
   }, [following, shareSearch, list, sharedUsers]);
 
-
-
   const handleShare = async () => {
     if (selectedUsers.length === 0 || !list) return;
 
     try {
-      // chama a API de compartilhamento
       await shareList(list.id, selectedUsers);
-
-      // limpa seleção
       setSelectedUsers([]);
       setShareSearch("");
-
-      // fecha modal
       setShowShare(false);
 
-      // recarrega listas compartilhadas
       const updatedSharedLists = await getSharedLists();
       setSharedLists(updatedSharedLists);
-
     } catch (err) {
       console.error("Erro ao compartilhar lista:", err);
     }
@@ -300,9 +340,15 @@ const ListDetail = () => {
       if (ratingFilter !== "all") {
         if (!rating || rating.rating !== Number(ratingFilter)) return false;
       }
+      if (userFilter !== "all") {
+        const hasUserRating = (sharedRatings[movie.id] || []).some(
+          (ur) => ur.profileName === userFilter
+        );
+        if (!hasUserRating) return false;
+      }
       return true;
     });
-  }, [list, movieRatings, genreFilter, platformFilter, datePreset, dateFrom, dateTo, ratingFilter]);
+  }, [list, movieRatings, movieGenres, genreFilter, platformFilter, datePreset, dateFrom, dateTo, ratingFilter, userFilter]);
 
   const handleSearch = () => {
     setSearchTerm(query);
@@ -356,23 +402,19 @@ const ListDetail = () => {
         <div className="flex items-start justify-between gap-4">
           <div>
             {list.ownerUser && (
-              <div className="flex items-center gap-3 mb-2">
-                <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+              <div className="mb-2 flex items-center gap-2">
+                <span className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
                   {list.ownerUser.avatar ? (
-                    <img
-                      src={getImageUrl(list.ownerUser.avatar)}
-                      alt={list.ownerUser.name}
-                      className="h-full w-full object-cover"
-                    />
+                    <img src={getImageUrl(list.ownerUser.avatar)} alt={list.ownerUser.name} className="h-full w-full object-cover" />
                   ) : (
-                    <span className="text-sm font-medium text-muted-foreground">
+                    <span className="text-[10px] font-medium text-muted-foreground">
                       {list.ownerUser.name.charAt(0).toUpperCase()}
                     </span>
                   )}
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground">{list.ownerUser.profileName}</span>
-                </div>
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {list.ownerUser.profileName}
+                </span>
               </div>
             )}
 
@@ -449,23 +491,19 @@ const ListDetail = () => {
                 </DialogContent>
               </Dialog>
             )}
-            {list.owner && (
-              <Dialog
-                open={showShare}
-                onOpenChange={(v) => {
-                  setShowShare(v);
-                  if (!v) {
-                    setShareSearch("");
-                    setSelectedUsers([]);
-                  }
-                }}
-              >
+            {list.owner !== false && (
+              <Dialog open={showShare} onOpenChange={(v) => {
+                setShowShare(v);
+                if (!v) {
+                  setShareSearch("");
+                  setSelectedUsers([]);
+                }
+              }}>
                 <DialogTrigger asChild>
                   <Button size="sm" variant="outline">
                     <Share2 className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
-
                 <DialogContent className="sm:max-w-[450px]">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
@@ -502,35 +540,23 @@ const ListDetail = () => {
                         >
                           <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
                             {user.avatar ? (
-                              <img
-                                src={getImageUrl(user.avatar)}
-                                alt={user.name}
-                                className="h-full w-full object-cover"
-                              />
+                              <img src={getImageUrl(user.avatar)} alt={user.name} className="h-full w-full object-cover" />
                             ) : (
                               <span className="text-sm font-medium text-muted-foreground">
                                 {user.name.charAt(0).toUpperCase()}
                               </span>
                             )}
                           </div>
-
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-card-foreground truncate">
-                              {user.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {user.profileName}
-                            </p>
+                            <p className="text-sm font-medium text-card-foreground truncate">{user.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{user.profileName}</p>
                           </div>
-
-                          <div
-                            className={cn(
-                              "h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0",
-                              selectedUsers.includes(user.profileName)
-                                ? "border-primary bg-primary"
-                                : "border-muted-foreground"
-                            )}
-                          >
+                          <div className={cn(
+                            "h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0",
+                            selectedUsers.includes(user.profileName)
+                              ? "border-primary bg-primary"
+                              : "border-muted-foreground"
+                          )}>
                             {selectedUsers.includes(user.profileName) && (
                               <div className="h-2 w-2 rounded-full bg-primary-foreground" />
                             )}
@@ -682,6 +708,32 @@ const ListDetail = () => {
                 </SelectContent>
               </Select>
 
+              {sharedUsers.length > 0 && (
+                <Select value={userFilter} onValueChange={setUserFilter}>
+                  <SelectTrigger className="w-full sm:w-[200px]">
+                    <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="Usuário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os usuários</SelectItem>
+                    {sharedUsers.map((u) => (
+                      <SelectItem key={u.profileName} value={u.profileName}>
+                        <span className="flex items-center gap-2">
+                          <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                            {u.avatar ? (
+                              <img src={getImageUrl(u.avatar)} alt={u.name} className="h-full w-full object-cover" />
+                            ) : (
+                              <span className="text-[10px] font-medium text-muted-foreground">{u.profileName.charAt(0).toUpperCase()}</span>
+                            )}
+                          </span>
+                          {u.profileName}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
               <Select value={datePreset} onValueChange={(v) => {
                 setDatePreset(v);
                 if (v !== "custom") { setDateFrom(undefined); setDateTo(undefined); }
@@ -785,6 +837,44 @@ const ListDetail = () => {
                     </div>
                     <div className="p-3 space-y-1.5">
                       <h3 className="truncate text-sm font-semibold text-card-foreground">{movie.title}</h3>
+                      {/* User ratings for shared lists */}
+                      {sharedRatings[movie.id]?.length > 0 && (
+                        <div className="mt-2 space-y-2">
+                          {sharedRatings[movie.id].map((rating) => (
+                            <div
+                              key={rating.profileName}
+                              className="flex items-center gap-2 text-xs text-muted-foreground"
+                            >
+                              {/* Avatar */}
+                              <div className="h-6 w-6 rounded-full overflow-hidden bg-muted shrink-0">
+                                {rating.avatar ? (
+                                  <img
+                                    src={getImageUrl(rating.avatar)}
+                                    alt={rating.profileName}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex items-center justify-center h-full w-full text-[10px]">
+                                    {rating.profileName.charAt(1).toUpperCase()}
+                                  </div>
+                                )}
+                              </div>
+                              {/* Estrelas */}
+                              <div className="flex items-center">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`h-3.5 w-3.5 ${i < rating.rating
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-muted-foreground"
+                                      }`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       {rating && (
                         <>
                           <div className="flex items-center gap-0.5">

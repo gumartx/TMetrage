@@ -1,5 +1,12 @@
 import { apiRequest } from "./api";
 
+export interface UserMovieRating {
+  movieId: number;
+  profileName: string;
+  avatar: string | null;
+  rating: number;
+}
+
 export interface MovieListItem {
   id: number;
   title: string;
@@ -27,6 +34,7 @@ export interface SharedList {
   sharedBy: string;
   sharedTo: { profileName: string; name: string; avatar: string | null }[];
   sharedAt: string;
+  ratings?: UserMovieRating[];
   direction: "sent" | "received";
 }
 
