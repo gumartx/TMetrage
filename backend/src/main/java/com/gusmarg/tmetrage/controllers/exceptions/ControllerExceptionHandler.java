@@ -12,11 +12,24 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.gusmarg.tmetrage.services.exceptions.DatabaseException;
 import com.gusmarg.tmetrage.services.exceptions.ResourceNotFoundException;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 
 @ControllerAdvice
 public class ControllerExceptionHandler {
 
+	@ExceptionHandler(ExpiredJwtException.class)
+	public ResponseEntity<StandardError> entityNotFound(ExpiredJwtException e, HttpServletRequest request) {
+		HttpStatus status = HttpStatus.FORBIDDEN;
+		StandardError err = new StandardError();
+		err.setTimestamp(Instant.now());
+		err.setStatus(status.value());
+		err.setError("Token experied");
+		err.setMessage(e.getMessage());
+		err.setPath(request.getRequestURI());
+		return ResponseEntity.status(status).body(err);
+	}
+	
 	@ExceptionHandler(ResourceNotFoundException.class)
 	public ResponseEntity<StandardError> entityNotFound(ResourceNotFoundException e, HttpServletRequest request) {
 		HttpStatus status = HttpStatus.NOT_FOUND;

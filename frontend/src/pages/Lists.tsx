@@ -325,7 +325,7 @@ const filteredSharedLists = groupedSharedLists.filter((s) =>
                     key={list.id}
                     className={cn(
                       "group relative rounded-lg border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5",
-                      isShared(list.id) ? "border-blue-500" : "border-border"
+                      isShared(list.id) ? "border-blue-300" : "border-border"
                     )}
                   >
                     <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -427,8 +427,7 @@ const filteredSharedLists = groupedSharedLists.filter((s) =>
                   <div
                     key={shared.id}
                     className={cn(
-                      "group relative rounded-lg border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5",
-                      isShared(shared.list.id) ? "border-blue-500" : "border-border"
+                      "group relative rounded-lg border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
                     )}
                   >
                     <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
