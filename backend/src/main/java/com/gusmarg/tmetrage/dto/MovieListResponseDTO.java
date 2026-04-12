@@ -26,6 +26,7 @@ public class MovieListResponseDTO {
 	private boolean owner;
 	private UserSearchDTO ownerUser;
 	private LocalDate createdAt;
+	private boolean isPublic = false;
 	
 	public MovieListResponseDTO(MovieList entity, User user, boolean owner) {
 		id = entity.getId();
@@ -33,6 +34,7 @@ public class MovieListResponseDTO {
 		description = entity.getDescription();
 		createdAt = entity.getCreatedAt();
 		this.owner = owner;
+		this.isPublic = entity.isPublic();
 		this.ownerUser = new UserSearchDTO(entity.getUser());
 		for (Movie movie : entity.getMovies()) {
 			movies.add(new MovieDTO(movie.getId(), movie.getPosterPath(), movie.getPosterPath()));

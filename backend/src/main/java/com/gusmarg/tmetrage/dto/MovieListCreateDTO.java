@@ -18,5 +18,6 @@ public class MovieListCreateDTO {
     private String name;
 	@Size(max = 250)
 	private String description;
+	private boolean isPublic = false;
     
 }

@@ -92,4 +92,19 @@ public class MovieListController {
 	    return ResponseEntity.ok(result);
 	}
 	
+    @GetMapping("/public/{profileName}")
+    public ResponseEntity<List<MovieListResponseDTO>> findPublicListsByUser(
+            @PathVariable String profileName,
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) Integer mes,
+            @RequestParam(required = false) Integer ano) {
+        List<MovieListResponseDTO> result = movieListService.findPublicListsByUser(profileName, nome, mes, ano);
+        return ResponseEntity.ok(result);
+    }
+    
+	@GetMapping(value = "/public/{profileName}/{listId}")
+	public ResponseEntity<MovieListDetailsDTO> findListByUser(@PathVariable Long listId, @PathVariable String profileName) {
+		MovieListDetailsDTO newDTO = movieListService.findPublicListByUser(listId, profileName);
+		return ResponseEntity.ok(newDTO);
+	}
 }

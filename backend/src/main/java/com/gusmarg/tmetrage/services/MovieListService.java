@@ -23,6 +23,7 @@ import com.gusmarg.tmetrage.repositories.MovieListRepository;
 import com.gusmarg.tmetrage.repositories.MovieRepository;
 import com.gusmarg.tmetrage.repositories.RatingRepository;
 import com.gusmarg.tmetrage.repositories.UserRepository;
+import com.gusmarg.tmetrage.services.exceptions.ResourceNotFoundException;
 import com.gusmarg.tmetrage.services.utils.TMDBService;
 
 import jakarta.validation.Valid;
@@ -47,7 +48,7 @@ public class MovieListService {
 		User user = authService.getAuthenticatedUser();
 
 		MovieList list = movieListRepository.findAccessibleList(listId, user.getId())
-				.orElseThrow(() -> new RuntimeException("Lista não encontrada"));
+				.orElseThrow(() -> new ResourceNotFoundException("Lista não encontrada"));
 
 		List<Rating> ratings = new ArrayList<>();
 
@@ -65,6 +66,32 @@ public class MovieListService {
 		return new MovieListDetailsDTO(list, ratings, owner);
 	}
 
+	 @Transactional(readOnly = true)
+	    public MovieListDetailsDTO findPublicListByUser(Long listId, String profileName) {
+	        User targetUser = userRepository.findByProfileName(profileName);
+
+	        if (targetUser == null) {
+	            throw new ResourceNotFoundException("Usuário não encontrado");
+	        }
+
+	        MovieList list = movieListRepository.findPublicListByUser(listId, targetUser.getId()).orElseThrow(() -> new ResourceNotFoundException("Lista pública não encontrada"));
+
+			boolean owner = list.getUser().getId().equals(targetUser.getId());
+			
+			List<Rating> ratings = new ArrayList<>();
+
+			for (Movie movie : list.getMovies()) {
+				Rating rating = ratingRepository.findByIdUserIdAndIdMovieId(targetUser.getId(), movie.getId()).orElse(null);
+				if (rating != null) {
+					ratings.add(rating);
+				}
+			}
+	        
+	        log.info("Detalhes da lista pública '{}' do usuário '{}'", list.getName(), profileName);
+
+	        return new MovieListDetailsDTO(list, ratings, owner);
+	    }
+	
 	@Transactional(readOnly = true)
 	public List<MovieListResponseDTO> findLists(String name, Integer month, Integer year) {
 
@@ -80,6 +107,23 @@ public class MovieListService {
 		}).toList();
 	}
 
+	 @Transactional(readOnly = true)
+	    public List<MovieListResponseDTO> findPublicListsByUser(String profileName, String name, Integer month, Integer year) {
+	        User targetUser = userRepository.findByProfileName(profileName);
+
+	        if (targetUser == null) {
+	            throw new RuntimeException("Usuário não encontrado");
+	        }
+
+	        List<MovieList> lists = movieListRepository.findPublicListsByUser(targetUser.getId(), name, month, year);
+
+	        log.info("Encontrado {} lista(s) pública(s) do usuário '{}'", lists.size(), profileName);
+
+	        return lists.stream()
+	                .map(list -> new MovieListResponseDTO(list, targetUser, false))
+	                .toList();
+	    }
+	
 	@Transactional
 	public MovieListResponseDTO createList(MovieListCreateDTO dto) {
 
@@ -109,6 +153,7 @@ public class MovieListService {
 
 		entity.setName(dto.getName());
 		entity.setDescription(dto.getDescription());
+		entity.setPublic(dto.isPublic());
 		entity = movieListRepository.save(entity);
 
 		log.info("Lista '{}' editada", entity.getId());

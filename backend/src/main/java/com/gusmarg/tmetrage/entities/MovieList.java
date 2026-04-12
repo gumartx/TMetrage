@@ -38,6 +38,8 @@ public class MovieList {
 	private String name;
 	private String description;
 	private LocalDate createdAt;
+	@Column(nullable = false)
+    private boolean isPublic = false;
 	
 	@ManyToOne
 	@JoinColumn(name = "user_id")

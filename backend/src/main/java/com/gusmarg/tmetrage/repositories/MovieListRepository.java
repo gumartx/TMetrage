@@ -39,5 +39,25 @@ public interface MovieListRepository extends JpaRepository<MovieList, Long> {
 			AND (l.user.id = :userId OR u.id = :userId)
 			""")
 	Optional<MovieList> findAccessibleList(Long listId, Long userId);
+	
+	@Query("""
+			SELECT DISTINCT l
+			FROM MovieList l
+			WHERE l.id = :listId
+			AND (l.user.id = :userId)
+			AND l.isPublic = true
+			""")
+	Optional<MovieList> findPublicListByUser(Long listId, Long userId);
+	
+	 @Query("""
+	            SELECT l
+	            FROM MovieList l
+	            WHERE l.user.id = :userId
+	            AND l.isPublic = true
+	            AND (:name IS NULL OR LOWER(l.name) LIKE LOWER(CONCAT('%', :name, '%')))
+	            AND (:month IS NULL OR MONTH(l.createdAt) = :month)
+	            AND (:year IS NULL OR YEAR(l.createdAt) = :year)
+	            """)
+	 List<MovieList> findPublicListsByUser(Long userId, String name, Integer month, Integer year);
 
 }

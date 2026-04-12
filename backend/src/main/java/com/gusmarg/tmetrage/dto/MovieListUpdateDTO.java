@@ -20,10 +20,12 @@ public class MovieListUpdateDTO {
     private String name;
 	@Size(max = 250)
 	private String description;
+	private boolean isPublic = false;
 	
 	public MovieListUpdateDTO(MovieList entity) {
 		name = entity.getName();
 		description = entity.getDescription();
+		isPublic = entity.isPublic();
 	}
 	
 }
