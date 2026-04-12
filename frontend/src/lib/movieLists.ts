@@ -26,6 +26,7 @@ export interface MovieList {
   owner?: boolean;
   ownerUser?: { profileName: string; name: string; avatar: string | null };
   createdAt: string;
+  isPublic: boolean;
 }
 
 export interface SharedList {

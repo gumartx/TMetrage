@@ -132,6 +132,7 @@ public class MovieListService {
 		MovieList entity = new MovieList();
 		entity.setName(dto.getName());
 		entity.setDescription(dto.getDescription());
+		entity.setPublic(false);
 		entity.setUser(user);
 		entity = movieListRepository.save(entity);
 

@@ -290,6 +290,10 @@ const ListDetail = () => {
       .sort((a, b) => b.value - a.value);
   }, [list, genres, movieGenres]);
 
+  const totalMovies = list?.movies.length ?? 0;
+
+  const totalGenres = genreChartData.length;
+
   const getDateRange = (): { from?: Date; to?: Date } => {
     if (datePreset === "custom") return { from: dateFrom, to: dateTo };
     if (datePreset === "all") return {};
@@ -445,45 +449,58 @@ const ListDetail = () => {
                     </DialogTitle>
                   </DialogHeader>
                   {genreChartData.length > 0 ? (
-                    <div className="pt-4 pb-2 overflow-visible">
-                      <ResponsiveContainer width="100%" height={480}>
-                        <PieChart margin={{ top: 20, right: 80, bottom: 20, left: 80 }}>
-                          <Pie
-                            data={genreChartData}
-                            cx="50%"
-                            cy="45%"
-                            innerRadius={80}
-                            outerRadius={130}
-                            paddingAngle={3}
-                            dataKey="value"
-                            label={({ name, percent, x, y, textAnchor, index }) => (
-                              <text x={x} y={y} textAnchor={textAnchor} fill={CHART_COLORS[index % CHART_COLORS.length]} fontSize={12} fontWeight={500}>
-                                {`${name} (${(percent * 100).toFixed(0)}%)`}
-                              </text>
-                            )}
-                            labelLine={true}
-                          >
-                            {genreChartData.map((_, index) => (
-                              <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "hsl(215, 25%, 16%)",
-                              border: "1px solid hsl(215, 20%, 25%)",
-                              borderRadius: "8px",
-                              color: "white",
-                            }}
-                            formatter={(value: number) => [<span style={{ color: "white" }}>{`${value} filme${value > 1 ? "s" : ""}`}</span>, <span style={{ color: "white" }}>Quantidade</span>]}
-                            labelStyle={{ color: "white" }}
-                          />
-                          <Legend
-                            verticalAlign="bottom"
-                            wrapperStyle={{ paddingTop: "30px" }}
-                            formatter={(value) => <span style={{ color: "white", fontSize: "13px" }}>{value}</span>}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
+                    <div className="pt-4 pb-2 overflow-visible flex gap-6">
+                      <div className="flex-1">
+                        <ResponsiveContainer width="100%" height={480}>
+                          <PieChart margin={{ top: 20, right: 80, bottom: 20, left: 80 }}>
+                            <Pie
+                              data={genreChartData}
+                              cx="50%"
+                              cy="45%"
+                              innerRadius={80}
+                              outerRadius={130}
+                              paddingAngle={3}
+                              dataKey="value"
+                              label={({ name, percent, x, y, textAnchor, index }) => (
+                                <text x={x} y={y} textAnchor={textAnchor} fill={CHART_COLORS[index % CHART_COLORS.length]} fontSize={12} fontWeight={500}>
+                                  {`${name} (${(percent * 100).toFixed(0)}%)`}
+                                </text>
+                              )}
+                              labelLine={true}
+                            >
+                              {genreChartData.map((_, index) => (
+                                <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: "hsl(215, 25%, 16%)",
+                                border: "1px solid hsl(215, 20%, 25%)",
+                                borderRadius: "8px",
+                                color: "white",
+                              }}
+                              formatter={(value: number) => [<span style={{ color: "white" }}>{`${value} filme${value > 1 ? "s" : ""}`}</span>, <span style={{ color: "white" }}>Quantidade</span>]}
+                              labelStyle={{ color: "white" }}
+                            />
+                            <Legend
+                              verticalAlign="bottom"
+                              wrapperStyle={{ paddingTop: "30px" }}
+                              formatter={(value) => <span style={{ color: "white", fontSize: "13px" }}>{value}</span>}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="w-[180px] flex flex-col gap-4 justify-center">
+                        <div className="rounded-lg border border-border bg-card p-4 text-center">
+                          <p className="text-xs text-muted-foreground">Filmes na lista</p>
+                          <p className="text-2xl font-bold text-foreground">{totalMovies}</p>
+                        </div>
+
+                        <div className="rounded-lg border border-border bg-card p-4 text-center">
+                          <p className="text-xs text-muted-foreground">Gêneros diferentes</p>
+                          <p className="text-2xl font-bold text-foreground">{totalGenres}</p>
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground py-8 text-center">Nenhum dado de gênero disponível.</p>
