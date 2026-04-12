@@ -1,7 +1,5 @@
 package com.gusmarg.tmetrage.dto;
 
-import com.gusmarg.tmetrage.entities.MovieList;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -20,12 +18,6 @@ public class MovieListUpdateDTO {
     private String name;
 	@Size(max = 250)
 	private String description;
-	private boolean isPublic = false;
-	
-	public MovieListUpdateDTO(MovieList entity) {
-		name = entity.getName();
-		description = entity.getDescription();
-		isPublic = entity.isPublic();
-	}
-	
+	private boolean isPublic;
+
 }

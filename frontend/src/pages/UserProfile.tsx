@@ -171,7 +171,7 @@ const UserProfile = () => {
         <div className="flex gap-6 mb-8">
           <div className="flex items-center gap-2 text-sm">
             <Users className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-foreground">{profile.followers + (isFollowing ? 1 : 0)}</span>
+            <span className="font-semibold text-foreground">{profile.followers}</span>
             <span className="text-muted-foreground">seguidores</span>
           </div>
           <div className="flex items-center gap-2 text-sm">

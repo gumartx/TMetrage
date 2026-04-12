@@ -48,18 +48,18 @@ export async function getList(listId: string): Promise<MovieList> {
   return apiRequest<MovieList>(`/lists/${listId}`, { auth: true });
 }
 
-export async function createList(name: string, description: string): Promise<MovieList> {
+export async function createList(name: string, description: string | null, isPublic: boolean): Promise<MovieList> {
   return apiRequest<MovieList>("/lists", {
     method: "POST",
-    body: { name, description },
+    body: { name, description, "public": isPublic },
     auth: true,
   });
 }
 
-export async function updateList(listId: string, name: string, description: string): Promise<MovieList> {
+export async function updateList(listId: string, name: string, description: string | null, isPublic: boolean): Promise<MovieList> {
   return apiRequest<MovieList>(`/lists/${listId}`, {
     method: "PUT",
-    body: { name, description },
+    body: { name, description, "public": isPublic },
     auth: true,
   });
 }
