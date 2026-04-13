@@ -32,7 +32,6 @@ import {
 import { cn } from "@/lib/utils";
 import { getImageUrl } from "@/lib/files";
 
-// ✅ Fora do componente — evita remontagem a cada render
 const VisibilityToggle = ({
   value,
   onChange,
@@ -154,7 +153,6 @@ const Lists = () => {
 
   const handleCreate = async () => {
     if (!name.trim()) return;
-    // ✅ description vazia vira null
     await createList(name.trim(), description.trim() || null, isPublic);
     await loadLists();
     setName("");
@@ -181,7 +179,6 @@ const Lists = () => {
 
   const handleEdit = async () => {
     if (!editId || !editName.trim()) return;
-    // ✅ description vazia vira null
     await updateList(editId, editName.trim(), editDescription.trim() || null, editIsPublic);
     setLists((prev) =>
       prev.map((l) =>
@@ -372,7 +369,7 @@ const Lists = () => {
                       <div className="flex items-center gap-2 pr-16">
                         <h3 className="text-lg font-semibold text-card-foreground truncate">{list.name}</h3>
                         {list.isPublic ? (
-                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-400 dark:text-blue-400">
                             <Globe className="h-2.5 w-2.5" />
                             Pública
                           </span>

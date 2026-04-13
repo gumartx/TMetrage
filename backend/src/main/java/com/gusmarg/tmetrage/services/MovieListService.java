@@ -132,7 +132,7 @@ public class MovieListService {
 		MovieList entity = new MovieList();
 		entity.setName(dto.getName());
 		entity.setDescription(dto.getDescription());
-		entity.setPublic(false);
+		entity.setPublic(dto.isPublic());
 		entity.setUser(user);
 		entity = movieListRepository.save(entity);
 
@@ -166,7 +166,7 @@ public class MovieListService {
 	public void deleteList(Long listId) {
 		User user = authService.getAuthenticatedUser();
 
-		MovieList entity = movieListRepository.getReferenceById(listId);
+		MovieList entity = movieListRepository.findById(listId).orElseThrow(() -> new ResourceNotFoundException("Lista não encontrada"));
 
 		if (!user.getId().equals(entity.getUser().getId())) {
 			throw new RuntimeException("Você não pode deletar essa lista");

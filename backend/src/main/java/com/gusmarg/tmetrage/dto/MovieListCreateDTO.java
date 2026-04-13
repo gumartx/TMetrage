@@ -1,5 +1,7 @@
 package com.gusmarg.tmetrage.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -18,6 +20,7 @@ public class MovieListCreateDTO {
     private String name;
 	@Size(max = 250)
 	private String description;
-	private Boolean isPublic = false;
+	@JsonProperty("isPublic")
+	private boolean isPublic;
     
 }
