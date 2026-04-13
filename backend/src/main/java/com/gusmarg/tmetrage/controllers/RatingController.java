@@ -58,7 +58,7 @@ public class RatingController {
 		return ResponseEntity.ok(result);
 	}
 	
-	@GetMapping("/{profileName}")
+	@GetMapping("/public/{profileName}")
 	public ResponseEntity<List<RatingResponseDTO>> getUserRatingsByProfileName(@PathVariable String profileName, @RequestParam(required = false) Platform plataforma,
 			@RequestParam(required = false) Integer nota, @RequestParam(required = false) Period periodo,
 			@RequestParam(required = false) LocalDate inicio, @RequestParam(required = false) LocalDate fim) {
