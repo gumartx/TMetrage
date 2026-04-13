@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Trash2, Film, ListMusic, Pencil, Search, CalendarDays, ChevronLeft, ChevronRight, X, Share2, Globe, Lock } from "lucide-react";
+import { Plus, Trash2, Film, List, Pencil, Search, CalendarDays, ChevronLeft, ChevronRight, X, Share2, Globe, Lock } from "lucide-react";
 import { getLists, createList, deleteList, updateList, getSharedLists, type MovieList, type SharedList } from "@/lib/movieLists";
 import { getPosterUrl } from "@/lib/tmdb";
 import Navbar from "@/components/Navbar";
@@ -331,7 +331,7 @@ const Lists = () => {
           <>
             {lists.length === 0 ? (
               <div className="mt-20 flex flex-col items-center text-center">
-                <ListMusic className="h-16 w-16 text-muted-foreground" />
+                <List className="h-16 w-16 text-muted-foreground" />
                 <p className="mt-4 text-lg font-medium text-muted-foreground">Você ainda não criou nenhuma lista</p>
                 <p className="mt-1 text-sm text-muted-foreground">Crie uma lista para organizar seus filmes favoritos</p>
               </div>

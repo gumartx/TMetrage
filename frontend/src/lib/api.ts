@@ -37,15 +37,18 @@ export async function apiRequest<T = unknown>(
       : undefined,
   });
 
-if (!res.ok) {
-  const error = await res.json().catch(() => ({ message: "Erro desconhecido" }));
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ message: "Erro desconhecido" }));
 
-  throw {
-    response: {
-      data: error
+    if (res.status === 401) {
+      removeToken();
+      window.location.href = "/login";
+      throw new Error("Sessão expirada");
     }
-  };
-}
+
+    throw { response: { data: error } };
+  }
+
   if (res.status === 204) {
     return undefined as T;
   }

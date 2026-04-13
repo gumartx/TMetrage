@@ -1,5 +1,7 @@
 package com.gusmarg.tmetrage.components;
 
+import java.io.IOException;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,6 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.gusmarg.tmetrage.services.utils.JwtService;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,39 +23,48 @@ import lombok.RequiredArgsConstructor;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-	private final JwtService jwtService;
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
 
-	private final UserDetailsService userDetailsService;
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
-	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-			throws ServletException, java.io.IOException {
+        final String authHeader = request.getHeader("Authorization");
 
-		final String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-			filterChain.doFilter(request, response);
-			return;
-		}
+        String jwt = authHeader.substring(7);
 
-		String jwt = authHeader.substring(7);
-		String username = jwtService.extractUsername(jwt);
+        try {
+            String username = jwtService.extractUsername(jwt);
 
-		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            }
 
-			UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            filterChain.doFilter(request, response);
 
-			if (jwtService.isTokenValid(jwt, userDetails)) {
+        } catch (ExpiredJwtException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
 
-				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-						userDetails, null, userDetails.getAuthorities());
+            String body = String.format(
+                "{\"status\":401,\"error\":\"Token expirado\",\"message\":\"Sua sessão expirou. Faça login novamente.\",\"path\":\"%s\"}",
+                request.getRequestURI()
+            );
 
-				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-				SecurityContextHolder.getContext().setAuthentication(authentication);
-			}
-		}
-
-		filterChain.doFilter(request, response);
-	}
+            response.getWriter().write(body);
+        }
+    }
 }

@@ -417,7 +417,7 @@ const ListDetail = () => {
                   )}
                 </span>
                 <Link
-                  to={`/usuario/${list.ownerUser.profileName}`}
+                  to={list.owner ? "/perfil" : `/usuario/${list.ownerUser.profileName}`}
                   className="text-xs text-muted-foreground hover:text-primary transition-colors"
                 >
                   {list.ownerUser.profileName}
