@@ -96,3 +96,11 @@ export async function shareList(listId: string, sharedTo: string[]): Promise<voi
 export async function getSharedLists(): Promise<SharedList[]> {
   return apiRequest<SharedList[]>("/lists/shared", { auth: true });
 }
+
+export async function getPublicListsByUser(profileName: string): Promise<MovieList[]> {
+  return apiRequest<MovieList[]>(`/lists/public/${encodeURIComponent(profileName)}`);
+}
+
+export async function getPublicListByUser(profileName: string, listId: string): Promise<MovieList> {
+  return apiRequest<MovieList>(`/lists/public/${encodeURIComponent(profileName)}/${listId}`);
+}

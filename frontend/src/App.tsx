@@ -15,6 +15,7 @@ import UserProfile from "./pages/UserProfile.tsx";
 import RatedMovies from "./pages/RatedMovies.tsx";
 import UserComments from "./pages/UserComments.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import UserLists from "./pages/UserLists.tsx";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/usuario/:username" element={<UserProfile />} />
           <Route path="/filmes-avaliados" element={<RatedMovies />} />
           <Route path="/comentarios" element={<UserComments />} />
+          <Route path="/usuario/:username/listas" element={<UserLists />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
