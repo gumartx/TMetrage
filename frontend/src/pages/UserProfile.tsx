@@ -2,7 +2,7 @@ import { getImageUrl } from "@/lib/files";
 import { useState, useEffect, useCallback } from "react";
 import { getGenreColor } from "@/lib/genreColors";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Star, Film, Users, UserPlus, MessageSquare, ChevronDown, ChevronUp, Search, Heart, MessageCircle, Loader2 } from "lucide-react";
+import { Star, Film, Users, UserPlus, MessageSquare, ChevronDown, ChevronUp, Search, Heart, MessageCircle, Loader2, List } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import Navbar from "@/components/Navbar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,8 +23,8 @@ const UserProfile = () => {
   const [topGenres, setTopGenres] = useState<{ name: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [ratingsOpen, setRatingsOpen] = useState(true);
-  const [reviewsOpen, setReviewsOpen] = useState(true);
+  const [ratingsOpen, setRatingsOpen] = useState(false);
+  const [reviewsOpen, setReviewsOpen] = useState(false);
   const [ratingSearch, setRatingSearch] = useState("");
   const [likedReviews, setLikedReviews] = useState<Record<string, boolean>>({});
 
@@ -182,14 +182,16 @@ const UserProfile = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 mb-8">
-          <Card className="bg-card border-border">
-            <CardContent className="flex flex-col items-center justify-center py-6">
-              <Film className="h-6 w-6 text-primary mb-2" />
-              <span className="text-2xl font-bold text-foreground">{profile.totalRatings}</span>
-              <span className="text-xs text-muted-foreground">Filmes avaliados</span>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-8">
+          <Link to={`/usuario/${profile.profileName}/filmes-avaliados`}>
+            <Card className="bg-card border-border cursor-pointer transition-colors hover:border-primary/40">
+              <CardContent className="flex flex-col items-center justify-center py-6">
+                <Film className="h-6 w-6 text-primary mb-2" />
+                <span className="text-2xl font-bold text-foreground">{profile.totalRatings}</span>
+                <span className="text-xs text-muted-foreground">Filmes avaliados</span>
+              </CardContent>
+            </Card>
+          </Link>
           <Card className="bg-card border-border">
             <CardContent className="flex flex-col items-center justify-center py-6">
               <Star className="h-6 w-6 text-star mb-2" />
@@ -199,9 +201,19 @@ const UserProfile = () => {
               <span className="text-xs text-muted-foreground">Nota média</span>
             </CardContent>
           </Card>
+          <Link to={`/usuario/${profile.profileName}/listas`}>
+            <Card className="bg-card border-border cursor-pointer transition-colors hover:border-primary/40">
+              <CardContent className="flex flex-col items-center justify-center py-6">
+                <List className="h-6 w-6 text-primary mb-2" />
+                <span className="text-2xl font-bold text-foreground">{profile.totalLists ?? 0}</span>
+                <span className="text-xs text-muted-foreground">Listas criadas</span>
+              </CardContent>
+            </Card>
+          </Link>
+
           <Card className="bg-card border-border">
             <CardContent className="flex flex-col items-center justify-center py-6">
-              <MessageSquare className="h-6 w-6 text-primary mb-2" />
+              <MessageCircle className="h-6 w-6 text-primary mb-2" />
               <span className="text-2xl font-bold text-foreground">{profile.totalComments}</span>
               <span className="text-xs text-muted-foreground">Comentários</span>
             </CardContent>

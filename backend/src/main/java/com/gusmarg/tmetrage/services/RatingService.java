@@ -23,6 +23,7 @@ import com.gusmarg.tmetrage.entities.pk.RatingPK;
 import com.gusmarg.tmetrage.repositories.MovieListRepository;
 import com.gusmarg.tmetrage.repositories.MovieRepository;
 import com.gusmarg.tmetrage.repositories.RatingRepository;
+import com.gusmarg.tmetrage.repositories.UserRepository;
 import com.gusmarg.tmetrage.services.utils.TMDBService;
 
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RatingService {
 
 	private final AuthService authService;
+	private final UserRepository userRepository;
 	private final RatingRepository ratingRepository;
 	private final MovieListRepository movieListRepository;
 	private final MovieRepository movieRepository;
@@ -92,11 +94,54 @@ public class RatingService {
 		List<Rating> ratings = ratingRepository.findByFilters(user.getId(), filter.getPlatform(), filter.getScore(),
 				startDate, endDate);
 
-		log.info("Encontrado {} avaliação(ões)", ratings.size());
+		log.info("Encontrado {} avaliação(ões) de '{}'", ratings.size(), user.getProfileName());
 
 		return ratings.stream().map(RatingResponseDTO::new).toList();
 	}
 
+
+	@Transactional(readOnly = true)
+	public List<RatingResponseDTO> findUserRatingsByProfileName(String profileName, RatingFilterDTO filter) {
+
+		User user = userRepository.findByProfileName(profileName);
+
+		LocalDate startDate = null;
+		LocalDate endDate = null;
+
+		if (filter.getPeriod() != null) {
+
+			LocalDate now = LocalDate.now();
+
+			switch (filter.getPeriod()) {
+
+			case LAST_WEEK -> startDate = now.minusWeeks(1);
+
+			case LAST_MONTH -> startDate = now.minusMonths(1);
+
+			case LAST_3_MONTHS -> startDate = now.minusMonths(3);
+
+			case LAST_YEAR -> startDate = now.minusYears(1);
+
+			case CUSTOM -> {
+				startDate = filter.getStartDate();
+				endDate = filter.getEndDate();
+			}
+			}
+
+			if (endDate == null) {
+				endDate = now;
+			}
+		}
+
+		List<Rating> ratings = ratingRepository.findByFilters(user.getId(), filter.getPlatform(), filter.getScore(),
+				startDate, endDate);
+
+		log.info("Encontrado {} avaliação(ões) de '{}'", ratings.size(), user.getProfileName());
+
+		return ratings.stream().map(RatingResponseDTO::new).toList();
+	}
+
+	
 	@Transactional
 	public RatingResponseDTO rateMovie(RatingMovieDTO dto) {
 

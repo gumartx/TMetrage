@@ -57,6 +57,17 @@ public class RatingController {
 		List<RatingResponseDTO> result = ratingService.findUserRatings(filter);
 		return ResponseEntity.ok(result);
 	}
+	
+	@GetMapping("/{profileName}")
+	public ResponseEntity<List<RatingResponseDTO>> getUserRatingsByProfileName(@PathVariable String profileName, @RequestParam(required = false) Platform plataforma,
+			@RequestParam(required = false) Integer nota, @RequestParam(required = false) Period periodo,
+			@RequestParam(required = false) LocalDate inicio, @RequestParam(required = false) LocalDate fim) {
+
+		RatingFilterDTO filter = new RatingFilterDTO(plataforma, nota, periodo, inicio, fim);
+		
+		List<RatingResponseDTO> result = ratingService.findUserRatingsByProfileName(profileName, filter);
+		return ResponseEntity.ok(result);
+	}
 
 	@PostMapping()
 	public ResponseEntity<RatingResponseDTO> rateMovie(@Valid @RequestBody RatingMovieDTO dto) {
