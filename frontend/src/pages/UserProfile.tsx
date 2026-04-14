@@ -78,10 +78,28 @@ const UserProfile = () => {
   }, [profile]);
 
   const handleFollow = async () => {
-    if (!username) return;
+    if (!username || !profile) return;
+
     try {
       await toggleFollow(username);
-      setIsFollowing(prev => !prev);
+
+      setIsFollowing(prev => {
+        const newValue = !prev;
+
+        setProfile((old) =>
+          old
+            ? {
+              ...old,
+              followers: newValue
+                ? old.followers + 1
+                : old.followers - 1,
+            }
+            : old
+        );
+
+        return newValue;
+      });
+
     } catch (err) {
       toast.error(err.message || "Erro ao seguir/deixar de seguir");
     }
@@ -211,13 +229,15 @@ const UserProfile = () => {
             </Card>
           </Link>
 
-          <Card className="bg-card border-border">
-            <CardContent className="flex flex-col items-center justify-center py-6">
-              <MessageCircle className="h-6 w-6 text-primary mb-2" />
-              <span className="text-2xl font-bold text-foreground">{profile.totalComments}</span>
-              <span className="text-xs text-muted-foreground">Comentários</span>
-            </CardContent>
-          </Card>
+          <Link to={`/usuario/${profile.profileName}/comentarios`}>
+            <Card className="bg-card border-border cursor-pointer transition-colors hover:border-primary/40">
+              <CardContent className="flex flex-col items-center justify-center py-6">
+                <MessageCircle className="h-6 w-6 text-primary mb-2" />
+                <span className="text-2xl font-bold text-foreground">{profile.totalComments}</span>
+                <span className="text-xs text-muted-foreground">Comentários</span>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Favorite Genres */}

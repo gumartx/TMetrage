@@ -12,6 +12,10 @@ export async function getUserRatings(): Promise<RatingResponse[]> {
   return apiRequest<RatingResponse[]>("/ratings", { auth: true });
 }
 
+export async function getUserRatingsByProfileName(username: string): Promise<RatingResponse[]> {
+  return apiRequest<RatingResponse[]>(`/ratings/public/${encodeURIComponent(username)}`, { auth: true });
+}
+
 export async function getMovieRatingsList(listId: string): Promise<RatingResponse[]> {
   return apiRequest<RatingResponse[]>(`/ratings/${listId}/lists`, { auth: true });
 }

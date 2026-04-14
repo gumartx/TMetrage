@@ -102,7 +102,7 @@ public class RatingService {
 
 	@Transactional(readOnly = true)
 	public List<RatingResponseDTO> findUserRatingsByProfileName(String profileName, RatingFilterDTO filter) {
-
+		log.info(profileName);
 		User user = userRepository.findByProfileName(profileName);
 
 		LocalDate startDate = null;
