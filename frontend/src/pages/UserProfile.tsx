@@ -271,16 +271,10 @@ const UserProfile = () => {
           {/* Avaliações */}
           <Collapsible open={ratingsOpen} onOpenChange={setRatingsOpen} className="flex-1">
             <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-accent">
-              <h2 className="font-display text-lg font-semibold text-foreground">Avaliações</h2>
+              <h2 className="font-display text-lg font-semibold text-foreground">Avaliações Recentes</h2>
               {ratingsOpen ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-3">
-              <Input
-                value={ratingSearch}
-                onChange={(e) => setRatingSearch(e.target.value)}
-                placeholder="Pesquisar filme..."
-                className="mb-3"
-              />
               {filteredRatings.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-4 text-center">Nenhum filme encontrado.</p>
               ) : (
@@ -318,7 +312,7 @@ const UserProfile = () => {
           {/* Comentários */}
           <Collapsible open={reviewsOpen} onOpenChange={setReviewsOpen} className="flex-1">
             <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-accent">
-              <h2 className="font-display text-lg font-semibold text-foreground">Comentários</h2>
+              <h2 className="font-display text-lg font-semibold text-foreground">Comentários Recentes</h2>
               {reviewsOpen ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-3 space-y-3">
