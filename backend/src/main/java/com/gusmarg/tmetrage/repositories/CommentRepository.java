@@ -1,6 +1,7 @@
 package com.gusmarg.tmetrage.repositories;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,4 +34,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 			      AND (:endDate IS NULL OR c.createdAt <= :endDate)
 			""")
 	List<Comment> searchComments(Long userId, String search, LocalDate startDate, LocalDate endDate);
+
+	List<Comment> findByCreatedAtAfterOrderByCreatedAtDesc(LocalDateTime twoDaysAgo);
 }

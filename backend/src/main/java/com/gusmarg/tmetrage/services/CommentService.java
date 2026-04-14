@@ -34,7 +34,7 @@ public class CommentService {
 	private final AuthService authService;
 	private final UserRepository userRepository;
 
-	@Transactional
+	@Transactional(readOnly = true)
 	public List<CommentResponseDTO> findAllMovieComments(Long movieId) {
 
 		User user = authService.getAuthenticatedUserOptional();
@@ -141,6 +141,18 @@ public class CommentService {
 				start != null ? start.toLocalDate() : null, end != null ? end.toLocalDate() : null);
 
 		return comments.stream().map(comment -> new CommentResponseDTO(comment, user)).collect(Collectors.toList());
+	}
+
+	@Transactional(readOnly = true)
+	public List<CommentResponseDTO> getRecentComments(String profileName) {
+
+		User user = userRepository.findByProfileName(profileName);
+
+		LocalDateTime twoDaysAgo = LocalDateTime.now().minusDays(2);
+
+		List<Comment> comments = commentRepository.findByCreatedAtAfterOrderByCreatedAtDesc(twoDaysAgo);
+
+		return comments.stream().map(comment -> new CommentResponseDTO(comment, user)).toList();
 	}
 
 }

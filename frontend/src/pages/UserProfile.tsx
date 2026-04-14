@@ -14,7 +14,7 @@ import { getPosterUrl } from "@/lib/tmdb";
 import { getMovieDetails } from "@/lib/tmdb";
 import { toast } from "sonner";
 import { getUserProfile, toggleFollow, UserProfile as UserProfileType } from "@/lib/profile";
-import { toggleLike } from "@/lib/comments";
+import { toggleLike, getRecentComments } from "@/lib/comments";
 
 const UserProfile = () => {
   const { username } = useParams<{ username: string }>();
@@ -22,12 +22,14 @@ const UserProfile = () => {
   const [profile, setProfile] = useState<UserProfileType | null>(null);
   const [topGenres, setTopGenres] = useState<{ name: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [recentComments, setRecentComments] = useState<Comment[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [ratingsOpen, setRatingsOpen] = useState(false);
   const [reviewsOpen, setReviewsOpen] = useState(false);
   const [ratingSearch, setRatingSearch] = useState("");
   const [likedReviews, setLikedReviews] = useState<Record<string, boolean>>({});
 
+  
   const loadProfile = useCallback(async () => {
     if (!username) return;
     try {
@@ -50,6 +52,7 @@ const UserProfile = () => {
       setTopGenres([]);
       return;
     }
+
 
     const loadGenres = async () => {
       try {

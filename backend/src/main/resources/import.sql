@@ -27,3 +27,11 @@ INSERT INTO tb_follow (follower_id, following_id) VALUES (1, 3);
 INSERT INTO tb_follow (follower_id, following_id) VALUES (2, 1);
 INSERT INTO tb_follow (follower_id, following_id) VALUES (3, 1);
 INSERT INTO tb_follow (follower_id, following_id) VALUES (3, 2);
+
+INSERT INTO tb_comment (created_at, movie_id, parent_id, user_id, message) VALUES ('2026-04-13T20:43:49.52651', 83533, NULL, 1, '1');
+INSERT INTO tb_comment (created_at, movie_id, parent_id, user_id, message) VALUES ('2026-04-10T20:43:51.895916', 83533, NULL, 1, '2');
+INSERT INTO tb_comment (created_at, movie_id, parent_id, user_id, message) VALUES ('2026-04-09T20:43:54.032064', 83533, NULL, 1, '3');
+INSERT INTO tb_comment (created_at, movie_id, parent_id, user_id, message) VALUES ('2026-04-08T20:43:49.52651', 83533, NULL, 1, '4');
+INSERT INTO tb_comment (created_at, movie_id, parent_id, user_id, message) VALUES ('2026-04-14T20:43:49.52651', 83533, NULL, 1, '5');;
+INSERT INTO tb_comment (created_at, movie_id, parent_id, user_id, message) VALUES ('2026-04-14T20:43:49.52651', 83533, NULL, 1, '57');
+INSERT INTO tb_comment (created_at, movie_id, parent_id, user_id, message) VALUES ('2026-04-01T20:43:49.52651', 83533, NULL, 1, '6');

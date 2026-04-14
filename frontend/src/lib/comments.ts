@@ -29,6 +29,13 @@ export async function getCommentsForMovie(movieId: number): Promise<Comment[]> {
   });
 }
 
+export async function getRecentComments(username: string): Promise<Comment[]> {
+  return apiRequest<Comment[]>(`/comments/${encodeURIComponent(username)}/recent`, {
+    method: "GET",
+    auth: true
+  });
+}
+
 export async function getUserComments(filters?: CommentFilters): Promise<Comment[]> {
   try {
     const params = new URLSearchParams();

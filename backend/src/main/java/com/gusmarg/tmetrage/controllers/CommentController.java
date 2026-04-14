@@ -54,6 +54,11 @@ public class CommentController {
         return commentService.findUserComments(filter, profileName);
     }
 
+    @GetMapping("/{profileName}/recent")
+    public ResponseEntity<List<CommentResponseDTO>> getRecentComments(@PathVariable String profileName) {
+        return ResponseEntity.ok(commentService.getRecentComments(profileName));
+    }
+    
 	@GetMapping(value = "/movies/{movieId}")
 	public ResponseEntity<List<CommentResponseDTO>> getMovieComments(@PathVariable Long movieId) {
 		List<CommentResponseDTO> result = commentService.findAllMovieComments(movieId);
