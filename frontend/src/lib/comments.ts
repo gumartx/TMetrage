@@ -43,9 +43,32 @@ export async function getUserComments(filters?: CommentFilters): Promise<Comment
 
     return await apiRequest<Comment[]>(
       `/comments/search${query ? `?${query}` : ""}`, {
-        method: "GET",
-        auth: true
-      }
+      method: "GET",
+      auth: true
+    }
+    );
+  } catch {
+    return [];
+  }
+}
+
+export async function getUserCommentsByProfileName(username: string, filters?: CommentFilters): Promise<Comment[]> {
+  try {
+    const params = new URLSearchParams();
+
+    if (filters?.message) params.append("message", filters.message);
+    if (filters?.movieTitle) params.append("movieTitle", filters.movieTitle);
+    if (filters?.periodo) params.append("periodo", filters.periodo);
+    if (filters?.inicio) params.append("inicio", filters.inicio);
+    if (filters?.fim) params.append("fim", filters.fim);
+
+    const query = params.toString();
+
+    return await apiRequest<Comment[]>(
+      `/comments/${encodeURIComponent(username)}/search${query ? `?${query}` : ""}`, {
+      method: "GET",
+      auth: true
+    }
     );
   } catch {
     return [];

@@ -40,6 +40,19 @@ public class CommentController {
 
         return commentService.findUserComments(filter);
     }
+    
+    @GetMapping("/{profileName}/search")
+    public List<CommentResponseDTO> searchUserComments(@PathVariable String profileName, @RequestParam(required = false) String search,
+                                                   @RequestParam(required = false) String startDate,
+                                                   @RequestParam(required = false) String endDate) {
+
+        CommentFilterDTO filter = new CommentFilterDTO();
+        filter.setSearch(search);
+        if (startDate != null) filter.setStartDate(LocalDate.parse(startDate));
+        if (endDate != null) filter.setEndDate(LocalDate.parse(endDate));
+
+        return commentService.findUserComments(filter, profileName);
+    }
 
 	@GetMapping(value = "/movies/{movieId}")
 	public ResponseEntity<List<CommentResponseDTO>> getMovieComments(@PathVariable Long movieId) {

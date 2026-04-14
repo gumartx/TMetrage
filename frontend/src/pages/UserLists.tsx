@@ -70,7 +70,7 @@ const UserLists = () => {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="font-display text-2xl font-bold text-foreground">
-            Listas de {username}
+            Listas de <span className="text-primary">{username}</span>
           </h1>
           {!loading && (
             <span className="text-sm text-muted-foreground">({lists.length})</span>

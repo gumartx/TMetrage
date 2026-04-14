@@ -16,6 +16,7 @@ import com.gusmarg.tmetrage.entities.Movie;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.CommentRepository;
 import com.gusmarg.tmetrage.repositories.MovieRepository;
+import com.gusmarg.tmetrage.repositories.UserRepository;
 import com.gusmarg.tmetrage.services.exceptions.ResourceNotFoundException;
 import com.gusmarg.tmetrage.services.utils.TMDBService;
 
@@ -31,6 +32,7 @@ public class CommentService {
 	private final CommentRepository commentRepository;
 	private final MovieRepository movieRepository;
 	private final AuthService authService;
+	private final UserRepository userRepository;
 
 	@Transactional
 	public List<CommentResponseDTO> findAllMovieComments(Long movieId) {
@@ -117,6 +119,20 @@ public class CommentService {
 	public List<CommentResponseDTO> findUserComments(CommentFilterDTO filter) {
 
 		User user = authService.getAuthenticatedUser();
+
+		LocalDateTime start = filter.getStartDate() != null ? filter.getStartDate().atStartOfDay() : null;
+		LocalDateTime end = filter.getEndDate() != null ? filter.getEndDate().atTime(23, 59, 59) : null;
+
+		List<Comment> comments = commentRepository.searchComments(user.getId(), filter.getSearch(),
+				start != null ? start.toLocalDate() : null, end != null ? end.toLocalDate() : null);
+
+		return comments.stream().map(comment -> new CommentResponseDTO(comment, user)).collect(Collectors.toList());
+	}
+
+	@Transactional(readOnly = true)
+	public List<CommentResponseDTO> findUserComments(CommentFilterDTO filter, String profileName) {
+
+		User user = userRepository.findByProfileName(profileName);
 
 		LocalDateTime start = filter.getStartDate() != null ? filter.getStartDate().atStartOfDay() : null;
 		LocalDateTime end = filter.getEndDate() != null ? filter.getEndDate().atTime(23, 59, 59) : null;
