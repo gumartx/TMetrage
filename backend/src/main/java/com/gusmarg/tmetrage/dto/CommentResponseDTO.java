@@ -19,6 +19,8 @@ public class CommentResponseDTO {
 
 	private Long id;
 	private Long movieId;
+	private String movieTitle;
+	private String posterPath;
 	private String author;
 	private String content;
 	private String avatar;
@@ -31,6 +33,8 @@ public class CommentResponseDTO {
 	public CommentResponseDTO(Comment entity, User currentUser) {
 		id = entity.getId();
 		movieId = entity.getMovie().getId();
+		movieTitle = entity.getMovie().getTitle();
+		posterPath = entity.getMovie().getPosterPath();
 		author = entity.getUser().getProfileName();
 		avatar = entity.getUser().getAvatar();
 		content = entity.getMessage();

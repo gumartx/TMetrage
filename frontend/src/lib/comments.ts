@@ -3,6 +3,8 @@ import { apiRequest } from "./api";
 export interface Comment {
   id: number;
   movieId: number;
+  movieTitle: string;
+  posterPath: string | null;
   author: string;
   avatar: string | null;
   content: string;

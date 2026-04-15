@@ -14,7 +14,7 @@ import { getPosterUrl } from "@/lib/tmdb";
 import { getMovieDetails } from "@/lib/tmdb";
 import { toast } from "sonner";
 import { getUserProfile, toggleFollow, UserProfile as UserProfileType } from "@/lib/profile";
-import { toggleLike, getRecentComments } from "@/lib/comments";
+import { toggleLike, getRecentComments, type Comment } from "@/lib/comments";
 
 const UserProfile = () => {
   const { username } = useParams<{ username: string }>();
@@ -29,7 +29,7 @@ const UserProfile = () => {
   const [ratingSearch, setRatingSearch] = useState("");
   const [likedReviews, setLikedReviews] = useState<Record<string, boolean>>({});
 
-  
+
   const loadProfile = useCallback(async () => {
     if (!username) return;
     try {
@@ -48,11 +48,17 @@ const UserProfile = () => {
   }, [loadProfile]);
 
   useEffect(() => {
+    if (!username) return;
+    getRecentComments(username)
+      .then(setRecentComments)
+      .catch(() => setRecentComments([]));
+  }, [username]);
+
+  useEffect(() => {
     if (!profile?.ratings?.length) {
       setTopGenres([]);
       return;
     }
-
 
     const loadGenres = async () => {
       try {
@@ -316,40 +322,40 @@ const UserProfile = () => {
               {reviewsOpen ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-3 space-y-3">
-              {(profile.reviews || []).length === 0 ? (
+              {recentComments.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">Nenhum comentário ainda.</p>
               ) : (
-                profile.reviews.map((review, index) => {
-                  const reviewKey = `${review.movieId}-${index}`;
-                  const isLiked = likedReviews[reviewKey] || false;
-                  return (
-                    <div key={reviewKey} className="rounded-lg border border-border bg-card p-3">
-                      <div className="flex items-start gap-3">
-                        <Link to={`/movie/${review.movieId}`} className="shrink-0">
-                          {getPosterUrl(review.posterPath, "w185") ? (
-                            <img
-                              src={getPosterUrl(review.posterPath, "w185")!}
-                              alt={review.movieTitle}
-                              className="h-16 w-12 rounded object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="flex h-16 w-12 items-center justify-center rounded bg-muted">
-                              <Film className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                          )}
-                        </Link>
-                        <div className="flex-1 min-w-0">
-                          <Link to={`/movie/${review.movieId}`} className="hover:underline">
-                            <h3 className="text-xs font-semibold text-card-foreground">{review.movieTitle}</h3>
+                recentComments.map((comment) => (
+                  <div key={comment.id} className="rounded-lg border border-border bg-card p-3">
+                    <div className="flex items-start gap-3">
+                      <Link to={`/movie/${comment.movieId}`} className="shrink-0">
+                        {comment.posterPath && getPosterUrl(comment.posterPath, "w185") ? (
+                          <img
+                            src={getPosterUrl(comment.posterPath, "w185")!}
+                            alt={comment.movieTitle ?? ""}
+                            className="h-16 w-12 rounded object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="flex h-16 w-12 items-center justify-center rounded bg-muted">
+                            <Film className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
+                      </Link>
+                      <div className="flex-1 min-w-0">
+                        {comment.movieTitle && (
+                          <Link to={`/movie/${comment.movieId}`} className="hover:underline">
+                            <h3 className="text-xs font-semibold text-card-foreground">{comment.movieTitle}</h3>
                           </Link>
-                          <p className="mt-0.5 text-[10px] text-muted-foreground">{new Date(review.date).toLocaleDateString("pt-BR")}</p>
-                          <p className="mt-1 text-xs text-muted-foreground">{review.content}</p>
-                        </div>
+                        )}
+                        <p className="mt-0.5 text-[10px] text-muted-foreground">
+                          {new Date(comment.createdAt).toLocaleDateString("pt-BR")}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">{comment.content}</p>
                       </div>
                     </div>
-                  );
-                })
+                  </div>
+                ))
               )}
             </CollapsibleContent>
           </Collapsible>
