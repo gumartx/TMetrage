@@ -91,8 +91,14 @@ const UserRatedMovies = () => {
     const matchesPlatform = platformFilter === "all" || (platformFilter === "none" ? !rm.platform : rm.platform === platformFilter);
     const matchesRating = ratingFilter === "all" || rm.rating === Number(ratingFilter);
     const range = getDateRange();
-    const ratingDate = new Date(rm.date);
-    const matchesDate = (!range.from || ratingDate >= range.from) && (!range.to || ratingDate <= new Date(range.to.getTime() + 86400000));
+    const ratingDate = new Date(rm.date + "T00:00:00");
+    const to = range.to
+      ? new Date(range.to.getFullYear(), range.to.getMonth(), range.to.getDate(), 23, 59, 59, 999)
+      : null;
+
+    const matchesDate =
+      (!range.from || ratingDate >= range.from) &&
+      (!to || ratingDate <= to);
     return matchesSearch && matchesGenre && matchesPlatform && matchesRating && matchesDate;
   });
 
@@ -221,7 +227,7 @@ const UserRatedMovies = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {filtered.map((rm) => {
               const posterUrl = getPosterUrl(rm.movie.poster_path);
-              const formattedDate = new Date(rm.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+              const formattedDate = new Date(rm.date + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
               return (
                 <Link key={rm.movie.id} to={`/movie/${rm.movie.id}`} className="group rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
                   <div className="aspect-[2/3] overflow-hidden">
