@@ -3,7 +3,14 @@ INSERT INTO tb_user (avatar, background_img_url, bio, email, name, password, pro
 INSERT INTO tb_user (avatar, background_img_url, bio, email, name, password, profile_name) VALUES (NULL, NULL, NULL, 'bru@gmail.com', 'bruna', '$2a$10$8d9a/Trpz/HT0MxRA/1qr.YtHKXEVx7r1yu9BB53lp9uk5MKHeYh2', '@garotagelida');
 
 INSERT INTO tb_movie (id, poster_path, title) VALUES (83533, '/9k2zKeUfcKkAz1dGt5MP6dZMm4G.jpg', 'Avatar: Fogo e Cinzas');
+INSERT INTO tb_movie (id, poster_path, title) VALUES (1159831, '/vcdnSEcm0f0shJohkJnrOBcCq1m.jpg', 'A Noiva!');
+INSERT INTO tb_movie (id, poster_path, title) VALUES (1226863, '/b3WeTp42eJSRuE4UZfyPCOJW4c.jpg', 'Super Mario Galaxy: O Filme');
+INSERT INTO tb_movie (id, poster_path, title) VALUES (1290821, '/hSvhZRkbYD9crC4nqy8uCk9EdFH.jpg', 'Missão Refúgio');
+INSERT INTO tb_movie (id, poster_path, title) VALUES (1297842, '/x0SRTrltSJi1iQiIAUpyvkxnr41.jpg', 'Um Cabra Bom de Bola');
+INSERT INTO tb_movie (id, poster_path, title) VALUES (1327819, '/ftPFJBGbldoWiiPrmesW96zBzdH.jpg', 'Cara de Um, Focinho de Outro');
+INSERT INTO tb_movie (id, poster_path, title) VALUES (1470130, '/mc3nj2DI1MZeFoAR08zSRDxezzf.jpg', 'The Mortuary Assistant');
 INSERT INTO tb_movie (id, poster_path, title) VALUES (1523145, '/hXNn25hE2SH2kHMPVOLjqDISSxf.jpg', 'Um Amor de Mentiras');
+INSERT INTO tb_movie (id, poster_path, title) VALUES (1641319, '/gGhjs14pomQA6N8parCw5Bl3qoh.jpg', 'O Atirador: Sem Nação');
 
 INSERT INTO tb_list (created_at, user_id, description, name, is_public) VALUES ('2026-04-08', 1, NULL, 'teste2', false);
 INSERT INTO tb_list (created_at, user_id, description, name, is_public) VALUES ('2026-04-08', 1, NULL, 'teste1', false);
@@ -16,6 +23,13 @@ INSERT INTO tb_rating (created_at, score, movie_id, user_id, platform) VALUES ('
 INSERT INTO tb_rating (created_at, score, movie_id, user_id, platform) VALUES ('2026-04-08', 5.0, 83533, 2, NULL);
 INSERT INTO tb_rating (created_at, score, movie_id, user_id, platform) VALUES ('2026-04-08', 2.0, 1523145, 3, 'CINEMA');
 INSERT INTO tb_rating (created_at, score, movie_id, user_id, platform) VALUES ('2026-04-08', 4.0, 83533, 3, NULL);
+INSERT INTO tb_rating (created_at, score, movie_id, user_id, platform) VALUES ('2026-04-15', 4.0, 1226863, 1, NULL);
+INSERT INTO tb_rating (created_at, score, movie_id, user_id, platform) VALUES ('2026-04-15', 4.0, 1290821, 1, NULL);
+INSERT INTO tb_rating (created_at, score, movie_id, user_id, platform) VALUES ('2026-04-15', 3.0, 1470130, 1, NULL);
+INSERT INTO tb_rating (created_at, score, movie_id, user_id, platform) VALUES ('2026-04-15', 3.0, 1159831, 1, NULL);
+INSERT INTO tb_rating (created_at, score, movie_id, user_id, platform) VALUES ('2026-04-15', 5.0, 1297842, 1, NULL);
+INSERT INTO tb_rating (created_at, score, movie_id, user_id, platform) VALUES ('2026-04-15', 4.0, 1641319, 1, NULL);
+INSERT INTO tb_rating (created_at, score, movie_id, user_id, platform) VALUES ('2026-04-15', 5.0, 1327819, 1, NULL);
 
 INSERT INTO tb_list_movie (list_id, movie_id) VALUES (1, 83533);
 INSERT INTO tb_list_movie (list_id, movie_id) VALUES (1, 1523145);

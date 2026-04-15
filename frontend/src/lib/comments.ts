@@ -32,7 +32,9 @@ export async function getCommentsForMovie(movieId: number): Promise<Comment[]> {
 }
 
 export async function getRecentComments(username: string): Promise<Comment[]> {
-  return apiRequest<Comment[]>(`/comments/${encodeURIComponent(username)}/recent`, {
+  const profileName = username.startsWith("@") ? username : `@${username}`;
+  
+  return apiRequest<Comment[]>(`/comments/${encodeURIComponent(profileName)}/recent`, {
     method: "GET",
     auth: true
   });

@@ -152,6 +152,8 @@ public class CommentService {
 
 		List<Comment> comments = commentRepository.findByCreatedAtAfterOrderByCreatedAtDesc(twoDaysAgo);
 
+		log.info("Comentário(s) recente(s) de '{}'", user.getProfileName());
+		
 		return comments.stream().map(comment -> new CommentResponseDTO(comment, user)).toList();
 	}
 

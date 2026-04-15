@@ -2,6 +2,8 @@ import { apiRequest, isAuthenticated } from "./api";
 
 export interface RatingResponse {
   movieId: number;
+  movieTitle: string;
+  posterPath: string | null;
   rating: number;
   platform?: string;
   createdAt: string;
@@ -14,6 +16,12 @@ export async function getUserRatings(): Promise<RatingResponse[]> {
 
 export async function getUserRatingsByProfileName(username: string): Promise<RatingResponse[]> {
   return apiRequest<RatingResponse[]>(`/ratings/public/${encodeURIComponent(username)}`, { auth: true });
+}
+
+export async function getRecentRatings(username: string): Promise<RatingResponse[]> {
+  const profileName = username.startsWith("@") ? username : `@${username}`;
+
+  return apiRequest<RatingResponse[]>(`/ratings/${encodeURIComponent(profileName)}/recent`, { auth: true });
 }
 
 export async function getMovieRatingsList(listId: string): Promise<RatingResponse[]> {

@@ -15,6 +15,7 @@ import { getMovieDetails } from "@/lib/tmdb";
 import { toast } from "sonner";
 import { getUserProfile, toggleFollow, UserProfile as UserProfileType } from "@/lib/profile";
 import { toggleLike, getRecentComments, type Comment } from "@/lib/comments";
+import { getRecentRatings, type RatingResponse } from "@/lib/ratings";
 
 const UserProfile = () => {
   const { username } = useParams<{ username: string }>();
@@ -23,6 +24,7 @@ const UserProfile = () => {
   const [topGenres, setTopGenres] = useState<{ name: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [recentComments, setRecentComments] = useState<Comment[]>([]);
+  const [recentRatings, setRecentRatings] = useState<RatingResponse[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [ratingsOpen, setRatingsOpen] = useState(false);
   const [reviewsOpen, setReviewsOpen] = useState(false);
@@ -46,6 +48,14 @@ const UserProfile = () => {
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
+
+  useEffect(() => {
+    if (!username) return;
+
+    getRecentRatings(username)
+      .then(setRecentRatings)
+      .catch(() => setRecentRatings([]));
+  }, [username]);
 
   useEffect(() => {
     if (!username) return;
@@ -139,8 +149,7 @@ const UserProfile = () => {
 
   const displayUsername = profile.profileName.startsWith("@") ? profile.profileName : `@${profile.profileName}`;
 
-  // Filtragem de avaliações
-  const filteredRatings = (profile.ratings || []).filter(r =>
+  const filteredRatings = recentRatings.filter(r =>
     r.movieTitle.toLowerCase().includes(ratingSearch.toLowerCase())
   );
 

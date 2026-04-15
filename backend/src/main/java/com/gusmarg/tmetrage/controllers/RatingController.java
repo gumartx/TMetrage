@@ -33,6 +33,11 @@ public class RatingController {
 
 	private final RatingService ratingService;
 
+    @GetMapping("/{profileName}/recent")
+    public ResponseEntity<List<RatingResponseDTO>> getRecentRatings(@PathVariable String profileName) {
+        return ResponseEntity.ok(ratingService.getRecentRatings(profileName));
+    }
+	
 	@GetMapping(value = "{movieId}")
 	public ResponseEntity<RatingResponseDTO> getMovieUserRating(@PathVariable Long movieId) {
 		RatingResponseDTO result = ratingService.findMovieUserRating(movieId);

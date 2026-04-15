@@ -52,10 +52,8 @@ public class RatingService {
 
 		log.info("Avaliação de usuário '{}' no filme '{}'", user.getProfileName(), movie.getTitle());
 
-	    return ratingRepository
-	            .findByIdUserIdAndIdMovieId(user.getId(), movie.getId())
-	            .map(RatingResponseDTO::new)
-	            .orElse(null);
+		return ratingRepository.findByIdUserIdAndIdMovieId(user.getId(), movie.getId()).map(RatingResponseDTO::new)
+				.orElse(null);
 	}
 
 	@Transactional(readOnly = true)
@@ -99,7 +97,6 @@ public class RatingService {
 		return ratings.stream().map(RatingResponseDTO::new).toList();
 	}
 
-
 	@Transactional(readOnly = true)
 	public List<RatingResponseDTO> findUserRatingsByProfileName(String profileName, RatingFilterDTO filter) {
 		log.info(profileName);
@@ -141,7 +138,6 @@ public class RatingService {
 		return ratings.stream().map(RatingResponseDTO::new).toList();
 	}
 
-	
 	@Transactional
 	public RatingResponseDTO rateMovie(RatingMovieDTO dto) {
 
@@ -224,15 +220,27 @@ public class RatingService {
 		List<Long> movieIds = movies.stream().map(Movie::getId).toList();
 
 		if (movieIds == null || movieIds.isEmpty()) {
-		    return List.of();
+			return List.of();
 		}
-		
+
 		List<Rating> ratings = ratingRepository.findByUserIdAndMovieIdIn(user.getId(), movieIds);
 
 		Map<Long, Rating> ratingMap = ratings.stream().collect(Collectors.toMap(r -> r.getMovie().getId(), r -> r));
 
 		log.info("Avaliação(ões) dos filmes presentes na lista '{}'", list.getName());
-		
+
 		return movies.stream().map(movie -> new RatedMovieDTO(movie, ratingMap.get(movie.getId()))).toList();
 	}
+
+	@Transactional(readOnly = true)
+	public List<RatingResponseDTO> getRecentRatings(String profileName) {
+		User user = userRepository.findByProfileName(profileName);
+		
+		List<Rating> ratings = ratingRepository.findTop8ByIdUserOrderByCreatedAtDesc(user);
+
+		log.info("Avaliação(ões) recente(s) de '{}'", user.getProfileName());
+
+		return ratings.stream().map(rating -> new RatingResponseDTO(rating)).toList();
+	}
+
 }

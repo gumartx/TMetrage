@@ -8,11 +8,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import com.gusmarg.tmetrage.entities.Rating;
+import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.entities.enums.Platform;
 import com.gusmarg.tmetrage.entities.pk.RatingPK;
 
 public interface RatingRepository extends JpaRepository<Rating, RatingPK> {
 
+	List<Rating> findTop8ByIdUserOrderByCreatedAtDesc(User user);
+	
 	Optional<Rating> findByIdUserIdAndIdMovieId(Long userId, Long movieId);
 
 	@Query("""
