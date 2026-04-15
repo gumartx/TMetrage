@@ -349,9 +349,15 @@ const UserProfile = () => {
                           </Link>
                         )}
                         <p className="mt-0.5 text-[10px] text-muted-foreground">
-                          {new Date(comment.createdAt).toLocaleDateString("pt-BR")}
+                          {new Date(comment.createdAt).toLocaleString("pt-BR", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </p>
-                        <p className="mt-1 text-xs text-muted-foreground">{comment.content}</p>
+                        <p className="mt-1 text-xs text-foreground/80">{comment.content}</p>
                       </div>
                     </div>
                   </div>
