@@ -76,6 +76,7 @@ const Lists = () => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [isEditingOwner, setIsEditingOwner] = useState(true);
   const [isPublic, setIsPublic] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -174,6 +175,7 @@ const Lists = () => {
     setEditName(list.name);
     setEditDescription(list.description ?? "");
     setEditIsPublic(list.isPublic ?? false);
+    setIsEditingOwner(list.owner ?? false);
     setEditOpen(true);
   };
 
@@ -251,9 +253,9 @@ const Lists = () => {
                   />
                   <div className="space-y-1.5">
                     <p className="text-sm text-muted-foreground">Visibilidade</p>
-                    <VisibilityToggle value={isPublic} onChange={setIsPublic} />
+                    <VisibilityToggle value={editIsPublic} onChange={setEditIsPublic} />
                     <p className="text-xs text-muted-foreground">
-                      {isPublic
+                      {editIsPublic
                         ? "Qualquer pessoa pode visualizar esta lista."
                         : "Somente você e quem você compartilhar pode ver."}
                     </p>
@@ -549,15 +551,17 @@ const Lists = () => {
                 onChange={(e) => setEditDescription(e.target.value)}
                 rows={3}
               />
-              <div className="space-y-1.5">
-                <p className="text-sm text-muted-foreground">Visibilidade</p>
-                <VisibilityToggle value={editIsPublic} onChange={setEditIsPublic} />
-                <p className="text-xs text-muted-foreground">
-                  {editIsPublic
-                    ? "Qualquer pessoa pode visualizar esta lista."
-                    : "Somente você e quem você compartilhar pode ver."}
-                </p>
-              </div>
+              {isEditingOwner && (
+                <div className="space-y-1.5">
+                  <p className="text-sm text-muted-foreground">Visibilidade</p>
+                  <VisibilityToggle value={editIsPublic} onChange={setEditIsPublic} />
+                  <p className="text-xs text-muted-foreground">
+                    {editIsPublic
+                      ? "Qualquer pessoa pode visualizar esta lista."
+                      : "Somente você e quem você compartilhar pode ver."}
+                  </p>
+                </div>
+              )}
               <Button onClick={handleEdit} className="w-full" disabled={!editName.trim()}>
                 Salvar
               </Button>

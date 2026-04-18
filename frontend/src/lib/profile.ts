@@ -20,6 +20,10 @@ export interface UserProfile {
     reviews: { id: number; movieId: number; movieTitle: string; posterPath: string | null; content: string; date: string }[];
 }
 
+export async function getCurrentUserProfile(): Promise<{ profileName: string }> {
+  return apiRequest("/users/me", { auth: true });
+}
+
 export async function getMyProfile(): Promise<UserProfile> {
     return apiRequest<UserProfile>("/users", { auth: true });
 }

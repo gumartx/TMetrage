@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Search, Star, Filter, ArrowLeft, Calendar as CalendarIcon } from "lucide-react";
+import { Search, Star, Filter, ArrowLeft, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
-import { pt } from "date-fns/locale";
 import Navbar from "@/components/Navbar";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,14 +13,6 @@ import { getUserRatings } from "@/lib/ratings";
 import { getMovieDetails, getPosterUrl, type MovieDetails } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 import { Tv } from "lucide-react";
-
-const GENRE_NAMES: Record<number, string> = {
-  28: "Ação", 12: "Aventura", 16: "Animação", 35: "Comédia", 80: "Crime",
-  99: "Documentário", 18: "Drama", 10751: "Família", 14: "Fantasia",
-  36: "História", 27: "Terror", 10402: "Música", 9648: "Mistério",
-  10749: "Romance", 878: "Ficção científica", 10770: "Cinema TV",
-  53: "Thriller", 10752: "Guerra", 37: "Faroeste",
-};
 
 interface RatedMovie {
   movie: MovieDetails;
@@ -39,6 +30,8 @@ const DATE_PRESETS = [
   { label: "Personalizado", value: "custom" },
 ];
 
+const PAGE_SIZE = 10;
+
 const RatedMovies = () => {
   const [ratedMovies, setRatedMovies] = useState<RatedMovie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,24 +42,20 @@ const RatedMovies = () => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [ratingFilter, setRatingFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1); // ✅ página atual
 
   useEffect(() => {
     const loadRatedMovies = async () => {
       try {
         const ratings = await getUserRatings();
-        if (ratings.length === 0) {
-          setLoading(false);
-          return;
-        }
+        if (ratings.length === 0) { setLoading(false); return; }
 
         const results: RatedMovie[] = [];
         for (const entry of ratings) {
           try {
             const movie = await getMovieDetails(entry.movieId);
             results.push({ movie, rating: entry.rating, date: entry.createdAt, platform: entry.platform });
-          } catch {
-            // skip failed fetches
-          }
+          } catch { /* skip */ }
         }
         results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setRatedMovies(results);
@@ -80,16 +69,11 @@ const RatedMovies = () => {
     loadRatedMovies();
   }, []);
 
-  // Collect all genres from rated movies
   const allGenres = new Map<number, string>();
-  ratedMovies.forEach((rm) =>
-    rm.movie.genres.forEach((g) => allGenres.set(g.id, g.name))
-  );
+  ratedMovies.forEach((rm) => rm.movie.genres.forEach((g) => allGenres.set(g.id, g.name)));
 
   const getDateRange = (): { from?: Date; to?: Date } => {
-    if (datePreset === "custom") {
-      return { from: dateFrom, to: dateTo };
-    }
+    if (datePreset === "custom") return { from: dateFrom, to: dateTo };
     if (datePreset === "all") return {};
     const now = new Date();
     const from = new Date();
@@ -103,27 +87,29 @@ const RatedMovies = () => {
   };
 
   const filtered = ratedMovies.filter((rm) => {
-    const matchesSearch = !searchQuery.trim() ||
-      rm.movie.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesGenre = genreFilter === "all" ||
-      rm.movie.genres.some((g) => g.id === Number(genreFilter));
-    const matchesPlatform = platformFilter === "all" ||
-      (platformFilter === "none" ? !rm.platform : rm.platform === platformFilter);
-    const matchesRating = ratingFilter === "all" ||
-      rm.rating === Number(ratingFilter);
+    const matchesSearch = !searchQuery.trim() || rm.movie.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesGenre = genreFilter === "all" || rm.movie.genres.some((g) => g.id === Number(genreFilter));
+    const matchesPlatform = platformFilter === "all" || (platformFilter === "none" ? !rm.platform : rm.platform === platformFilter);
+    const matchesRating = ratingFilter === "all" || rm.rating === Number(ratingFilter);
     const range = getDateRange();
     const ratingDate = new Date(rm.date + "T00:00:00");
     const from = range.from ? new Date(range.from) : null;
     const to = range.to ? new Date(range.to) : null;
-
     if (from) from.setHours(0, 0, 0, 0);
     if (to) to.setHours(0, 0, 0, 0);
-
-    const matchesDate =
-      (!from || ratingDate >= from) &&
-      (!to || ratingDate <= to);
+    const matchesDate = (!from || ratingDate >= from) && (!to || ratingDate <= to);
     return matchesSearch && matchesGenre && matchesPlatform && matchesRating && matchesDate;
   });
+
+  // ✅ Paginação
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  // ✅ Volta para página 1 quando filtros mudam
+  const handleFilterChange = (fn: () => void) => {
+    fn();
+    setCurrentPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -134,10 +120,9 @@ const RatedMovies = () => {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <h1 className="font-display text-2xl font-bold text-foreground">Filmes Avaliados</h1>
-          <span className="text-sm text-muted-foreground">({ratedMovies.length})</span>
+          <span className="text-sm text-muted-foreground">({filtered.length})</span>
         </div>
 
-        {/* Filters */}
         <div className="flex flex-col gap-3 mb-6">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1 max-w-md">
@@ -145,25 +130,23 @@ const RatedMovies = () => {
               <Input
                 placeholder="Pesquisar por nome do filme..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleFilterChange(() => setSearchQuery(e.target.value))}
                 className="pl-9"
               />
             </div>
-            <Select value={genreFilter} onValueChange={setGenreFilter}>
+            <Select value={genreFilter} onValueChange={(v) => handleFilterChange(() => setGenreFilter(v))}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Gênero" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os gêneros</SelectItem>
-                {Array.from(allGenres.entries())
-                  .sort(([, a], [, b]) => a.localeCompare(b))
-                  .map(([id, name]) => (
-                    <SelectItem key={id} value={String(id)}>{name}</SelectItem>
-                  ))}
+                {Array.from(allGenres.entries()).sort(([, a], [, b]) => a.localeCompare(b)).map(([id, name]) => (
+                  <SelectItem key={id} value={String(id)}>{name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <Select value={platformFilter} onValueChange={setPlatformFilter}>
+            <Select value={platformFilter} onValueChange={(v) => handleFilterChange(() => setPlatformFilter(v))}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <Tv className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Plataforma" />
@@ -173,15 +156,12 @@ const RatedMovies = () => {
                 <SelectItem value="none">Não informado</SelectItem>
                 {PLATFORMS.map((p) => (
                   <SelectItem key={p.value} value={p.value}>
-                    <span className="flex items-center gap-2">
-                      <PlatformBadge value={p.value} />
-                      {p.label}
-                    </span>
+                    <span className="flex items-center gap-2"><PlatformBadge value={p.value} />{p.label}</span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Select value={ratingFilter} onValueChange={setRatingFilter}>
+            <Select value={ratingFilter} onValueChange={(v) => handleFilterChange(() => setRatingFilter(v))}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <Star className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Nota" />
@@ -199,13 +179,10 @@ const RatedMovies = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={datePreset} onValueChange={(v) => {
+            <Select value={datePreset} onValueChange={(v) => handleFilterChange(() => {
               setDatePreset(v);
-              if (v !== "custom") {
-                setDateFrom(undefined);
-                setDateTo(undefined);
-              }
-            }}>
+              if (v !== "custom") { setDateFrom(undefined); setDateTo(undefined); }
+            })}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Período" />
@@ -228,14 +205,7 @@ const RatedMovies = () => {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateFrom}
-                    onSelect={setDateFrom}
-                    disabled={(date) => date > new Date() || (dateTo ? date > dateTo : false)}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
+                  <Calendar mode="single" selected={dateFrom} onSelect={(d) => handleFilterChange(() => setDateFrom(d))} disabled={(date) => date > new Date() || (dateTo ? date > dateTo : false)} initialFocus className={cn("p-3 pointer-events-auto")} />
                 </PopoverContent>
               </Popover>
               <span className="text-sm text-muted-foreground">até</span>
@@ -247,18 +217,11 @@ const RatedMovies = () => {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateTo}
-                    onSelect={setDateTo}
-                    disabled={(date) => date > new Date() || (dateFrom ? date < dateFrom : false)}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
+                  <Calendar mode="single" selected={dateTo} onSelect={(d) => handleFilterChange(() => setDateTo(d))} disabled={(date) => date > new Date() || (dateFrom ? date < dateFrom : false)} initialFocus className={cn("p-3 pointer-events-auto")} />
                 </PopoverContent>
               </Popover>
               {(dateFrom || dateTo) && (
-                <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}>
+                <Button variant="ghost" size="sm" onClick={() => handleFilterChange(() => { setDateFrom(undefined); setDateTo(undefined); })}>
                   Limpar
                 </Button>
               )}
@@ -266,10 +229,9 @@ const RatedMovies = () => {
           )}
         </div>
 
-        {/* Content */}
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {Array.from({ length: 10 }).map((_, i) => (
+            {Array.from({ length: PAGE_SIZE }).map((_, i) => (
               <div key={i} className="animate-pulse rounded-lg bg-muted aspect-[2/3]" />
             ))}
           </div>
@@ -277,71 +239,104 @@ const RatedMovies = () => {
           <div className="text-center py-16">
             <Star className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
             <p className="text-muted-foreground">
-              {ratedMovies.length === 0
-                ? "Você ainda não avaliou nenhum filme."
-                : "Nenhum filme encontrado com os filtros selecionados."}
+              {ratedMovies.length === 0 ? "Você ainda não avaliou nenhum filme." : "Nenhum filme encontrado com os filtros selecionados."}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {filtered.map((rm) => {
-              const posterUrl = getPosterUrl(rm.movie.poster_path);
-              const formattedDate = new Date(rm.date + "T00:00:00").toLocaleDateString("pt-BR", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              });
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {paginated.map((rm) => {
+                const posterUrl = getPosterUrl(rm.movie.poster_path);
+                const formattedDate = new Date(rm.date + "T00:00:00").toLocaleDateString("pt-BR", {
+                  day: "2-digit", month: "short", year: "numeric",
+                });
+                return (
+                  <Link
+                    key={rm.movie.id}
+                    to={`/movie/${rm.movie.id}`}
+                    className="group rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+                  >
+                    <div className="aspect-[2/3] overflow-hidden">
+                      {posterUrl ? (
+                        <img src={posterUrl} alt={rm.movie.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-muted">
+                          <span className="text-muted-foreground text-sm">Sem imagem</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3 space-y-1.5">
+                      <h3 className="truncate text-sm font-semibold text-card-foreground">{rm.movie.title}</h3>
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star key={s} className={`h-3.5 w-3.5 ${s <= rm.rating ? "fill-star text-star" : "fill-transparent text-star-empty"}`} />
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <CalendarIcon className="h-3 w-3" />
+                        <span>{formattedDate}</span>
+                      </div>
+                      {rm.platform && (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <PlatformBadge value={rm.platform} />
+                          <span>{PLATFORMS.find((p) => p.value === rm.platform)?.label || rm.platform}</span>
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
 
-              return (
-                <Link
-                  key={rm.movie.id}
-                  to={`/movie/${rm.movie.id}`}
-                  className="group rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+            {totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
                 >
-                  <div className="aspect-[2/3] overflow-hidden">
-                    {posterUrl ? (
-                      <img
-                        src={posterUrl}
-                        alt={rm.movie.title}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        loading="lazy"
-                      />
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((page) =>
+                    page === 1 ||
+                    page === totalPages ||
+                    Math.abs(page - currentPage) <= 1
+                  )
+                  .reduce<(number | "...")[]>((acc, page, idx, arr) => {
+                    if (idx > 0 && page - (arr[idx - 1] as number) > 1) acc.push("...");
+                    acc.push(page);
+                    return acc;
+                  }, [])
+                  .map((item, idx) =>
+                    item === "..." ? (
+                      <span key={`ellipsis-${idx}`} className="px-1 text-muted-foreground text-sm">...</span>
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-muted">
-                        <span className="text-muted-foreground text-sm">Sem imagem</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3 space-y-1.5">
-                    <h3 className="truncate text-sm font-semibold text-card-foreground">
-                      {rm.movie.title}
-                    </h3>
-                    <div className="flex items-center gap-0.5">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star
-                          key={s}
-                          className={`h-3.5 w-3.5 ${s <= rm.rating
-                              ? "fill-star text-star"
-                              : "fill-transparent text-star-empty"
-                            }`}
-                        />
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <CalendarIcon className="h-3 w-3" />
-                      <span>{formattedDate}</span>
-                    </div>
-                    {rm.platform && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <PlatformBadge value={rm.platform} />
-                        <span>{PLATFORMS.find((p) => p.value === rm.platform)?.label || rm.platform}</span>
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                      <Button
+                        key={item}
+                        variant={currentPage === item ? "default" : "outline"}
+                        size="sm"
+                        className="w-9"
+                        onClick={() => setCurrentPage(item as number)}
+                      >
+                        {item}
+                      </Button>
+                    )
+                  )}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

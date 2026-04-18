@@ -32,6 +32,11 @@ public class UserController {
 
 	private final UserService userService;
 
+	@GetMapping("/me")
+	public ResponseEntity<String> currentUser() {
+		return ResponseEntity.ok(userService.currentUser());
+	}
+	
 	@GetMapping()
 	public ResponseEntity<UserDetailsDTO> userDetails() {
 		UserDetailsDTO result = userService.showUserDetails();

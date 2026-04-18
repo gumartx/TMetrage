@@ -223,7 +223,7 @@ public class RatingService {
 			return List.of();
 		}
 
-		List<Rating> ratings = ratingRepository.findByUserIdAndMovieIdIn(user.getId(), movieIds);
+		List<Rating> ratings = ratingRepository.findByIdUserIdAndIdMovieIdIn(user.getId(), movieIds);
 
 		Map<Long, Rating> ratingMap = ratings.stream().collect(Collectors.toMap(r -> r.getMovie().getId(), r -> r));
 

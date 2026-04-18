@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { Search, Star, Filter, ArrowLeft, Calendar as CalendarIcon } from "lucide-react";
+import { Search, Star, Filter, ArrowLeft, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import Navbar from "@/components/Navbar";
 import { Input } from "@/components/ui/input";
@@ -12,8 +12,7 @@ import { PLATFORMS, PlatformBadge } from "@/components/UserRating";
 import { getMovieDetails, getPosterUrl, type MovieDetails } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 import { Tv } from "lucide-react";
-import { apiRequest } from "@/lib/api";
-import { getUserRatingsByProfileName, type RatingResponse } from "@/lib/ratings";
+import { getUserRatingsByProfileName } from "@/lib/ratings";
 
 interface RatedMovie {
   movie: MovieDetails;
@@ -31,6 +30,8 @@ const DATE_PRESETS = [
   { label: "Personalizado", value: "custom" },
 ];
 
+const PAGE_SIZE = 10;
+
 const UserRatedMovies = () => {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ const UserRatedMovies = () => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [ratingFilter, setRatingFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (!username) return;
@@ -67,9 +69,7 @@ const UserRatedMovies = () => {
   }, [username]);
 
   const allGenres = new Map<number, string>();
-  ratedMovies.forEach((rm) =>
-    rm.movie.genres.forEach((g) => allGenres.set(g.id, g.name))
-  );
+  ratedMovies.forEach((rm) => rm.movie.genres.forEach((g) => allGenres.set(g.id, g.name)));
 
   const getDateRange = (): { from?: Date; to?: Date } => {
     if (datePreset === "custom") return { from: dateFrom, to: dateTo };
@@ -95,12 +95,17 @@ const UserRatedMovies = () => {
     const to = range.to
       ? new Date(range.to.getFullYear(), range.to.getMonth(), range.to.getDate(), 23, 59, 59, 999)
       : null;
-
-    const matchesDate =
-      (!range.from || ratingDate >= range.from) &&
-      (!to || ratingDate <= to);
+    const matchesDate = (!range.from || ratingDate >= range.from) && (!to || ratingDate <= to);
     return matchesSearch && matchesGenre && matchesPlatform && matchesRating && matchesDate;
   });
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const handleFilterChange = (fn: () => void) => {
+    fn();
+    setCurrentPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -110,17 +115,24 @@ const UserRatedMovies = () => {
           <button onClick={() => navigate(`/usuario/${username}`)} className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="font-display text-2xl font-bold text-foreground">Filmes avaliados por <span className="text-primary">{username}</span></h1>
-          <span className="text-sm text-muted-foreground">({ratedMovies.length})</span>
+          <h1 className="font-display text-2xl font-bold text-foreground">
+            Filmes avaliados por <span className="text-primary">{username}</span>
+          </h1>
+          <span className="text-sm text-muted-foreground">({filtered.length})</span>
         </div>
 
         <div className="flex flex-col gap-3 mb-6">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Pesquisar por nome do filme..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+              <Input
+                placeholder="Pesquisar por nome do filme..."
+                value={searchQuery}
+                onChange={(e) => handleFilterChange(() => setSearchQuery(e.target.value))}
+                className="pl-9"
+              />
             </div>
-            <Select value={genreFilter} onValueChange={setGenreFilter}>
+            <Select value={genreFilter} onValueChange={(v) => handleFilterChange(() => setGenreFilter(v))}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Gênero" />
@@ -132,7 +144,7 @@ const UserRatedMovies = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={platformFilter} onValueChange={setPlatformFilter}>
+            <Select value={platformFilter} onValueChange={(v) => handleFilterChange(() => setPlatformFilter(v))}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <Tv className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Plataforma" />
@@ -147,7 +159,7 @@ const UserRatedMovies = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={ratingFilter} onValueChange={setRatingFilter}>
+            <Select value={ratingFilter} onValueChange={(v) => handleFilterChange(() => setRatingFilter(v))}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <Star className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Nota" />
@@ -165,7 +177,10 @@ const UserRatedMovies = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={datePreset} onValueChange={(v) => { setDatePreset(v); if (v !== "custom") { setDateFrom(undefined); setDateTo(undefined); } }}>
+            <Select value={datePreset} onValueChange={(v) => handleFilterChange(() => {
+              setDatePreset(v);
+              if (v !== "custom") { setDateFrom(undefined); setDateTo(undefined); }
+            })}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Período" />
@@ -188,7 +203,7 @@ const UserRatedMovies = () => {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} disabled={(date) => date > new Date() || (dateTo ? date > dateTo : false)} initialFocus className={cn("p-3 pointer-events-auto")} />
+                  <Calendar mode="single" selected={dateFrom} onSelect={(d) => handleFilterChange(() => setDateFrom(d))} disabled={(date) => date > new Date() || (dateTo ? date > dateTo : false)} initialFocus className={cn("p-3 pointer-events-auto")} />
                 </PopoverContent>
               </Popover>
               <span className="text-sm text-muted-foreground">até</span>
@@ -200,11 +215,13 @@ const UserRatedMovies = () => {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={dateTo} onSelect={setDateTo} disabled={(date) => date > new Date() || (dateFrom ? date < dateFrom : false)} initialFocus className={cn("p-3 pointer-events-auto")} />
+                  <Calendar mode="single" selected={dateTo} onSelect={(d) => handleFilterChange(() => setDateTo(d))} disabled={(date) => date > new Date() || (dateFrom ? date < dateFrom : false)} initialFocus className={cn("p-3 pointer-events-auto")} />
                 </PopoverContent>
               </Popover>
               {(dateFrom || dateTo) && (
-                <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}>Limpar</Button>
+                <Button variant="ghost" size="sm" onClick={() => handleFilterChange(() => { setDateFrom(undefined); setDateTo(undefined); })}>
+                  Limpar
+                </Button>
               )}
             </div>
           )}
@@ -212,7 +229,7 @@ const UserRatedMovies = () => {
 
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {Array.from({ length: 10 }).map((_, i) => (
+            {Array.from({ length: PAGE_SIZE }).map((_, i) => (
               <div key={i} className="animate-pulse rounded-lg bg-muted aspect-[2/3]" />
             ))}
           </div>
@@ -224,43 +241,90 @@ const UserRatedMovies = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {filtered.map((rm) => {
-              const posterUrl = getPosterUrl(rm.movie.poster_path);
-              const formattedDate = new Date(rm.date + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
-              return (
-                <Link key={rm.movie.id} to={`/movie/${rm.movie.id}`} className="group rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
-                  <div className="aspect-[2/3] overflow-hidden">
-                    {posterUrl ? (
-                      <img src={posterUrl} alt={rm.movie.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {paginated.map((rm) => {
+                const posterUrl = getPosterUrl(rm.movie.poster_path);
+                const formattedDate = new Date(rm.date + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+                return (
+                  <Link key={rm.movie.id} to={`/movie/${rm.movie.id}`} className="group rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
+                    <div className="aspect-[2/3] overflow-hidden">
+                      {posterUrl ? (
+                        <img src={posterUrl} alt={rm.movie.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-muted">
+                          <span className="text-muted-foreground text-sm">Sem imagem</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3 space-y-1.5">
+                      <h3 className="truncate text-sm font-semibold text-card-foreground">{rm.movie.title}</h3>
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star key={s} className={`h-3.5 w-3.5 ${s <= rm.rating ? "fill-star text-star" : "fill-transparent text-star-empty"}`} />
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <CalendarIcon className="h-3 w-3" />
+                        <span>{formattedDate}</span>
+                      </div>
+                      {rm.platform && (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <PlatformBadge value={rm.platform} />
+                          <span>{PLATFORMS.find((p) => p.value === rm.platform)?.label || rm.platform}</span>
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                  .reduce<(number | "...")[]>((acc, page, idx, arr) => {
+                    if (idx > 0 && page - (arr[idx - 1] as number) > 1) acc.push("...");
+                    acc.push(page);
+                    return acc;
+                  }, [])
+                  .map((item, idx) =>
+                    item === "..." ? (
+                      <span key={`ellipsis-${idx}`} className="px-1 text-muted-foreground text-sm">...</span>
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-muted">
-                        <span className="text-muted-foreground text-sm">Sem imagem</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3 space-y-1.5">
-                    <h3 className="truncate text-sm font-semibold text-card-foreground">{rm.movie.title}</h3>
-                    <div className="flex items-center gap-0.5">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star key={s} className={`h-3.5 w-3.5 ${s <= rm.rating ? "fill-star text-star" : "fill-transparent text-star-empty"}`} />
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <CalendarIcon className="h-3 w-3" />
-                      <span>{formattedDate}</span>
-                    </div>
-                    {rm.platform && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <PlatformBadge value={rm.platform} />
-                        <span>{PLATFORMS.find((p) => p.value === rm.platform)?.label || rm.platform}</span>
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                      <Button
+                        key={item}
+                        variant={currentPage === item ? "default" : "outline"}
+                        size="sm"
+                        className="w-9"
+                        onClick={() => setCurrentPage(item as number)}
+                      >
+                        {item}
+                      </Button>
+                    )
+                  )}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

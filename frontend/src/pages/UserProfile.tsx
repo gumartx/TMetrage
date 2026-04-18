@@ -281,7 +281,6 @@ const UserProfile = () => {
           )}
         </div>
 
-        {/* Dropdowns lado a lado */}
         <div className="flex gap-4 mb-10">
           {/* Avaliações */}
           <Collapsible open={ratingsOpen} onOpenChange={setRatingsOpen} className="flex-1">

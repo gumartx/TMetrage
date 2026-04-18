@@ -8,7 +8,7 @@ import { getMovieDetails, searchMovies, getPosterUrl, getGenres } from "@/lib/tm
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { PLATFORMS, PlatformBadge } from "@/components/UserRating";
-import { getFollowing } from "@/lib/profile";
+import { getFollowing, getCurrentUserProfile } from "@/lib/profile"; // ✅ import adicionado
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getUserRatings, type RatingResponse } from "@/lib/ratings";
+import { getMovieRatingsList, getUserRatings, type RatingResponse } from "@/lib/ratings";
 import { getImageUrl } from "@/lib/files";
 
 const DATE_PRESETS = [
@@ -51,6 +51,7 @@ const ListDetail = () => {
   const [query, setQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [following, setFollowing] = useState<{ name: string; profileName: string; avatar: string }[]>([]);
+  const [currentProfileName, setCurrentProfileName] = useState<string | null>(null); // ✅ novo estado
 
   // Filters
   const [genreFilter, setGenreFilter] = useState("all");
@@ -72,6 +73,12 @@ const ListDetail = () => {
   };
 
   useEffect(() => {
+    getCurrentUserProfile()
+      .then((u) => setCurrentProfileName(u.profileName))
+      .catch(() => setCurrentProfileName(null));
+  }, []);
+
+  useEffect(() => {
     loadList();
   }, [id]);
 
@@ -82,38 +89,52 @@ const ListDetail = () => {
   }, [showShare]);
 
   useEffect(() => {
-    if (!list || sharedLists.length === 0) return;
-
-    const listShared = sharedLists.filter(sl => sl.list.id === list.id);
+    if (!list) return;
 
     const map: Record<number, UserMovieRating[]> = {};
+    const seen = new Set<string>();
 
     list.movies.forEach(movie => {
       map[movie.id] = [];
+    });
 
-      listShared.forEach(sl => {
-        sl.ratings?.forEach(r => {
-          if (r.movieId === movie.id && r.rating != null && r.rating > 0) {
-            map[movie.id].push({
+    const listShared = sharedLists.filter(
+      sl => Number(sl.list.id) === Number(list.id)
+    );
+
+    listShared.forEach(sl => {
+      (sl.ratings || []).forEach(r => {
+        if (
+          r.rating != null &&
+          r.rating > 0
+        ) {
+          const key = `${r.movieId}-${r.profileName}`;
+
+          if (!seen.has(key)) {
+            seen.add(key);
+
+            if (!map[r.movieId]) map[r.movieId] = [];
+
+            map[r.movieId].push({
               profileName: r.profileName,
               avatar: r.avatar,
               rating: r.rating,
               movieId: r.movieId,
             });
           }
-        });
+        }
       });
     });
 
     setSharedRatings(map);
-  }, [list, sharedLists]);
+  }, [list, sharedLists, currentProfileName]);
 
   useEffect(() => {
     if (!list?.movies) return;
 
     async function fetchRatings() {
       try {
-        const userRatings = await getUserRatings();
+        const userRatings = await getMovieRatingsList(list.id);
         const map: Record<number, RatingResponse> = {};
         userRatings.forEach((r) => {
           map[r.movieId] = r;
@@ -161,7 +182,7 @@ const ListDetail = () => {
     };
 
     loadShared();
-  }, []);
+  }, [list]);
 
   const toggleUserSelection = (profileName: string) => {
     setSelectedUsers((prev) =>
@@ -174,7 +195,6 @@ const ListDetail = () => {
 
     const map = new Map<string, { profileName: string; name: string; avatar: string | null }>();
 
-    // Usuários que a lista foi compartilhada
     sharedLists
       .filter(sl => sl.list.id === list.id)
       .flatMap(sl => sl.sharedTo)
@@ -182,7 +202,6 @@ const ListDetail = () => {
         if (!map.has(u.profileName)) map.set(u.profileName, u);
       });
 
-    // Usuários que deram notas (incluindo a nova conta)
     list.movies.forEach(movie => {
       (sharedRatings[movie.id] || []).forEach(r => {
         if (!map.has(r.profileName)) {
@@ -202,19 +221,13 @@ const ListDetail = () => {
     if (!list) return [];
 
     const sharedSet = new Set(sharedUsers.map(u => u.profileName));
-
-    const availableUsers = following.filter(
-      u => !sharedSet.has(u.profileName)
-    );
+    const availableUsers = following.filter(u => !sharedSet.has(u.profileName));
 
     if (!shareSearch.trim()) return availableUsers;
 
     const q = shareSearch.toLowerCase();
-
     return availableUsers.filter(
-      u =>
-        u.name.toLowerCase().includes(q) ||
-        u.profileName.toLowerCase().includes(q)
+      u => u.name.toLowerCase().includes(q) || u.profileName.toLowerCase().includes(q)
     );
   }, [following, shareSearch, list, sharedUsers]);
 
@@ -254,34 +267,26 @@ const ListDetail = () => {
 
   const allGenres = useMemo(() => {
     if (!list || !genres) return new Map<number, string>();
-
     const map = new Map<number, string>();
-
     list.movies.forEach((movie) => {
       const gIds = movieGenres[movie.id] || [];
-
       gIds.forEach((gid) => {
         const g = genres.find((g) => g.id === gid);
         if (g) map.set(gid, g.name);
       });
     });
-
     return map;
   }, [list, genres, movieGenres]);
 
   const genreChartData = useMemo(() => {
     if (!list || !genres) return [];
-
     const counts: Record<number, number> = {};
-
     list.movies.forEach((movie) => {
       const gIds = movieGenres[movie.id] || [];
-
       gIds.forEach((gid) => {
         counts[gid] = (counts[gid] || 0) + 1;
       });
     });
-
     return Object.entries(counts)
       .map(([id, count]) => ({
         name: genres.find((g) => g.id === Number(id))?.name || `ID ${id}`,
@@ -291,7 +296,6 @@ const ListDetail = () => {
   }, [list, genres, movieGenres]);
 
   const totalMovies = list?.movies.length ?? 0;
-
   const totalGenres = genreChartData.length;
 
   const getDateRange = (): { from?: Date; to?: Date } => {
@@ -326,13 +330,11 @@ const ListDetail = () => {
       if (datePreset !== "all" && rating?.createdAt) {
         const range = getDateRange();
         const ratingDate = new Date(rating.createdAt + "T00:00:00");
-
         if (range.from) {
           const from = new Date(range.from);
           from.setHours(0, 0, 0, 0);
           if (ratingDate < from) return false;
         }
-
         if (range.to) {
           const to = new Date(range.to);
           to.setHours(0, 0, 0, 0);
@@ -354,9 +356,7 @@ const ListDetail = () => {
     });
   }, [list, movieRatings, movieGenres, genreFilter, platformFilter, datePreset, dateFrom, dateTo, ratingFilter, userFilter]);
 
-  const handleSearch = () => {
-    setSearchTerm(query);
-  };
+  const handleSearch = () => setSearchTerm(query);
 
   const handleAddMovie = async (movie: { id: number; title: string; poster_path: string | null; vote_average: number; genre_ids: number[] }) => {
     if (!id) return;
@@ -482,7 +482,10 @@ const ListDetail = () => {
                                 borderRadius: "8px",
                                 color: "white",
                               }}
-                              formatter={(value: number) => [<span style={{ color: "white" }}>{`${value} filme${value > 1 ? "s" : ""}`}</span>, <span style={{ color: "white" }}>Quantidade</span>]}
+                              formatter={(value: number) => [
+                                <span style={{ color: "white" }}>{`${value} filme${value > 1 ? "s" : ""}`}</span>,
+                                <span style={{ color: "white" }}>Quantidade</span>
+                              ]}
                               labelStyle={{ color: "white" }}
                             />
                             <Legend
@@ -498,7 +501,6 @@ const ListDetail = () => {
                           <p className="text-xs text-muted-foreground">Filmes na lista</p>
                           <p className="text-2xl font-bold text-foreground">{totalMovies}</p>
                         </div>
-
                         <div className="rounded-lg border border-border bg-card p-4 text-center">
                           <p className="text-xs text-muted-foreground">Gêneros diferentes</p>
                           <p className="text-2xl font-bold text-foreground">{totalGenres}</p>
@@ -514,10 +516,7 @@ const ListDetail = () => {
             {list.owner !== false && (
               <Dialog open={showShare} onOpenChange={(v) => {
                 setShowShare(v);
-                if (!v) {
-                  setShareSearch("");
-                  setSelectedUsers([]);
-                }
+                if (!v) { setShareSearch(""); setSelectedUsers([]); }
               }}>
                 <DialogTrigger asChild>
                   <Button size="sm" variant="outline">
@@ -531,7 +530,6 @@ const ListDetail = () => {
                       Compartilhar Lista
                     </DialogTitle>
                   </DialogHeader>
-
                   <div className="flex gap-2 pt-2">
                     <div className="flex flex-1 items-center rounded-md border border-border bg-secondary">
                       <Search className="ml-3 h-4 w-4 text-muted-foreground" />
@@ -544,7 +542,6 @@ const ListDetail = () => {
                       />
                     </div>
                   </div>
-
                   <div className="mt-2 max-h-[300px] overflow-y-auto space-y-1">
                     {filteredFollowing.length > 0 ? (
                       filteredFollowing.map((user) => (
@@ -573,9 +570,7 @@ const ListDetail = () => {
                           </div>
                           <div className={cn(
                             "h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0",
-                            selectedUsers.includes(user.profileName)
-                              ? "border-primary bg-primary"
-                              : "border-muted-foreground"
+                            selectedUsers.includes(user.profileName) ? "border-primary bg-primary" : "border-muted-foreground"
                           )}>
                             {selectedUsers.includes(user.profileName) && (
                               <div className="h-2 w-2 rounded-full bg-primary-foreground" />
@@ -585,23 +580,15 @@ const ListDetail = () => {
                       ))
                     ) : (
                       <p className="text-sm text-muted-foreground text-center py-6">
-                        {following.length === 0
-                          ? "Você ainda não segue ninguém."
-                          : "Nenhum usuário encontrado."}
+                        {following.length === 0 ? "Você ainda não segue ninguém." : "Nenhum usuário encontrado."}
                       </p>
                     )}
                   </div>
-
                   {following.length > 0 && (
                     <div className="flex justify-end pt-2">
-                      <Button
-                        size="sm"
-                        disabled={selectedUsers.length === 0}
-                        onClick={handleShare}
-                      >
+                      <Button size="sm" disabled={selectedUsers.length === 0} onClick={handleShare}>
                         <Share2 className="mr-1.5 h-4 w-4" />
-                        Compartilhar
-                        {selectedUsers.length > 0 ? ` (${selectedUsers.length})` : ""}
+                        Compartilhar{selectedUsers.length > 0 ? ` (${selectedUsers.length})` : ""}
                       </Button>
                     </div>
                   )}
@@ -639,11 +626,7 @@ const ListDetail = () => {
                       return (
                         <div key={movie.id} className="flex items-center gap-3 rounded-md border border-border bg-card p-2">
                           {getPosterUrl(movie.poster_path, "w185") ? (
-                            <img
-                              src={getPosterUrl(movie.poster_path, "w185")!}
-                              alt={movie.title}
-                              className="h-16 w-11 rounded object-cover"
-                            />
+                            <img src={getPosterUrl(movie.poster_path, "w185")!} alt={movie.title} className="h-16 w-11 rounded object-cover" />
                           ) : (
                             <div className="flex h-16 w-11 items-center justify-center rounded bg-muted">
                               <Film className="h-4 w-4 text-muted-foreground" />
@@ -682,11 +665,9 @@ const ListDetail = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os gêneros</SelectItem>
-                  {Array.from(allGenres.entries())
-                    .sort(([, a], [, b]) => a.localeCompare(b))
-                    .map(([id, name]) => (
-                      <SelectItem key={id} value={String(id)}>{name}</SelectItem>
-                    ))}
+                  {Array.from(allGenres.entries()).sort(([, a], [, b]) => a.localeCompare(b)).map(([id, name]) => (
+                    <SelectItem key={id} value={String(id)}>{name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
@@ -700,10 +681,7 @@ const ListDetail = () => {
                   <SelectItem value="none">Não informado</SelectItem>
                   {PLATFORMS.map((p) => (
                     <SelectItem key={p.value} value={p.value}>
-                      <span className="flex items-center gap-2">
-                        <PlatformBadge value={p.value} />
-                        {p.label}
-                      </span>
+                      <span className="flex items-center gap-2"><PlatformBadge value={p.value} />{p.label}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -780,14 +758,7 @@ const ListDetail = () => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateFrom}
-                      onSelect={setDateFrom}
-                      disabled={(date) => date > new Date() || (dateTo ? date > dateTo : false)}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
+                    <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} disabled={(date) => date > new Date() || (dateTo ? date > dateTo : false)} initialFocus className={cn("p-3 pointer-events-auto")} />
                   </PopoverContent>
                 </Popover>
                 <span className="text-sm text-muted-foreground">até</span>
@@ -799,20 +770,11 @@ const ListDetail = () => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateTo}
-                      onSelect={setDateTo}
-                      disabled={(date) => date > new Date() || (dateFrom ? date < dateFrom : false)}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
+                    <Calendar mode="single" selected={dateTo} onSelect={setDateTo} disabled={(date) => date > new Date() || (dateFrom ? date < dateFrom : false)} initialFocus className={cn("p-3 pointer-events-auto")} />
                   </PopoverContent>
                 </Popover>
                 {(dateFrom || dateTo) && (
-                  <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}>
-                    Limpar
-                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}>Limpar</Button>
                 )}
               </div>
             )}
@@ -825,9 +787,7 @@ const ListDetail = () => {
           <div className="mt-20 flex flex-col items-center text-center">
             <Film className="h-16 w-16 text-muted-foreground" />
             <p className="mt-4 text-lg font-medium text-muted-foreground">Lista vazia</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Adicione filmes usando o botão acima
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">Adicione filmes usando o botão acima</p>
           </div>
         ) : filteredMovies.length === 0 ? (
           <div className="mt-20 flex flex-col items-center text-center">
@@ -843,6 +803,10 @@ const ListDetail = () => {
                 ? new Date(rating.createdAt + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
                 : null;
 
+              const othersRatings = (sharedRatings[movie.id] || []).filter(
+                (r) => r.profileName !== currentProfileName
+              );
+
               return (
                 <div key={movie.id} className="group relative overflow-hidden rounded-lg border border-border bg-card animate-fade-in">
                   <Link to={`/movie/${movie.id}`} className="block">
@@ -857,37 +821,25 @@ const ListDetail = () => {
                     </div>
                     <div className="p-3 space-y-1.5">
                       <h3 className="truncate text-sm font-semibold text-card-foreground">{movie.title}</h3>
-                      {/* User ratings for shared lists */}
-                      {sharedRatings[movie.id]?.length > 0 && (
-                        <div className="mt-2 space-y-2">
-                          {sharedRatings[movie.id].map((rating) => (
-                            <div
-                              key={rating.profileName}
-                              className="flex items-center gap-2 text-xs text-muted-foreground"
-                            >
-                              {/* Avatar */}
-                              <div className="h-6 w-6 rounded-full overflow-hidden bg-muted shrink-0">
-                                {rating.avatar ? (
-                                  <img
-                                    src={getImageUrl(rating.avatar)}
-                                    alt={rating.profileName}
-                                    className="h-full w-full object-cover"
-                                  />
+
+                      {othersRatings.length > 0 && (
+                        <div className="space-y-1.5 pb-1.5 border-b border-border">
+                          {othersRatings.map((r) => (
+                            <div key={r.profileName} className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <div className="h-5 w-5 rounded-full overflow-hidden bg-muted shrink-0">
+                                {r.avatar ? (
+                                  <img src={getImageUrl(r.avatar)} alt={r.profileName} className="h-full w-full object-cover" />
                                 ) : (
-                                  <div className="flex items-center justify-center h-full w-full text-[10px]">
-                                    {rating.profileName.charAt(1).toUpperCase()}
+                                  <div className="flex items-center justify-center h-full w-full text-[9px]">
+                                    {r.profileName.charAt(0).toUpperCase()}
                                   </div>
                                 )}
                               </div>
-                              {/* Estrelas */}
-                              <div className="flex items-center">
+                              <div className="flex items-center gap-0.5">
                                 {Array.from({ length: 5 }).map((_, i) => (
                                   <Star
                                     key={i}
-                                    className={`h-3.5 w-3.5 ${i < rating.rating
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "text-muted-foreground"
-                                      }`}
+                                    className={`h-3 w-3 ${i < r.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`}
                                   />
                                 ))}
                               </div>
@@ -895,16 +847,14 @@ const ListDetail = () => {
                           ))}
                         </div>
                       )}
+
                       {rating && (
                         <>
                           <div className="flex items-center gap-0.5">
                             {[1, 2, 3, 4, 5].map((s) => (
                               <Star
                                 key={s}
-                                className={`h-3.5 w-3.5 ${s <= rating.rating
-                                  ? "fill-star text-star"
-                                  : "fill-transparent text-star-empty"
-                                  }`}
+                                className={`h-3.5 w-3.5 ${s <= rating.rating ? "fill-star text-star" : "fill-transparent text-star-empty"}`}
                               />
                             ))}
                           </div>
@@ -935,7 +885,6 @@ const ListDetail = () => {
             })}
           </div>
         )}
-
       </main>
     </div>
   );

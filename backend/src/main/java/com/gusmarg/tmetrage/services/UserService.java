@@ -282,10 +282,18 @@ public class UserService implements UserDetailsService {
 	    }
 	}
 	
+
+	@Transactional(readOnly = true)
+	public String currentUser() {
+		User user = authService.getAuthenticatedUser();
+		return user.getProfileName();
+	}
+	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		return userRepository.findByEmail(username).orElseThrow(() -> new ResourceNotFoundException("Email não cadastrado"));
 	}
+
 
 
 }

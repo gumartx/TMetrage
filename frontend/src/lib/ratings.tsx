@@ -25,7 +25,21 @@ export async function getRecentRatings(username: string): Promise<RatingResponse
 }
 
 export async function getMovieRatingsList(listId: string): Promise<RatingResponse[]> {
-  return apiRequest<RatingResponse[]>(`/ratings/${listId}/lists`, { auth: true });
+  const raw = await apiRequest<{ id: number; title: string; poster_path: string | null; rating: number | null; platform: string | null; createdAt: string }[]>(
+    `/ratings/${listId}/lists`,
+    { auth: true }
+  );
+
+  return raw
+    .filter((r) => r.rating != null)
+    .map((r) => ({
+      movieId: r.id,
+      movieTitle: r.title,
+      posterPath: r.poster_path,
+      rating: r.rating!,
+      platform: r.platform ?? undefined,
+      createdAt: r.createdAt,
+    }));
 }
 
 // Fetch a single rating by movie

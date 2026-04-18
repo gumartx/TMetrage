@@ -1,5 +1,6 @@
 package com.gusmarg.tmetrage.dto;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import com.gusmarg.tmetrage.entities.Movie;
@@ -21,6 +22,7 @@ public class RatedMovieDTO {
     private String title;
     private String poster_path;
     private Double rating;
+    private LocalDate createdAt;
     private Platform platform;
 
     public RatedMovieDTO(Movie movie, List<Rating> ratings) {
@@ -36,9 +38,11 @@ public class RatedMovieDTO {
         if (userRating != null) {
             this.rating = userRating.getScore();
             this.platform = userRating.getPlatform();
+            this.createdAt = userRating.getCreatedAt();
         } else {
             this.rating = null;
             this.platform = null;
+            this.createdAt = null;
         }
     }
 
@@ -50,6 +54,7 @@ public class RatedMovieDTO {
         if (rating != null) {
             this.rating = rating.getScore();
             this.platform = rating.getPlatform();
+            this.createdAt = rating.getCreatedAt();
         }
     }
 
