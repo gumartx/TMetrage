@@ -803,8 +803,10 @@ const ListDetail = () => {
                 ? new Date(rating.createdAt + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
                 : null;
 
+              const normalize = (p?: string | null) => p?.replace(/^@/, "").toLowerCase() ?? "";
+
               const othersRatings = (sharedRatings[movie.id] || []).filter(
-                (r) => r.profileName !== currentProfileName
+                (r) => normalize(r.profileName) !== normalize(currentProfileName)
               );
 
               return (
@@ -826,23 +828,40 @@ const ListDetail = () => {
                         <div className="space-y-1.5 pb-1.5 border-b border-border">
                           {othersRatings.map((r) => (
                             <div key={r.profileName} className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <div className="h-5 w-5 rounded-full overflow-hidden bg-muted shrink-0">
-                                {r.avatar ? (
-                                  <img src={getImageUrl(r.avatar)} alt={r.profileName} className="h-full w-full object-cover" />
-                                ) : (
-                                  <div className="flex items-center justify-center h-full w-full text-[9px]">
-                                    {r.profileName.charAt(0).toUpperCase()}
-                                  </div>
-                                )}
+
+                              <div className="relative h-5 w-5 shrink-0">
+
+                                <Link to={`/usuario/${r.profileName}`} className="peer block h-5 w-5 rounded-full overflow-hidden bg-muted">
+                                  {r.avatar ? (
+                                    <img
+                                      src={getImageUrl(r.avatar)}
+                                      alt={r.profileName}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="flex items-center justify-center h-full w-full text-[9px]">
+                                      {r.profileName.charAt(0).toUpperCase()}
+                                    </div>
+                                  )}
+                                </Link>
+
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden peer-hover:block whitespace-nowrap rounded bg-black px-2 py-1 text-[10px] text-white shadow pointer-events-none">
+                                  {r.profileName}
+                                </div>
                               </div>
+
                               <div className="flex items-center gap-0.5">
                                 {Array.from({ length: 5 }).map((_, i) => (
                                   <Star
                                     key={i}
-                                    className={`h-3 w-3 ${i < r.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`}
+                                    className={`h-3 w-3 ${i < r.rating
+                                        ? "fill-yellow-400 text-yellow-400"
+                                        : "text-muted-foreground"
+                                      }`}
                                   />
                                 ))}
                               </div>
+
                             </div>
                           ))}
                         </div>

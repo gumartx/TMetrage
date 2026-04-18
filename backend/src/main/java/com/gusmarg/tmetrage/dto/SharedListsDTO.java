@@ -1,6 +1,7 @@
 package com.gusmarg.tmetrage.dto;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.gusmarg.tmetrage.entities.ListShare;
@@ -26,31 +27,23 @@ public class SharedListsDTO {
 	private String direction;
 
 	public SharedListsDTO(ListShare share, User user) {
-
 	    this.id = share.getId();
-
 	    boolean owner = share.getSharedBy().getId().equals(user.getId());
-
 	    this.list = new MovieListResponseDTO(share.getList(), user, owner);
-
 	    this.sharedBy = new UserSearchDTO(share.getSharedBy());
-
 	    this.sharedTo = share.getSharedTo().stream()
 	                          .map(UserSearchDTO::new)
 	                          .toList();
-
 	    this.sharedAt = share.getSharedAt();
-
 	    this.direction = owner ? "sent" : "received";
 
+	    List<User> allParticipants = new ArrayList<>();
+	    allParticipants.add(share.getSharedBy());
+	    allParticipants.addAll(share.getSharedTo());
+
 	    this.ratings = share.getList().getMovies().stream()
-	        .flatMap(movie -> this.sharedTo.stream().map(userDto -> {
-	            User sharedUser = share.getSharedTo().stream()
-	                                   .filter(u -> u.getProfileName().equals(userDto.getProfileName()))
-	                                   .findFirst()
-	                                   .orElse(null);
-	            return new UsersRatingsDTO(sharedUser, movie);
-	        }))
+	        .flatMap(movie -> allParticipants.stream()
+	            .map(participant -> new UsersRatingsDTO(participant, movie)))
 	        .toList();
 	}
 }

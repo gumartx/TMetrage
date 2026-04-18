@@ -21,7 +21,13 @@ export interface UserProfile {
 }
 
 export async function getCurrentUserProfile(): Promise<{ profileName: string }> {
-  return apiRequest("/users/me", { auth: true });
+  const data = await apiRequest<{ profileName: string }>("/users/me", { auth: true });
+  return {
+    ...data,
+    profileName: data.profileName.startsWith("@")
+      ? data.profileName
+      : `@${data.profileName}`,
+  };
 }
 
 export async function getMyProfile(): Promise<UserProfile> {
