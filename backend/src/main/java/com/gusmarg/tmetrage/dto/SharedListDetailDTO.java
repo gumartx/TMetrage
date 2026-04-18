@@ -16,16 +16,17 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SharedListsDTO {
+public class SharedListDetailDTO {
 
 	private Long id;
 	private MovieListResponseDTO list;
 	private UserSearchDTO sharedBy;
 	private List<UserSearchDTO> sharedTo;
+	private List<UsersRatingsDTO> ratings;
 	private LocalDateTime sharedAt;
 	private String direction;
 
-	public SharedListsDTO(ListShare share, User user) {
+	public SharedListDetailDTO(ListShare share, User user) {
 	    this.id = share.getId();
 	    boolean owner = share.getSharedBy().getId().equals(user.getId());
 	    this.list = new MovieListResponseDTO(share.getList(), user, owner);
@@ -39,6 +40,10 @@ public class SharedListsDTO {
 	    List<User> allParticipants = new ArrayList<>();
 	    allParticipants.add(share.getSharedBy());
 	    allParticipants.addAll(share.getSharedTo());
-	}
 
+	    this.ratings = share.getList().getMovies().stream()
+	        .flatMap(movie -> allParticipants.stream()
+	            .map(participant -> new UsersRatingsDTO(participant, movie)))
+	        .toList();
+	}
 }

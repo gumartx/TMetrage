@@ -97,6 +97,10 @@ export async function getSharedLists(): Promise<SharedList[]> {
   return apiRequest<SharedList[]>("/lists/shared", { auth: true });
 }
 
+export async function getSharedList(listId: string): Promise<SharedList> {
+  return apiRequest<SharedList>(`/lists/${listId}/shared`, { auth: true });
+}
+
 export async function getPublicListsByUser(profileName: string): Promise<MovieList[]> {
   return apiRequest<MovieList[]>(`/lists/public/${encodeURIComponent(profileName)}`);
 }

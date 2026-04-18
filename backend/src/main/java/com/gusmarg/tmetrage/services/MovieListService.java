@@ -12,6 +12,7 @@ import com.gusmarg.tmetrage.dto.MovieListDetailsDTO;
 import com.gusmarg.tmetrage.dto.MovieListResponseDTO;
 import com.gusmarg.tmetrage.dto.MovieListUpdateDTO;
 import com.gusmarg.tmetrage.dto.ShareListToDTO;
+import com.gusmarg.tmetrage.dto.SharedListDetailDTO;
 import com.gusmarg.tmetrage.dto.SharedListsDTO;
 import com.gusmarg.tmetrage.entities.ListShare;
 import com.gusmarg.tmetrage.entities.Movie;
@@ -255,6 +256,18 @@ public class MovieListService {
 		log.info("{} lista(s) compartilhada(s) encontrada(s)", shares.size());
 
 		return shares.stream().map(share -> new SharedListsDTO(share, user)).toList();
+	}
+	
+	@Transactional(readOnly = true)
+	public SharedListDetailDTO findSharedList(Long listId) {
+
+		User user = authService.getAuthenticatedUser();
+
+		ListShare share = listShareRepository.findByListId(listId).orElseThrow(() -> new ResourceNotFoundException("Lista compartilhada não encontrada"));
+
+		log.info("Detalhes da lista compartilhada '{}'", share.getList().getName());
+
+		return new SharedListDetailDTO(share, user);
 	}
 
 	private void validateListPermission(MovieList list, User user) {

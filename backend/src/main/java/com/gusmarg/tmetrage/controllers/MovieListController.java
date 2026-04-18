@@ -21,6 +21,7 @@ import com.gusmarg.tmetrage.dto.MovieListDetailsDTO;
 import com.gusmarg.tmetrage.dto.MovieListResponseDTO;
 import com.gusmarg.tmetrage.dto.MovieListUpdateDTO;
 import com.gusmarg.tmetrage.dto.ShareListToDTO;
+import com.gusmarg.tmetrage.dto.SharedListDetailDTO;
 import com.gusmarg.tmetrage.dto.SharedListsDTO;
 import com.gusmarg.tmetrage.services.MovieListService;
 
@@ -89,6 +90,12 @@ public class MovieListController {
 	@GetMapping("/shared")
 	public ResponseEntity<List<SharedListsDTO>> getSharedLists(){
 	    List<SharedListsDTO> result = movieListService.findSharedLists();
+	    return ResponseEntity.ok(result);
+	}
+	
+	@GetMapping("/{listId}/shared")
+	public ResponseEntity<SharedListDetailDTO> getSharedList(@PathVariable Long listId){
+	    SharedListDetailDTO result = movieListService.findSharedList(listId);
 	    return ResponseEntity.ok(result);
 	}
 	

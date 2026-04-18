@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Trash2, Film, Search, BarChart3, Star, Calendar as CalendarIcon, Filter, Share2, User } from "lucide-react";
 import { Tv } from "lucide-react";
 import { format } from "date-fns";
-import { getList, getSharedLists, removeMovieFromList, addMovieToList, shareList, type MovieList, type MovieListItem, type SharedList, type UserMovieRating } from "@/lib/movieLists";
+import { getList, getSharedLists, removeMovieFromList, addMovieToList, shareList, type MovieList, type MovieListItem, type SharedList, type UserMovieRating, getSharedList } from "@/lib/movieLists";
 import { getMovieDetails, searchMovies, getPosterUrl, getGenres } from "@/lib/tmdb";
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
@@ -39,7 +39,7 @@ const ListDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [list, setList] = useState<MovieList | undefined>();
-  const [sharedLists, setSharedLists] = useState<SharedList[]>([]);
+  const [sharedList, setSharedList] = useState<SharedList | null>(null);
   const [movieGenres, setMovieGenres] = useState<Record<number, number[]>>({});
   const [movieRatings, setRatings] = useState<Record<number, RatingResponse>>({});
   const [showChart, setShowChart] = useState(false);
@@ -98,9 +98,7 @@ const ListDetail = () => {
       map[movie.id] = [];
     });
 
-    const listShared = sharedLists.filter(
-      sl => Number(sl.list.id) === Number(list.id)
-    );
+    const listShared = sharedList ? [sharedList] : [];
 
     listShared.forEach(sl => {
       (sl.ratings || []).forEach(r => {
@@ -127,7 +125,7 @@ const ListDetail = () => {
     });
 
     setSharedRatings(map);
-  }, [list, sharedLists, currentProfileName]);
+  }, [list, sharedList, currentProfileName]);
 
   useEffect(() => {
     if (!list?.movies) return;
@@ -172,17 +170,19 @@ const ListDetail = () => {
   }, [list]);
 
   useEffect(() => {
+    if (!list?.id) return;
+
     const loadShared = async () => {
       try {
-        const data = await getSharedLists();
-        setSharedLists(data);
+        const data = await getSharedList(list.id);
+        setSharedList(data);
       } catch (err) {
         console.error(err);
       }
     };
 
     loadShared();
-  }, [list]);
+  }, [list?.id]);
 
   const toggleUserSelection = (profileName: string) => {
     setSelectedUsers((prev) =>
@@ -194,13 +194,6 @@ const ListDetail = () => {
     if (!list) return [];
 
     const map = new Map<string, { profileName: string; name: string; avatar: string | null }>();
-
-    sharedLists
-      .filter(sl => sl.list.id === list.id)
-      .flatMap(sl => sl.sharedTo)
-      .forEach(u => {
-        if (!map.has(u.profileName)) map.set(u.profileName, u);
-      });
 
     list.movies.forEach(movie => {
       (sharedRatings[movie.id] || []).forEach(r => {
@@ -215,7 +208,7 @@ const ListDetail = () => {
     });
 
     return Array.from(map.values());
-  }, [list, sharedLists, sharedRatings]);
+  }, [list, sharedList, sharedRatings]);
 
   const filteredFollowing = useMemo(() => {
     if (!list) return [];
@@ -240,8 +233,8 @@ const ListDetail = () => {
       setShareSearch("");
       setShowShare(false);
 
-      const updatedSharedLists = await getSharedLists();
-      setSharedLists(updatedSharedLists);
+      const updatedSharedLists = await getSharedList(list.id);
+      setSharedList(updatedSharedLists);
     } catch (err) {
       console.error("Erro ao compartilhar lista:", err);
     }
@@ -855,8 +848,8 @@ const ListDetail = () => {
                                   <Star
                                     key={i}
                                     className={`h-3 w-3 ${i < r.rating
-                                        ? "fill-yellow-400 text-yellow-400"
-                                        : "text-muted-foreground"
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-muted-foreground"
                                       }`}
                                   />
                                 ))}

@@ -1,6 +1,7 @@
 package com.gusmarg.tmetrage.repositories;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -26,5 +27,7 @@ public interface ListShareRepository extends JpaRepository<ListShare, Long> {
 	List<ListShare> findBySharedBy(User user);
 	
 	List<ListShare> findBySharedByIdOrSharedToId(Long sharedById, Long sharedToId);
+
+	Optional<ListShare> findByListId(Long listId);
 
 }
