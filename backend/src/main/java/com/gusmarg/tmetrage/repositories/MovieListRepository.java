@@ -92,14 +92,23 @@ public interface MovieListRepository extends JpaRepository<MovieList, Long> {
 	List<MovieList> findSharedListsByUser(Long userId);
 
 	@Query("""
-		    SELECT DISTINCT l
-		    FROM MovieList l
-		    LEFT JOIN FETCH l.sharedTo s
-		    LEFT JOIN FETCH l.movies
-		    JOIN FETCH l.user
-		    WHERE l.id = :listId
-		    AND (l.user.id = :userId OR s.id = :userId)
-		""")
+			    SELECT DISTINCT l
+			    FROM MovieList l
+			    LEFT JOIN FETCH l.sharedTo
+			    LEFT JOIN FETCH l.movies
+			    JOIN FETCH l.user
+			    WHERE l.id = :listId
+			    AND (
+			        l.user.id = :userId
+			        OR EXISTS (
+			            SELECT 1
+			            FROM MovieList l2
+			            JOIN l2.sharedTo s2
+			            WHERE l2.id = l.id
+			            AND s2.id = :userId
+			        )
+			    )
+			""")
 	Optional<MovieList> findSharedListDetail(Long listId, Long userId);
 
 }

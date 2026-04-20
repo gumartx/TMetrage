@@ -63,11 +63,18 @@ const ListDetail = () => {
 
   const loadList = async () => {
     if (!id) return;
+
     try {
       const data = await getList(id);
       setList(data);
     } catch {
-      setList(undefined);
+      try {
+        const shared = await getSharedListDetail(id);
+        setSharedList(shared);
+        setList(shared.list);
+      } catch {
+        setList(undefined);
+      }
     }
   };
 
@@ -752,7 +759,7 @@ const ListDetail = () => {
                 : [];
 
               return (
-                <div key={movie.id} className="group relative overflow-hidden rounded-lg border border-border bg-card animate-fade-in">
+                <div key={movie.id} className="group relative overflow-visible rounded-lg border border-border bg-card animate-fade-in">
                   <Link to={`/movie/${movie.id}`} className="block">
                     <div className="aspect-[2/3] overflow-hidden">
                       {url ? (
@@ -773,7 +780,10 @@ const ListDetail = () => {
 
                               <div className="relative h-5 w-5 shrink-0">
 
-                                <Link to={`/usuario/${r.profileName}`} className="peer block h-5 w-5 rounded-full overflow-hidden bg-muted">
+                                <Link
+                                  to={`/usuario/${r.profileName}`}
+                                  className="peer block h-5 w-5 rounded-full overflow-hidden bg-muted"
+                                >
                                   {r.avatar ? (
                                     <img
                                       src={getImageUrl(r.avatar)}
@@ -787,9 +797,23 @@ const ListDetail = () => {
                                   )}
                                 </Link>
 
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden peer-hover:block whitespace-nowrap rounded bg-black px-2 py-1 text-[10px] text-white shadow pointer-events-none">
+                                {/* Tooltip */}
+                                <div
+                                  className="
+              pointer-events-none
+              absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+              whitespace-nowrap
+              rounded-md bg-popover border border-border
+              px-2 py-1 text-[10px] text-popover-foreground
+              shadow-md
+              opacity-0 scale-95
+              transition-all duration-150
+              peer-hover:opacity-100 peer-hover:scale-100
+            "
+                                >
                                   {r.profileName}
                                 </div>
+
                               </div>
 
                               <div className="flex items-center gap-0.5">
@@ -797,8 +821,8 @@ const ListDetail = () => {
                                   <Star
                                     key={i}
                                     className={`h-3 w-3 ${i < r.rating
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "text-muted-foreground"
+                                        ? "fill-yellow-400 text-yellow-400"
+                                        : "text-muted-foreground"
                                       }`}
                                   />
                                 ))}
