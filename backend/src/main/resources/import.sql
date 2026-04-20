@@ -12,10 +12,10 @@ INSERT INTO tb_movie (id, poster_path, title) VALUES (1470130, '/mc3nj2DI1MZeFoA
 INSERT INTO tb_movie (id, poster_path, title) VALUES (1523145, '/hXNn25hE2SH2kHMPVOLjqDISSxf.jpg', 'Um Amor de Mentiras');
 INSERT INTO tb_movie (id, poster_path, title) VALUES (1641319, '/gGhjs14pomQA6N8parCw5Bl3qoh.jpg', 'O Atirador: Sem Nação');
 
-INSERT INTO tb_list (created_at, user_id, description, name, is_public) VALUES ('2026-04-08', 1, NULL, 'teste2', false);
-INSERT INTO tb_list (created_at, user_id, description, name, is_public) VALUES ('2026-04-08', 1, NULL, 'teste1', false);
-INSERT INTO tb_list (created_at, user_id, description, name, is_public) VALUES ('2026-04-08', 1, NULL, 'publica1', true);
-INSERT INTO tb_list (created_at, user_id, description, name, is_public) VALUES ('2026-04-08', 1, NULL, 'publica2', true);
+INSERT INTO tb_list (created_at, user_id, description, name, is_public, is_shared) VALUES ('2026-04-08', 1, NULL, 'teste2', false, false);
+INSERT INTO tb_list (created_at, user_id, description, name, is_public, is_shared) VALUES ('2026-04-08', 1, NULL, 'teste1', false, false);
+INSERT INTO tb_list (created_at, user_id, description, name, is_public, is_shared) VALUES ('2026-04-08', 1, NULL, 'publica1', true, false);
+INSERT INTO tb_list (created_at, user_id, description, name, is_public, is_shared) VALUES ('2026-04-08', 1, NULL, 'publica2', true, false);
 
 INSERT INTO tb_rating (created_at, score, movie_id, user_id, platform) VALUES ('2026-04-08', 4.0, 1523145, 1, 'GLOBOPLAY');
 INSERT INTO tb_rating (created_at, score, movie_id, user_id, platform) VALUES ('2026-04-08', 4.0, 83533, 1, NULL);

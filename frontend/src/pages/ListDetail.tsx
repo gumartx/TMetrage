@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Trash2, Film, Search, BarChart3, Star, Calendar as CalendarIcon, Filter, Share2, User } from "lucide-react";
 import { Tv } from "lucide-react";
 import { format } from "date-fns";
-import { getList, getSharedLists, removeMovieFromList, addMovieToList, shareList, type MovieList, type MovieListItem, type SharedList, type UserMovieRating, getSharedList } from "@/lib/movieLists";
+import { getList, getSharedLists, removeMovieFromList, addMovieToList, shareList, type MovieList, type MovieListItem, type SharedList, type UserMovieRating, getSharedListDetail } from "@/lib/movieLists";
 import { getMovieDetails, searchMovies, getPosterUrl, getGenres } from "@/lib/tmdb";
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
@@ -45,13 +45,12 @@ const ListDetail = () => {
   const [showChart, setShowChart] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [shareSearch, setShareSearch] = useState("");
-  const [sharedRatings, setSharedRatings] = useState<Record<number, UserMovieRating[]>>({});
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [following, setFollowing] = useState<{ name: string; profileName: string; avatar: string }[]>([]);
-  const [currentProfileName, setCurrentProfileName] = useState<string | null>(null); // ✅ novo estado
+  const [currentProfileName, setCurrentProfileName] = useState<string | null>(null);
 
   // Filters
   const [genreFilter, setGenreFilter] = useState("all");
@@ -87,45 +86,6 @@ const ListDetail = () => {
       getFollowing().then(setFollowing).catch(() => { });
     }
   }, [showShare]);
-
-  useEffect(() => {
-    if (!list) return;
-
-    const map: Record<number, UserMovieRating[]> = {};
-    const seen = new Set<string>();
-
-    list.movies.forEach(movie => {
-      map[movie.id] = [];
-    });
-
-    const listShared = sharedList ? [sharedList] : [];
-
-    listShared.forEach(sl => {
-      (sl.ratings || []).forEach(r => {
-        if (
-          r.rating != null &&
-          r.rating > 0
-        ) {
-          const key = `${r.movieId}-${r.profileName}`;
-
-          if (!seen.has(key)) {
-            seen.add(key);
-
-            if (!map[r.movieId]) map[r.movieId] = [];
-
-            map[r.movieId].push({
-              profileName: r.profileName,
-              avatar: r.avatar,
-              rating: r.rating,
-              movieId: r.movieId,
-            });
-          }
-        }
-      });
-    });
-
-    setSharedRatings(map);
-  }, [list, sharedList, currentProfileName]);
 
   useEffect(() => {
     if (!list?.movies) return;
@@ -174,7 +134,7 @@ const ListDetail = () => {
 
     const loadShared = async () => {
       try {
-        const data = await getSharedList(list.id);
+        const data = await getSharedListDetail(list.id);
         setSharedList(data);
       } catch (err) {
         console.error(err);
@@ -184,6 +144,12 @@ const ListDetail = () => {
     loadShared();
   }, [list?.id]);
 
+  const getMovieSharedRatings = (movieId: number) => {
+    if (!sharedList?.ratings) return [];
+
+    return sharedList.ratings.filter(r => r.movieId === movieId);
+  };
+
   const toggleUserSelection = (profileName: string) => {
     setSelectedUsers((prev) =>
       prev.includes(profileName) ? prev.filter((u) => u !== profileName) : [...prev, profileName]
@@ -191,24 +157,22 @@ const ListDetail = () => {
   };
 
   const sharedUsers = useMemo(() => {
-    if (!list) return [];
+    if (!sharedList?.ratings) return [];
 
-    const map = new Map<string, { profileName: string; name: string; avatar: string | null }>();
+    const map = new Map();
 
-    list.movies.forEach(movie => {
-      (sharedRatings[movie.id] || []).forEach(r => {
-        if (!map.has(r.profileName)) {
-          map.set(r.profileName, {
-            profileName: r.profileName,
-            name: r.profileName,
-            avatar: r.avatar ?? null
-          });
-        }
-      });
+    sharedList.ratings.forEach(r => {
+      if (!map.has(r.profileName)) {
+        map.set(r.profileName, {
+          profileName: r.profileName,
+          name: r.profileName,
+          avatar: r.avatar ?? null
+        });
+      }
     });
 
     return Array.from(map.values());
-  }, [list, sharedList, sharedRatings]);
+  }, [sharedList]);
 
   const filteredFollowing = useMemo(() => {
     if (!list) return [];
@@ -233,7 +197,7 @@ const ListDetail = () => {
       setShareSearch("");
       setShowShare(false);
 
-      const updatedSharedLists = await getSharedList(list.id);
+      const updatedSharedLists = await getSharedListDetail(list.id);
       setSharedList(updatedSharedLists);
     } catch (err) {
       console.error("Erro ao compartilhar lista:", err);
@@ -340,8 +304,8 @@ const ListDetail = () => {
         if (!rating || rating.rating !== Number(ratingFilter)) return false;
       }
       if (userFilter !== "all") {
-        const hasUserRating = (sharedRatings[movie.id] || []).some(
-          (ur) => ur.profileName === userFilter
+        const hasUserRating = sharedList?.ratings?.some(
+          (r) => r.movieId === movie.id && r.profileName === userFilter
         );
         if (!hasUserRating) return false;
       }
@@ -398,26 +362,6 @@ const ListDetail = () => {
 
         <div className="flex items-start justify-between gap-4">
           <div>
-            {list.ownerUser && (
-              <div className="mb-2 flex items-center gap-2">
-                <span className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                  {list.ownerUser.avatar ? (
-                    <img src={getImageUrl(list.ownerUser.avatar)} alt={list.ownerUser.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-[10px] font-medium text-muted-foreground">
-                      {list.ownerUser.name.charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </span>
-                <Link
-                  to={list.owner ? "/perfil" : `/usuario/${list.ownerUser.profileName}`}
-                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {list.ownerUser.profileName}
-                </Link>
-              </div>
-            )}
-
             <h1 className="font-display text-2xl font-bold text-foreground">{list.name}</h1>
             {list.description && (
               <p className="mt-1 text-sm text-muted-foreground">{list.description}</p>
@@ -798,9 +742,14 @@ const ListDetail = () => {
 
               const normalize = (p?: string | null) => p?.replace(/^@/, "").toLowerCase() ?? "";
 
-              const othersRatings = (sharedRatings[movie.id] || []).filter(
-                (r) => normalize(r.profileName) !== normalize(currentProfileName)
-              );
+              const othersRatings = (list.isShared)
+                ? (getMovieSharedRatings(movie.id) || []).filter(
+                  (r) =>
+                    normalize(r.profileName) !== normalize(currentProfileName) &&
+                    r.rating !== null &&
+                    r.rating !== undefined
+                )
+                : [];
 
               return (
                 <div key={movie.id} className="group relative overflow-hidden rounded-lg border border-border bg-card animate-fade-in">

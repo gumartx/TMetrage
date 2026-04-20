@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,7 +13,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -40,13 +38,21 @@ public class MovieList {
 	private LocalDate createdAt;
 	@Column(nullable = false)
     private boolean isPublic = false;
+	@Column(nullable = false)
+	private boolean isShared = false;
 	
 	@ManyToOne
 	@JoinColumn(name = "user_id")
 	private User user;
+
+    @ManyToMany
+    @JoinTable(
+        name = "tb_list_share_users",
+        joinColumns = @JoinColumn(name = "share_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> sharedTo = new HashSet<>();
 	
-	@OneToMany(mappedBy = "list", cascade = CascadeType.ALL, orphanRemoval = true)
-	private Set<ListShare> shares = new HashSet<>();
 	
 	@ManyToMany
 	@JoinTable(

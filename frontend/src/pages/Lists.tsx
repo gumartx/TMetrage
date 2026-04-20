@@ -104,20 +104,26 @@ const Lists = () => {
   };
 
   const isShared = (listId: string) => {
-    return sharedLists.some((s) => s.list.id === listId);
+    return sharedLists.some(
+      (s) => s.list.id === listId && !s.list.owner
+    );
   };
 
   useEffect(() => {
     loadLists();
-    loadShared();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "shared") {
+      loadShared();
+    }
+  }, [activeTab]);
 
   const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
   const filteredLists = lists.filter((list) => {
     const matchesSearch =
-      list.name.toLowerCase().includes(search.toLowerCase()) ||
-      list.ownerUser?.profileName.toLowerCase().includes(search.toLowerCase());
+      list.name.toLowerCase().includes(search.toLowerCase())
     if (!matchesSearch) return false;
     if (filterYear === null && filterMonth === null) return true;
     const created = new Date(list.createdAt);
@@ -126,21 +132,8 @@ const Lists = () => {
     return true;
   });
 
-  const groupedSharedLists = Object.values(
-    sharedLists.reduce((acc, item) => {
-      const listId = item.list.id;
-      if (!acc[listId]) {
-        acc[listId] = { ...item, sharedTo: [...item.sharedTo] };
-      } else {
-        acc[listId].sharedTo.push(...item.sharedTo);
-      }
-      return acc;
-    }, {} as Record<string, SharedList>)
-  );
-
-  const filteredSharedLists = groupedSharedLists.filter((s) =>
-    s.list.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.list.ownerUser?.profileName.toLowerCase().includes(search.toLowerCase())
+  const filteredSharedLists = sharedLists.filter((s) =>
+    s.list.name.toLowerCase().includes(search.toLowerCase())
   );
 
   const clearDateFilter = () => {
@@ -349,7 +342,7 @@ const Lists = () => {
                     key={list.id}
                     className={cn(
                       "group relative rounded-lg border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5",
-                      isShared(list.id) ? "border-blue-300" : "border-border"
+                      list.isShared ? "border-blue-400 bg-blue-500/5" : "border-border"
                     )}
                   >
                     <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -457,19 +450,19 @@ const Lists = () => {
                       )}
                     </div>
                     <Link to={`/listas/${shared.list.id}`} className="block">
-                      {shared.list.ownerUser && (
+                      {(shared.sharedBy.profileName || (shared.sharedTo && shared.sharedTo.length > 0)) && (
                         <div className="flex items-center gap-2 mb-3 px-2 py-1.5 rounded-md bg-muted/50">
                           <div className="h-6 w-6 rounded-full border-2 bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                            {shared.list.ownerUser.avatar ? (
-                              <img src={getImageUrl(shared.list.ownerUser.avatar)} alt={shared.list.ownerUser.name} className="h-full w-full object-cover" />
+                            {shared.sharedBy.avatar ? (
+                              <img src={getImageUrl(shared.sharedBy.avatar)} alt={shared.sharedBy.name} className="h-full w-full object-cover" />
                             ) : (
                               <span className="text-[10px] font-medium text-muted-foreground">
-                                {shared.list.ownerUser.name.charAt(0).toUpperCase()}
+                                {shared.sharedBy.name.charAt(0).toUpperCase()}
                               </span>
                             )}
                           </div>
                           <span className="text-xs text-muted-foreground truncate">
-                            Criada por <span className="font-medium text-foreground">{shared.list.ownerUser.profileName}</span>
+                            Criada por <span className="font-medium text-foreground">{shared.sharedBy.profileName}</span>
                           </span>
                         </div>
                       )}

@@ -25,10 +25,12 @@ public class MovieListResponseDTO {
 	private String description;
 	private List<MovieDTO> movies = new ArrayList<>();
 	private boolean owner;
-	private UserSearchDTO ownerUser;
 	private LocalDate createdAt;
 	@JsonProperty("isPublic")
 	private boolean isPublic = false;
+	@JsonProperty("isShared")
+	private boolean isShared = false;
+	
 
 	public MovieListResponseDTO(MovieList entity, User user, boolean owner) {
 		id = entity.getId();
@@ -37,7 +39,7 @@ public class MovieListResponseDTO {
 		createdAt = entity.getCreatedAt();
 		this.owner = owner;
 		this.isPublic = entity.isPublic();
-		this.ownerUser = new UserSearchDTO(entity.getUser());
+		this.isShared = entity.isShared();
 		for (Movie movie : entity.getMovies()) {
 			movies.add(new MovieDTO(movie.getId(), movie.getTitle(), movie.getPosterPath()));
 		}

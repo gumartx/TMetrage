@@ -24,17 +24,16 @@ export interface MovieList {
   description: string;
   movies: MovieListItem[];
   owner?: boolean;
-  ownerUser?: { profileName: string; name: string; avatar: string | null };
   createdAt: string;
   isPublic: boolean;
+  isShared: boolean;
 }
 
 export interface SharedList {
   id: string;
   list: MovieList;
-  sharedBy: string;
+  sharedBy: { profileName: string; name: string; avatar: string | null };
   sharedTo: { profileName: string; name: string; avatar: string | null }[];
-  sharedAt: string;
   ratings?: UserMovieRating[];
   direction: "sent" | "received";
 }
@@ -97,7 +96,7 @@ export async function getSharedLists(): Promise<SharedList[]> {
   return apiRequest<SharedList[]>("/lists/shared", { auth: true });
 }
 
-export async function getSharedList(listId: string): Promise<SharedList> {
+export async function getSharedListDetail(listId: string): Promise<SharedList> {
   return apiRequest<SharedList>(`/lists/${listId}/shared`, { auth: true });
 }
 

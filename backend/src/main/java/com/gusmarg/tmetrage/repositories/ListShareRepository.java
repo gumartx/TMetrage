@@ -28,6 +28,6 @@ public interface ListShareRepository extends JpaRepository<ListShare, Long> {
 	
 	List<ListShare> findBySharedByIdOrSharedToId(Long sharedById, Long sharedToId);
 
-	Optional<ListShare> findByListId(Long listId);
+	Optional<ListShare> findFirstByListId(Long listId);
 
 }

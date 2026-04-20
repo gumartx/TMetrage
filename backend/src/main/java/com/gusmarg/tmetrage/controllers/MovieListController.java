@@ -94,8 +94,8 @@ public class MovieListController {
 	}
 	
 	@GetMapping("/{listId}/shared")
-	public ResponseEntity<SharedListDetailDTO> getSharedList(@PathVariable Long listId){
-	    SharedListDetailDTO result = movieListService.findSharedList(listId);
+	public ResponseEntity<SharedListDetailDTO> getSharedListDetail(@PathVariable Long listId){
+	    SharedListDetailDTO result = movieListService.findSharedListDetail(listId);
 	    return ResponseEntity.ok(result);
 	}
 	

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gusmarg.tmetrage.entities.Movie;
 import com.gusmarg.tmetrage.entities.MovieList;
 import com.gusmarg.tmetrage.entities.Rating;
@@ -29,17 +30,23 @@ public class MovieListDetailsDTO {
 	private List<RatedMovieDTO> movies = new ArrayList<>();
 	private boolean owner;
 	private UserSearchDTO ownerUser;
-	
+	@JsonProperty("isPublic")
+	private boolean isPublic;
+	@JsonProperty("isShared")
+	private boolean isShared;
+
 	public MovieListDetailsDTO(MovieList entity, List<Rating> ratings, boolean owner) {
-		id = entity.getId();
-		name = entity.getName();
-		description = entity.getDescription();
-		createdAt = entity.getCreatedAt();
-		totalMovies = entity.getAmountMovies();
-		this.owner = owner;
-		ownerUser = new UserSearchDTO(entity.getUser());
-		for (Movie m : entity.getMovies()) {
-			movies.add(new RatedMovieDTO(m, ratings));
-		}
+	    id = entity.getId();
+	    name = entity.getName();
+	    description = entity.getDescription();
+	    createdAt = entity.getCreatedAt();
+	    totalMovies = entity.getAmountMovies();
+	    this.owner = owner;
+	    this.isPublic = entity.isPublic();
+	    this.isShared = entity.isShared();
+	    ownerUser = new UserSearchDTO(entity.getUser());
+	    for (Movie m : entity.getMovies()) {
+	        movies.add(new RatedMovieDTO(m, ratings));
+	    }
 	}
 }

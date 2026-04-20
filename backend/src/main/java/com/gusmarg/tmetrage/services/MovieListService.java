@@ -14,12 +14,10 @@ import com.gusmarg.tmetrage.dto.MovieListUpdateDTO;
 import com.gusmarg.tmetrage.dto.ShareListToDTO;
 import com.gusmarg.tmetrage.dto.SharedListDetailDTO;
 import com.gusmarg.tmetrage.dto.SharedListsDTO;
-import com.gusmarg.tmetrage.entities.ListShare;
 import com.gusmarg.tmetrage.entities.Movie;
 import com.gusmarg.tmetrage.entities.MovieList;
 import com.gusmarg.tmetrage.entities.Rating;
 import com.gusmarg.tmetrage.entities.User;
-import com.gusmarg.tmetrage.repositories.ListShareRepository;
 import com.gusmarg.tmetrage.repositories.MovieListRepository;
 import com.gusmarg.tmetrage.repositories.MovieRepository;
 import com.gusmarg.tmetrage.repositories.RatingRepository;
@@ -39,7 +37,6 @@ public class MovieListService {
 	private final AuthService authService;
 	private final TMDBService tmdbService;
 	private final RatingRepository ratingRepository;
-	private final ListShareRepository listShareRepository;
 	private final MovieRepository movieRepository;
 	private final MovieListRepository movieListRepository;
 	private final UserRepository userRepository;
@@ -61,38 +58,39 @@ public class MovieListService {
 		}
 
 		boolean owner = list.getUser().getId().equals(user.getId());
-		
+
 		log.info("Detalhes da lista '{}'", list.getName());
 
 		return new MovieListDetailsDTO(list, ratings, owner);
 	}
 
-	 @Transactional(readOnly = true)
-	    public MovieListDetailsDTO findPublicListByUser(Long listId, String profileName) {
-	        User targetUser = userRepository.findByProfileName(profileName);
+	@Transactional(readOnly = true)
+	public MovieListDetailsDTO findPublicListByUser(Long listId, String profileName) {
+		User targetUser = userRepository.findByProfileName(profileName);
 
-	        if (targetUser == null) {
-	            throw new ResourceNotFoundException("Usuário não encontrado");
-	        }
+		if (targetUser == null) {
+			throw new ResourceNotFoundException("Usuário não encontrado");
+		}
 
-	        MovieList list = movieListRepository.findPublicListByUser(listId, targetUser.getId()).orElseThrow(() -> new ResourceNotFoundException("Lista pública não encontrada"));
+		MovieList list = movieListRepository.findPublicListByUser(listId, targetUser.getId())
+				.orElseThrow(() -> new ResourceNotFoundException("Lista pública não encontrada"));
 
-			boolean owner = list.getUser().getId().equals(targetUser.getId());
-			
-			List<Rating> ratings = new ArrayList<>();
+		boolean owner = list.getUser().getId().equals(targetUser.getId());
 
-			for (Movie movie : list.getMovies()) {
-				Rating rating = ratingRepository.findByIdUserIdAndIdMovieId(targetUser.getId(), movie.getId()).orElse(null);
-				if (rating != null) {
-					ratings.add(rating);
-				}
+		List<Rating> ratings = new ArrayList<>();
+
+		for (Movie movie : list.getMovies()) {
+			Rating rating = ratingRepository.findByIdUserIdAndIdMovieId(targetUser.getId(), movie.getId()).orElse(null);
+			if (rating != null) {
+				ratings.add(rating);
 			}
-	        
-	        log.info("Detalhes da lista pública '{}' do usuário '{}'", list.getName(), profileName);
+		}
 
-	        return new MovieListDetailsDTO(list, ratings, owner);
-	    }
-	
+		log.info("Detalhes da lista pública '{}' do usuário '{}'", list.getName(), profileName);
+
+		return new MovieListDetailsDTO(list, ratings, owner);
+	}
+
 	@Transactional(readOnly = true)
 	public List<MovieListResponseDTO> findLists(String name, Integer month, Integer year) {
 
@@ -108,23 +106,22 @@ public class MovieListService {
 		}).toList();
 	}
 
-	 @Transactional(readOnly = true)
-	    public List<MovieListResponseDTO> findPublicListsByUser(String profileName, String name, Integer month, Integer year) {
-	        User targetUser = userRepository.findByProfileName(profileName);
+	@Transactional(readOnly = true)
+	public List<MovieListResponseDTO> findPublicListsByUser(String profileName, String name, Integer month,
+			Integer year) {
+		User targetUser = userRepository.findByProfileName(profileName);
 
-	        if (targetUser == null) {
-	            throw new RuntimeException("Usuário não encontrado");
-	        }
+		if (targetUser == null) {
+			throw new RuntimeException("Usuário não encontrado");
+		}
 
-	        List<MovieList> lists = movieListRepository.findPublicListsByUser(targetUser.getId(), name, month, year);
+		List<MovieList> lists = movieListRepository.findPublicListsByUser(targetUser.getId(), name, month, year);
 
-	        log.info("Encontrado {} lista(s) pública(s) do usuário '{}'", lists.size(), profileName);
+		log.info("Encontrado {} lista(s) pública(s) do usuário '{}'", lists.size(), profileName);
 
-	        return lists.stream()
-	                .map(list -> new MovieListResponseDTO(list, targetUser, false))
-	                .toList();
-	    }
-	
+		return lists.stream().map(list -> new MovieListResponseDTO(list, targetUser, false)).toList();
+	}
+
 	@Transactional
 	public MovieListResponseDTO createList(MovieListCreateDTO dto) {
 
@@ -167,7 +164,8 @@ public class MovieListService {
 	public void deleteList(Long listId) {
 		User user = authService.getAuthenticatedUser();
 
-		MovieList entity = movieListRepository.findById(listId).orElseThrow(() -> new ResourceNotFoundException("Lista não encontrada"));
+		MovieList entity = movieListRepository.findById(listId)
+				.orElseThrow(() -> new ResourceNotFoundException("Lista não encontrada"));
 
 		if (!user.getId().equals(entity.getUser().getId())) {
 			throw new RuntimeException("Você não pode deletar essa lista");
@@ -235,15 +233,11 @@ public class MovieListService {
 				throw new RuntimeException("A lista só pode ser compartilhada com usuários que se seguem mutuamente");
 			}
 
-			ListShare share = new ListShare();
-			share.setList(list);
-			share.setSharedBy(currentUser);
-			share.getSharedTo().add(user);
-
-			list.getShares().add(share);
+			list.getSharedTo().add(user);
 
 			log.info("Lista '{}' compartilhada com '{}'", list.getName(), user.getProfileName());
 		}
+		list.setShared(true);
 	}
 
 	@Transactional(readOnly = true)
@@ -251,37 +245,35 @@ public class MovieListService {
 
 		User user = authService.getAuthenticatedUser();
 
-		List<ListShare> shares = listShareRepository.findBySharedByIdOrSharedToId(user.getId(), user.getId());
-
+		List<MovieList> shares = movieListRepository.findSharedListsByUser(user.getId());
+		
 		log.info("{} lista(s) compartilhada(s) encontrada(s)", shares.size());
 
 		return shares.stream().map(share -> new SharedListsDTO(share, user)).toList();
 	}
-	
+
 	@Transactional(readOnly = true)
-	public SharedListDetailDTO findSharedList(Long listId) {
+	public SharedListDetailDTO findSharedListDetail(Long listId) {
 
 		User user = authService.getAuthenticatedUser();
+		
+		MovieList share = movieListRepository.findSharedListDetail(listId, user.getId())
+				.orElseThrow(() -> new ResourceNotFoundException("Lista compartilhada não encontrada"));
 
-		ListShare share = listShareRepository.findByListId(listId).orElseThrow(() -> new ResourceNotFoundException("Lista compartilhada não encontrada"));
-
-		log.info("Detalhes da lista compartilhada '{}'", share.getList().getName());
+		log.info("Detalhes da lista compartilhada '{}'", share.getName());
 
 		return new SharedListDetailDTO(share, user);
 	}
 
 	private void validateListPermission(MovieList list, User user) {
 
-	    boolean isOwner = list.getUser().getId().equals(user.getId());
+		boolean isOwner = list.getUser().getId().equals(user.getId());
 
-	    boolean isSharedUser = list.getShares().stream()
-	            .anyMatch(share -> share.getSharedTo().stream()
-	                    .anyMatch(sharedUser -> sharedUser.getId().equals(user.getId()))
-	            );
+		boolean isSharedUser = list.getSharedTo().stream().anyMatch(sharedUser -> sharedUser.getId().equals(user.getId()));
 
-	    if (!isOwner && !isSharedUser) {
-	        throw new RuntimeException("Você não tem permissão para alterar essa lista");
-	    }
+		if (!isOwner && !isSharedUser) {
+			throw new RuntimeException("Você não tem permissão para alterar essa lista");
+		}
 	}
 
 }

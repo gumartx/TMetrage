@@ -1,10 +1,8 @@
 package com.gusmarg.tmetrage.dto;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
-import com.gusmarg.tmetrage.entities.ListShare;
+import com.gusmarg.tmetrage.entities.MovieList;
 import com.gusmarg.tmetrage.entities.User;
 
 import lombok.AllArgsConstructor;
@@ -22,23 +20,20 @@ public class SharedListsDTO {
 	private MovieListResponseDTO list;
 	private UserSearchDTO sharedBy;
 	private List<UserSearchDTO> sharedTo;
-	private LocalDateTime sharedAt;
-	private String direction;
 
-	public SharedListsDTO(ListShare share, User user) {
-	    this.id = share.getId();
-	    boolean owner = share.getSharedBy().getId().equals(user.getId());
-	    this.list = new MovieListResponseDTO(share.getList(), user, owner);
-	    this.sharedBy = new UserSearchDTO(share.getSharedBy());
-	    this.sharedTo = share.getSharedTo().stream()
-	                          .map(UserSearchDTO::new)
-	                          .toList();
-	    this.sharedAt = share.getSharedAt();
-	    this.direction = owner ? "sent" : "received";
+	public SharedListsDTO(MovieList list, User currentUser) {
 
-	    List<User> allParticipants = new ArrayList<>();
-	    allParticipants.add(share.getSharedBy());
-	    allParticipants.addAll(share.getSharedTo());
+		this.id = list.getId();
+
+		boolean owner = list.getUser().getId().equals(currentUser.getId());
+
+		this.list = new MovieListResponseDTO(list, currentUser, owner);
+
+		this.sharedBy = new UserSearchDTO(list.getUser().getId(), list.getUser().getName(),
+				list.getUser().getProfileName(), list.getUser().getAvatar());
+
+		this.sharedTo = list.getSharedTo().stream()
+				.map(u -> new UserSearchDTO(u.getId(), u.getName(), u.getProfileName(), u.getAvatar())).toList();
 	}
 
 }
