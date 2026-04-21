@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Search, Star, Filter, ArrowLeft, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import Navbar from "@/components/Navbar";
@@ -44,7 +44,9 @@ const UserRatedMovies = () => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [ratingFilter, setRatingFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);  
+  const [searchParams, setSearchParams] = useSearchParams();
+  const genreParam = searchParams.get("genre");
 
   useEffect(() => {
     if (!username) return;
@@ -67,6 +69,19 @@ const UserRatedMovies = () => {
     };
     load();
   }, [username]);
+
+  useEffect(() => {
+    if (!genreParam || ratedMovies.length === 0) return;
+    const match = Array.from(allGenres.entries()).find(
+      ([, name]) => name.toLowerCase() === genreParam.toLowerCase()
+    );
+    if (match) {
+      setGenreFilter(String(match[0]));
+      const next = new URLSearchParams(searchParams);
+      next.delete("genre");
+      setSearchParams(next, { replace: true });
+    }
+  }, [genreParam, ratedMovies]);
 
   const allGenres = new Map<number, string>();
   ratedMovies.forEach((rm) => rm.movie.genres.forEach((g) => allGenres.set(g.id, g.name)));

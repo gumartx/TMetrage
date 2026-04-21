@@ -15,6 +15,7 @@ export async function getUserRatings(): Promise<RatingResponse[]> {
 }
 
 export async function getUserRatingsByProfileName(username: string): Promise<RatingResponse[]> {
+  username = username.startsWith("@") ? username : `@${username}`;
   return apiRequest<RatingResponse[]>(`/ratings/public/${encodeURIComponent(username)}`, { auth: true });
 }
 

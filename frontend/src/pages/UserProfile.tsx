@@ -266,13 +266,14 @@ const UserProfile = () => {
               {topGenres.map((g) => {
                 const colors = getGenreColor(g.name);
                 return (
-                  <span
+                  <Link
                     key={g.name}
-                    className="rounded-full px-4 py-1.5 text-sm font-medium"
+                    to={`/usuario/${username}/filmes-avaliados?genre=${encodeURIComponent(g.name)}`}
+                    className="rounded-full px-4 py-1.5 text-sm font-medium transition-transform hover:scale-105 hover:opacity-90"
                     style={{ backgroundColor: colors.bg, color: colors.text }}
                   >
                     {g.name} <span style={{ color: colors.text, opacity: 0.75 }}>({g.count})</span>
-                  </span>
+                  </Link>
                 );
               })}
             </div>

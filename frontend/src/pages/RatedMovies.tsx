@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Search, Star, Filter, ArrowLeft, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import Navbar from "@/components/Navbar";
@@ -42,7 +42,9 @@ const RatedMovies = () => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [ratingFilter, setRatingFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1); // ✅ página atual
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const genreParam = searchParams.get("genre");
 
   useEffect(() => {
     const loadRatedMovies = async () => {
@@ -68,6 +70,19 @@ const RatedMovies = () => {
 
     loadRatedMovies();
   }, []);
+
+  useEffect(() => {
+    if (!genreParam || ratedMovies.length === 0) return;
+    const match = Array.from(allGenres.entries()).find(
+      ([, name]) => name.toLowerCase() === genreParam.toLowerCase()
+    );
+    if (match) {
+      setGenreFilter(String(match[0]));
+      const next = new URLSearchParams(searchParams);
+      next.delete("genre");
+      setSearchParams(next, { replace: true });
+    }
+  }, [genreParam, ratedMovies]);
 
   const allGenres = new Map<number, string>();
   ratedMovies.forEach((rm) => rm.movie.genres.forEach((g) => allGenres.set(g.id, g.name)));
@@ -101,11 +116,9 @@ const RatedMovies = () => {
     return matchesSearch && matchesGenre && matchesPlatform && matchesRating && matchesDate;
   });
 
-  // ✅ Paginação
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  // ✅ Volta para página 1 quando filtros mudam
   const handleFilterChange = (fn: () => void) => {
     fn();
     setCurrentPage(1);

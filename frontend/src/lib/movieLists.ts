@@ -101,10 +101,12 @@ export async function getSharedListDetail(listId: string): Promise<SharedList> {
 }
 
 export async function getPublicListsByUser(profileName: string): Promise<MovieList[]> {
+  profileName = profileName.startsWith("@") ? profileName : `@${profileName}`;
   return apiRequest<MovieList[]>(`/lists/public/${encodeURIComponent(profileName)}`);
 }
 
 export async function getPublicListByUser(profileName: string, listId: string): Promise<MovieList> {
+  profileName = profileName.startsWith("@") ? profileName : `@${profileName}`;
   return apiRequest<MovieList>(`/lists/public/${encodeURIComponent(profileName)}/${listId}`);
 }
 
