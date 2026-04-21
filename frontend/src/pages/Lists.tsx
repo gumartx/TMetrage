@@ -246,9 +246,9 @@ const Lists = () => {
                   />
                   <div className="space-y-1.5">
                     <p className="text-sm text-muted-foreground">Visibilidade</p>
-                    <VisibilityToggle value={editIsPublic} onChange={setEditIsPublic} />
+                    <VisibilityToggle value={isPublic} onChange={setIsPublic} />
                     <p className="text-xs text-muted-foreground">
-                      {editIsPublic
+                      {isPublic
                         ? "Qualquer pessoa pode visualizar esta lista."
                         : "Somente você e quem você compartilhar pode ver."}
                     </p>

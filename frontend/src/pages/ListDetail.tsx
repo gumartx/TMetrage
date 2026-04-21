@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { getMovieRatingsList, getUserRatings, type RatingResponse } from "@/lib/ratings";
 import { getImageUrl } from "@/lib/files";
+import { link } from "fs";
 
 const DATE_PRESETS = [
   { label: "Todos", value: "all" },
@@ -200,12 +201,15 @@ const ListDetail = () => {
 
     try {
       await shareList(list.id, selectedUsers);
+
+      const updatedShared = await getSharedListDetail(list.id);
+
+      setSharedList(updatedShared);
+      setList(updatedShared.list);
+
       setSelectedUsers([]);
       setShareSearch("");
       setShowShare(false);
-
-      const updatedSharedLists = await getSharedListDetail(list.id);
-      setSharedList(updatedSharedLists);
     } catch (err) {
       console.error("Erro ao compartilhar lista:", err);
     }
@@ -792,7 +796,7 @@ const ListDetail = () => {
                                     />
                                   ) : (
                                     <div className="flex items-center justify-center h-full w-full text-[9px]">
-                                      {r.profileName.charAt(0).toUpperCase()}
+                                      {r.profileName.charAt(1).toUpperCase()}
                                     </div>
                                   )}
                                 </Link>
@@ -821,8 +825,8 @@ const ListDetail = () => {
                                   <Star
                                     key={i}
                                     className={`h-3 w-3 ${i < r.rating
-                                        ? "fill-yellow-400 text-yellow-400"
-                                        : "text-muted-foreground"
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-muted-foreground"
                                       }`}
                                   />
                                 ))}
@@ -836,6 +840,38 @@ const ListDetail = () => {
                       {rating && (
                         <>
                           <div className="flex items-center gap-0.5">
+                            {list.isShared && (
+                              <div className="relative h-7 w-7 shrink-0">
+
+                                <Link
+                                  to={`/perfil`}
+                                  className="peer block h-7 w-7 rounded-full overflow-hidden bg-muted"
+                                >
+                                  <img
+                                    src={getImageUrl(sharedList.sharedBy.avatar)}
+                                    alt={sharedList.sharedBy.profileName}
+                                    className="h-7 w-7 rounded-full object-cover"
+                                  />
+                                </Link>
+                                {/* Tooltip */}
+                                <div
+                                  className="
+              pointer-events-none
+              absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+              whitespace-nowrap
+              rounded-md bg-popover border border-border
+              px-2 py-1 text-[10px] text-popover-foreground
+              shadow-md
+              opacity-0 scale-95
+              transition-all duration-150
+              peer-hover:opacity-100 peer-hover:scale-100
+            "
+                                >
+                                  {sharedList.sharedBy.profileName}
+                                </div>
+
+                              </div>
+                            )}
                             {[1, 2, 3, 4, 5].map((s) => (
                               <Star
                                 key={s}
