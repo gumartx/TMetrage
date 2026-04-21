@@ -148,9 +148,7 @@ public class CommentService {
 
 		User user = userRepository.findByProfileName(profileName);
 
-		LocalDateTime twoDaysAgo = LocalDateTime.now().minusDays(2);
-
-		List<Comment> comments = commentRepository.findByCreatedAtAfterOrderByCreatedAtDesc(twoDaysAgo);
+		List<Comment> comments = commentRepository.findTop5ByUserIdOrderByCreatedAtDesc(user.getId());
 
 		log.info("Comentário(s) recente(s) de '{}'", user.getProfileName());
 		

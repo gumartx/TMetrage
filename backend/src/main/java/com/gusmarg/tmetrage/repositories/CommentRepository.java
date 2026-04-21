@@ -36,4 +36,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 	List<Comment> searchComments(Long userId, String search, LocalDate startDate, LocalDate endDate);
 
 	List<Comment> findByCreatedAtAfterOrderByCreatedAtDesc(LocalDateTime twoDaysAgo);
+
+	List<Comment> findTop5ByUserIdOrderByCreatedAtDesc(Long id);
 }
