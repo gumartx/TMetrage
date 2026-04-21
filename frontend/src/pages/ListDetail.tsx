@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Trash2, Film, Search, BarChart3, Star, Calendar as CalendarIcon, Filter, Share2, User } from "lucide-react";
+import { ArrowLeft, Trash2, Film, Search, BarChart3, Star, Calendar as CalendarIcon, Filter, Share2, User, Users } from "lucide-react";
 import { Tv } from "lucide-react";
 import { format } from "date-fns";
-import { getList, getSharedLists, removeMovieFromList, addMovieToList, shareList, type MovieList, type MovieListItem, type SharedList, type UserMovieRating, getSharedListDetail } from "@/lib/movieLists";
+import { getList, getSharedLists, removeMovieFromList, addMovieToList, shareList, unshareList, type MovieList, type MovieListItem, type SharedList, type UserMovieRating, getSharedListDetail } from "@/lib/movieLists";
 import { getMovieDetails, searchMovies, getPosterUrl, getGenres } from "@/lib/tmdb";
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
@@ -48,6 +48,7 @@ const ListDetail = () => {
   const [shareSearch, setShareSearch] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [showSharedUsers, setShowSharedUsers] = useState(false);
   const [query, setQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [following, setFollowing] = useState<{ name: string; profileName: string; avatar: string }[]>([]);
@@ -220,6 +221,18 @@ const ListDetail = () => {
       setShowShare(false);
     } catch (err) {
       console.error("Erro ao compartilhar lista:", err);
+    }
+  };
+
+  const handleUnshare = async (profileName: string) => {
+    if (!list) return;
+    try {
+      await unshareList(list.id, profileName);
+      const updatedSharedList = await getSharedListDetail(list.id);
+      setSharedList(updatedSharedList);
+      await loadList();
+    } catch (err) {
+      console.error("Erro ao remover usuário da lista:", err);
     }
   };
 
@@ -621,6 +634,69 @@ const ListDetail = () => {
                       </Button>
                     </div>
                   )}
+                </DialogContent>
+              </Dialog>
+            )}
+            {sharedUsers.length > 0 && (
+              <Dialog open={showSharedUsers} onOpenChange={setShowSharedUsers}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" title="Ver usuários compartilhados">
+                    <Users className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[450px]">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-primary" />
+                      Compartilhada com ({sharedUsers.length})
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="mt-2 max-h-[400px] overflow-y-auto space-y-2">
+                    {sharedUsers.map((user) => (
+                      <div
+                        key={user.profileName}
+                        className="flex items-center justify-between gap-3 rounded-md border border-border bg-card p-2.5 hover:bg-accent transition-colors"
+                      >
+                        <Link
+                          to={`/usuario/${user.profileName}`}
+                          onClick={() => setShowSharedUsers(false)}
+                          className="flex flex-1 items-center gap-3 min-w-0"
+                        >
+                          <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                            {user.avatar ? (
+                              <img
+                                src={getImageUrl(user.avatar)}
+                                alt={user.profileName}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-sm font-medium text-muted-foreground">
+                                {user.profileName.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-card-foreground truncate">
+                              {user.profileName}
+                            </p>
+                          </div>
+                        </Link>
+
+                        {list.owner !== false && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                            onClick={() => handleUnshare(user.profileName)}
+                            title="Remover usuário"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </DialogContent>
               </Dialog>
             )}

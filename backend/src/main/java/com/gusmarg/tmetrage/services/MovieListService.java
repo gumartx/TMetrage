@@ -240,6 +240,28 @@ public class MovieListService {
 		list.setShared(true);
 	}
 
+	@Transactional
+	public void removeShare(Long listId, String profileName) {
+		User currentUser = authService.getAuthenticatedUser();
+
+		MovieList list = movieListRepository.getReferenceById(listId);
+
+		if (!currentUser.getId().equals(list.getUser().getId())) {
+			throw new RuntimeException("Você não pode remover usuário dessa lista");
+		}
+
+		User user = userRepository.findByProfileName(profileName);
+
+		list.getSharedTo().remove(user);
+		
+		if(list.getSharedTo().isEmpty()) {
+			list.setShared(false);
+		}
+
+		log.info("Usuário '{}' removido da lista '{}'", user.getProfileName(), list.getName());
+
+	}
+
 	@Transactional(readOnly = true)
 	public List<SharedListsDTO> findSharedLists() {
 
@@ -256,7 +278,7 @@ public class MovieListService {
 	public SharedListDetailDTO findSharedListDetail(Long listId) {
 
 		User user = authService.getAuthenticatedUser();
-		
+
 		MovieList share = movieListRepository.findSharedListDetail(listId, user.getId())
 				.orElseThrow(() -> new ResourceNotFoundException("Lista compartilhada não encontrada"));
 
@@ -269,7 +291,8 @@ public class MovieListService {
 
 		boolean isOwner = list.getUser().getId().equals(user.getId());
 
-		boolean isSharedUser = list.getSharedTo().stream().anyMatch(sharedUser -> sharedUser.getId().equals(user.getId()));
+		boolean isSharedUser = list.getSharedTo().stream()
+				.anyMatch(sharedUser -> sharedUser.getId().equals(user.getId()));
 
 		if (!isOwner && !isSharedUser) {
 			throw new RuntimeException("Você não tem permissão para alterar essa lista");

@@ -107,3 +107,10 @@ export async function getPublicListsByUser(profileName: string): Promise<MovieLi
 export async function getPublicListByUser(profileName: string, listId: string): Promise<MovieList> {
   return apiRequest<MovieList>(`/lists/public/${encodeURIComponent(profileName)}/${listId}`);
 }
+
+export async function unshareList(listId: string, profileName: string): Promise<void> {
+  await apiRequest(`/lists/${listId}/shared/${encodeURIComponent(profileName)}`, {
+    method: "DELETE",
+    auth: true,
+  });
+}

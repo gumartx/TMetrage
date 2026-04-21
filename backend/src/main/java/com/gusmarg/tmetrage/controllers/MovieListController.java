@@ -84,7 +84,15 @@ public class MovieListController {
 
 		movieListService.shareList(listId, dto);
 
-		return ResponseEntity.ok().build();
+		return ResponseEntity.noContent().build();
+	}
+	
+	@DeleteMapping("/{listId}/shared/{profileName}")
+	public ResponseEntity<Void> removeShare(@PathVariable Long listId, @PathVariable String profileName) {
+
+		movieListService.removeShare(listId, profileName);
+
+		return ResponseEntity.noContent().build();
 	}
 	
 	@GetMapping("/shared")
