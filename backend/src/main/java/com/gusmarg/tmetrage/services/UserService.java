@@ -66,6 +66,8 @@ public class UserService implements UserDetailsService {
 		
 		Set<User> result = userRepository.findFollowersByUserId(user.getId());
 		
+		log.info("'{}' seguidores de '{}'", result.size(), user.getProfileName());
+		
 		return result.stream().map(u -> new UserSearchDTO(u)).toList();
 	}
 	
@@ -75,6 +77,8 @@ public class UserService implements UserDetailsService {
 		User user = authService.getAuthenticatedUser();
 		
 		Set<User> result = userRepository.findFollowingByUserId(user.getId());
+		
+		log.info("'{}' seguidos de '{}'", result.size(), user.getProfileName());
 		
 		return result.stream().map(u -> new UserSearchDTO(u)).toList();
 	}
@@ -281,6 +285,8 @@ public class UserService implements UserDetailsService {
 	        user.setAvatar(null);
 	        userRepository.save(user);
 	    }
+
+		log.info("Imagem de perfil de '{}' removida", user.getProfileName());
 	}
 	
 
@@ -294,7 +300,5 @@ public class UserService implements UserDetailsService {
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		return userRepository.findByEmail(username).orElseThrow(() -> new ResourceNotFoundException("Email não cadastrado"));
 	}
-
-
 
 }

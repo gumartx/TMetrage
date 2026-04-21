@@ -112,6 +112,9 @@ public class CommentService {
 			parent.getReplies().remove(comment);
 		}
 
+
+		log.info("Comentário '{}' de '{}' deletado", comment.getId(), user.getProfileName());
+		
 		commentRepository.delete(comment);
 	}
 
@@ -126,6 +129,8 @@ public class CommentService {
 		List<Comment> comments = commentRepository.searchComments(user.getId(), filter.getSearch(),
 				start != null ? start.toLocalDate() : null, end != null ? end.toLocalDate() : null);
 
+		log.info("'{}' comentário(s) de '{}'", comments.size(), user.getProfileName());
+		
 		return comments.stream().map(comment -> new CommentResponseDTO(comment, user)).collect(Collectors.toList());
 	}
 
@@ -140,6 +145,9 @@ public class CommentService {
 		List<Comment> comments = commentRepository.searchComments(user.getId(), filter.getSearch(),
 				start != null ? start.toLocalDate() : null, end != null ? end.toLocalDate() : null);
 
+
+		log.info("'{}' comentário(s) de '{}'", comments.size(), user.getProfileName());
+		
 		return comments.stream().map(comment -> new CommentResponseDTO(comment, user)).collect(Collectors.toList());
 	}
 
