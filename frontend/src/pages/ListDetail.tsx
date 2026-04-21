@@ -379,6 +379,29 @@ const ListDetail = () => {
           Voltar
         </Button>
 
+        {list.isShared && sharedList?.sharedBy && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <img
+              src={getImageUrl(sharedList.sharedBy.avatar)}
+              alt={sharedList.sharedBy.profileName}
+              className="h-6 w-6 rounded-full"
+            />
+
+            <span>
+              Lista de{" "}
+              {sharedList.sharedBy.profileName === currentUser?.profileName ? (
+                <Link to={`/perfil`} className="font-semibold hover:text-blue-300 transition-colors">
+                  <strong>{sharedList.sharedBy.profileName}</strong>
+                </Link>
+              ) : (
+                <Link to={`/usuario/${sharedList.sharedBy.profileName}`} className="font-semibold hover:text-blue-300 transition-colors">
+                  <strong>{sharedList.sharedBy.profileName}</strong>
+                </Link>
+              )}
+            </span>
+          </div>
+        )}
+
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="font-display text-2xl font-bold text-foreground">{list.name}</h1>
