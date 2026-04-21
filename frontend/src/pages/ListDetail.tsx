@@ -353,8 +353,12 @@ const ListDetail = () => {
       }
       if (userFilter !== "all") {
         const hasUserRating = sharedList?.ratings?.some(
-          (r) => r.movieId === movie.id && r.profileName === userFilter
+          (r) =>
+            r.movieId === movie.id &&
+            r.profileName === userFilter &&
+            r.rating !== null
         );
+
         if (!hasUserRating) return false;
       }
       return true;
@@ -602,7 +606,7 @@ const ListDetail = () => {
                               <img src={getImageUrl(user.avatar)} alt={user.name} className="h-full w-full object-cover" />
                             ) : (
                               <span className="text-sm font-medium text-muted-foreground">
-                                {user.name.charAt(0).toUpperCase()}
+                                {user.profileName.charAt(1).toUpperCase()}
                               </span>
                             )}
                           </div>
@@ -671,7 +675,7 @@ const ListDetail = () => {
                               />
                             ) : (
                               <span className="text-sm font-medium text-muted-foreground">
-                                {user.profileName.charAt(0).toUpperCase()}
+                                {user.profileName.charAt(1).toUpperCase()}
                               </span>
                             )}
                           </div>
@@ -826,7 +830,7 @@ const ListDetail = () => {
                             {u.avatar ? (
                               <img src={getImageUrl(u.avatar)} alt={u.name} className="h-full w-full object-cover" />
                             ) : (
-                              <span className="text-[10px] font-medium text-muted-foreground">{u.profileName.charAt(0).toUpperCase()}</span>
+                              <span className="text-[10px] font-medium text-muted-foreground">{u.profileName.charAt(1).toUpperCase()}</span>
                             )}
                           </span>
                           {u.profileName}
