@@ -271,6 +271,22 @@ const ListDetail = () => {
       .sort((a, b) => b.value - a.value);
   }, [list, genres, movieGenres]);
 
+  const genreMoviesMap = useMemo(() => {
+    if (!list || !genres) return new Map<string, string[]>();
+    const map = new Map<string, string[]>();
+
+    list.movies.forEach((movie) => {
+      (movieGenres[movie.id] || []).forEach((gid) => {
+        const genreName = genres.find((g) => g.id === gid)?.name;
+        if (!genreName) return;
+        if (!map.has(genreName)) map.set(genreName, []);
+        map.get(genreName)!.push(movie.title);
+      });
+    });
+
+    return map;
+  }, [list, genres, movieGenres]);
+
   const totalMovies = list?.movies.length ?? 0;
   const totalGenres = genreChartData.length;
 
@@ -460,12 +476,46 @@ const ListDetail = () => {
                                 border: "1px solid hsl(215, 20%, 25%)",
                                 borderRadius: "8px",
                                 color: "white",
+                                maxWidth: "220px",
                               }}
-                              formatter={(value: number) => [
-                                <span style={{ color: "white" }}>{`${value} filme${value > 1 ? "s" : ""}`}</span>,
-                                <span style={{ color: "white" }}>Quantidade</span>
-                              ]}
-                              labelStyle={{ color: "white" }}
+                              content={({ active, payload }) => {
+                                if (!active || !payload?.length) return null;
+                                const genreName = payload[0].name as string;
+                                const count = payload[0].value as number;
+                                const movies = genreMoviesMap.get(genreName) || [];
+
+                                return (
+                                  <div
+                                    style={{
+                                      backgroundColor: "hsl(215, 25%, 16%)",
+                                      border: "1px solid hsl(215, 20%, 25%)",
+                                      borderRadius: "8px",
+                                      padding: "10px 12px",
+                                      maxWidth: "220px",
+                                    }}
+                                  >
+                                    <p style={{ color: "white", fontWeight: 600, marginBottom: 6 }}>
+                                      {genreName} ({count} {count === 1 ? "filme" : "filmes"})
+                                    </p>
+                                    <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                                      {movies.map((title) => (
+                                        <li
+                                          key={title}
+                                          style={{
+                                            color: "hsl(215, 20%, 75%)",
+                                            fontSize: "11px",
+                                            paddingTop: "2px",
+                                            borderTop: "1px solid hsl(215, 20%, 25%)",
+                                            marginTop: "3px",
+                                          }}
+                                        >
+                                          {title}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                );
+                              }}
                             />
                             <Legend
                               verticalAlign="bottom"
