@@ -293,6 +293,9 @@ public class UserService implements UserDetailsService {
 	@Transactional(readOnly = true)
 	public CurrentUserDTO currentUser() {
 		User user = authService.getAuthenticatedUser();
+
+		log.info("Usuário '{}' autenticado", user.getProfileName());
+		
 		return new CurrentUserDTO(user);
 	}
 	
