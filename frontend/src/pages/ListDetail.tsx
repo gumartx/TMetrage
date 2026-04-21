@@ -51,7 +51,10 @@ const ListDetail = () => {
   const [query, setQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [following, setFollowing] = useState<{ name: string; profileName: string; avatar: string }[]>([]);
-  const [currentProfileName, setCurrentProfileName] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<{
+    profileName: string;
+    avatar: string | null;
+  } | null>(null);
 
   // Filters
   const [genreFilter, setGenreFilter] = useState("all");
@@ -81,8 +84,13 @@ const ListDetail = () => {
 
   useEffect(() => {
     getCurrentUserProfile()
-      .then((u) => setCurrentProfileName(u.profileName))
-      .catch(() => setCurrentProfileName(null));
+      .then((u) =>
+        setCurrentUser({
+          profileName: u.profileName,
+          avatar: u.avatar ?? null,
+        })
+      )
+      .catch(() => setCurrentUser(null));
   }, []);
 
   useEffect(() => {
@@ -756,7 +764,7 @@ const ListDetail = () => {
               const othersRatings = (list.isShared)
                 ? (getMovieSharedRatings(movie.id) || []).filter(
                   (r) =>
-                    normalize(r.profileName) !== normalize(currentProfileName) &&
+                    normalize(r.profileName) !== normalize(currentUser.profileName) &&
                     r.rating !== null &&
                     r.rating !== undefined
                 )
@@ -848,8 +856,8 @@ const ListDetail = () => {
                                   className="peer block h-7 w-7 rounded-full overflow-hidden bg-muted"
                                 >
                                   <img
-                                    src={getImageUrl(sharedList.sharedBy.avatar)}
-                                    alt={sharedList.sharedBy.profileName}
+                                    src={getImageUrl(currentUser?.avatar)}
+                                    alt={currentUser.profileName}
                                     className="h-7 w-7 rounded-full object-cover"
                                   />
                                 </Link>
@@ -867,7 +875,7 @@ const ListDetail = () => {
               peer-hover:opacity-100 peer-hover:scale-100
             "
                                 >
-                                  {sharedList.sharedBy.profileName}
+                                  {currentUser?.profileName}
                                 </div>
 
                               </div>

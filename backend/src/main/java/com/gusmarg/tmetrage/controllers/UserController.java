@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.gusmarg.tmetrage.dto.CurrentUserDTO;
 import com.gusmarg.tmetrage.dto.UserDetailsDTO;
 import com.gusmarg.tmetrage.dto.UserSearchDTO;
 import com.gusmarg.tmetrage.dto.UserUpdateDTO;
@@ -33,7 +34,7 @@ public class UserController {
 	private final UserService userService;
 
 	@GetMapping("/me")
-	public ResponseEntity<String> currentUser() {
+	public ResponseEntity<CurrentUserDTO> currentUser() {
 		return ResponseEntity.ok(userService.currentUser());
 	}
 	

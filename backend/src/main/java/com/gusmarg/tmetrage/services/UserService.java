@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.gusmarg.tmetrage.dto.CurrentUserDTO;
 import com.gusmarg.tmetrage.dto.UserDetailsDTO;
 import com.gusmarg.tmetrage.dto.UserRegisterDTO;
 import com.gusmarg.tmetrage.dto.UserRegisterResponseDTO;
@@ -284,9 +285,9 @@ public class UserService implements UserDetailsService {
 	
 
 	@Transactional(readOnly = true)
-	public String currentUser() {
+	public CurrentUserDTO currentUser() {
 		User user = authService.getAuthenticatedUser();
-		return user.getProfileName();
+		return new CurrentUserDTO(user);
 	}
 	
 	@Override

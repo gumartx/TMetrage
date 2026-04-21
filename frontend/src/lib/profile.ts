@@ -1,5 +1,10 @@
 import { apiRequest } from "./api";
 
+export interface CurrentUser {
+    profileName: string;
+    avatar?: string;
+}
+
 export interface UserProfile {
     id: string | number;
     name: string;
@@ -20,13 +25,14 @@ export interface UserProfile {
     reviews: { id: number; movieId: number; movieTitle: string; posterPath: string | null; content: string; date: string }[];
 }
 
-export async function getCurrentUserProfile(): Promise<{ profileName: string }> {
-  const data = await apiRequest<{ profileName: string }>("/users/me", { auth: true });
+export async function getCurrentUserProfile(): Promise<CurrentUser> {
+  const data = await apiRequest<{ profileName: string, avatar?: string }>("/users/me", { auth: true });
   return {
     ...data,
     profileName: data.profileName.startsWith("@")
       ? data.profileName
       : `@${data.profileName}`,
+      avatar: data.avatar || undefined,
   };
 }
 
