@@ -174,11 +174,11 @@ const ListDetail = () => {
   };
 
   const sharedUsers = useMemo(() => {
-    if (!sharedList?.ratings) return [];
+    if (!sharedList?.sharedTo) return [];
 
     const map = new Map();
 
-    sharedList.ratings.forEach(r => {
+    sharedList.sharedTo.forEach(r => {
       if (!map.has(r.profileName)) {
         map.set(r.profileName, {
           profileName: r.profileName,
