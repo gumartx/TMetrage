@@ -353,12 +353,8 @@ const ListDetail = () => {
       }
       if (userFilter !== "all") {
         const hasUserRating = sharedList?.ratings?.some(
-          (r) =>
-            r.movieId === movie.id &&
-            r.profileName === userFilter &&
-            r.rating !== null
+          (r) => r.movieId === movie.id && r.profileName === userFilter
         );
-
         if (!hasUserRating) return false;
       }
       return true;
