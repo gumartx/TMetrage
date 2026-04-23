@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Search, Star, Filter, ArrowLeft, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Star, Filter, ArrowLeft, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowUpAZ, ArrowDownZA } from "lucide-react";
 import { format } from "date-fns";
 import Navbar from "@/components/Navbar";
 import { Input } from "@/components/ui/input";
@@ -44,9 +44,10 @@ const UserRatedMovies = () => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [ratingFilter, setRatingFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);  
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchParams, setSearchParams] = useSearchParams();
   const genreParam = searchParams.get("genre");
+  const [sortOrder, setSortOrder] = useState<"none" | "asc" | "desc">("none");
 
   useEffect(() => {
     if (!username) return;
@@ -101,18 +102,56 @@ const UserRatedMovies = () => {
   };
 
   const filtered = ratedMovies.filter((rm) => {
-    const matchesSearch = !searchQuery.trim() || rm.movie.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesGenre = genreFilter === "all" || rm.movie.genres.some((g) => g.id === Number(genreFilter));
-    const matchesPlatform = platformFilter === "all" || (platformFilter === "none" ? !rm.platform : rm.platform === platformFilter);
-    const matchesRating = ratingFilter === "all" || rm.rating === Number(ratingFilter);
+    const matchesSearch =
+      !searchQuery.trim() ||
+      rm.movie.title.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesGenre =
+      genreFilter === "all" ||
+      rm.movie.genres.some((g) => g.id === Number(genreFilter));
+
+    const matchesPlatform =
+      platformFilter === "all" ||
+      (platformFilter === "none"
+        ? !rm.platform
+        : rm.platform === platformFilter);
+
+    const matchesRating =
+      ratingFilter === "all" || rm.rating === Number(ratingFilter);
+
     const range = getDateRange();
     const ratingDate = new Date(rm.date + "T00:00:00");
-    const to = range.to
-      ? new Date(range.to.getFullYear(), range.to.getMonth(), range.to.getDate(), 23, 59, 59, 999)
-      : null;
-    const matchesDate = (!range.from || ratingDate >= range.from) && (!to || ratingDate <= to);
-    return matchesSearch && matchesGenre && matchesPlatform && matchesRating && matchesDate;
+
+    const from = range.from ? new Date(range.from) : null;
+    const to = range.to ? new Date(range.to) : null;
+
+    if (from) from.setHours(0, 0, 0, 0);
+    if (to) to.setHours(0, 0, 0, 0);
+
+    const matchesDate =
+      (!from || ratingDate >= from) &&
+      (!to || ratingDate <= to);
+
+    return (
+      matchesSearch &&
+      matchesGenre &&
+      matchesPlatform &&
+      matchesRating &&
+      matchesDate
+    );
   });
+
+  if (sortOrder === "asc") {
+    filtered.sort((a, b) =>
+      a.movie.title.localeCompare(b.movie.title, "pt-BR")
+    );
+  }
+
+  if (sortOrder === "desc") {
+    filtered.sort((a, b) =>
+      b.movie.title.localeCompare(a.movie.title, "pt-BR")
+    );
+  }
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -206,6 +245,29 @@ const UserRatedMovies = () => {
                 ))}
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setSortOrder((prev) =>
+                  prev === "none" ? "asc" : prev === "asc" ? "desc" : "none"
+                )
+              }
+              className="w-full sm:w-auto"
+              title={
+                sortOrder === "asc"
+                  ? "Ordem alfabética (A-Z)"
+                  : sortOrder === "desc"
+                    ? "Ordem alfabética (Z-A)"
+                    : "Sem ordenação"
+              }
+            >
+              {sortOrder === "desc" ? (
+                <ArrowDownZA className="h-4 w-4 mr-2" />
+              ) : (
+                <ArrowUpAZ className="h-4 w-4 mr-2" />
+              )}
+              {sortOrder === "asc" ? "A-Z" : sortOrder === "desc" ? "Z-A" : "Ordenar"}
+            </Button>
           </div>
 
           {datePreset === "custom" && (
