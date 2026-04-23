@@ -367,7 +367,7 @@ const ListDetail = () => {
       }
       let referenceRating: number | null | undefined = rating?.rating;
       if (userFilter !== "all") {
-        const userRatingEntry  = sharedList?.ratings?.find(
+        const userRatingEntry = sharedList?.ratings?.find(
           (r) => r.movieId === movie.id && r.profileName === userFilter
         );
         if (!userRatingEntry) return false;
@@ -853,7 +853,10 @@ const ListDetail = () => {
                 </SelectContent>
               </Select>
 
-              <Select value={platformFilter} onValueChange={setPlatformFilter}>
+              <Select value={platformFilter} onValueChange={(v) => {
+                setPlatformFilter(v);
+                if (v !== "all") setUserFilter("all");
+              }}>
                 <SelectTrigger className="w-full sm:w-[200px]">
                   <Tv className="h-4 w-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Plataforma" />
@@ -922,6 +925,7 @@ const ListDetail = () => {
               <Select value={datePreset} onValueChange={(v) => {
                 setDatePreset(v);
                 if (v !== "custom") { setDateFrom(undefined); setDateTo(undefined); }
+                if (v !== "all") setUserFilter("all");
               }}>
                 <SelectTrigger className="w-full sm:w-[200px]">
                   <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
