@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, Star, Filter, ArrowLeft, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowUpAZ, ArrowDownZA } from "lucide-react";
+import { Search, Star, Filter, ArrowLeft, Calendar as CalendarIcon, ArrowUpAZ, ArrowDownZA } from "lucide-react";
 import { format } from "date-fns";
 import Navbar from "@/components/Navbar";
 import { Input } from "@/components/ui/input";
@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import Pagination from "@/components/Pagination";
 import { PLATFORMS, PlatformBadge } from "@/components/UserRating";
-import { getUserRatings } from "@/lib/ratings";
+import { getUserRatingsPaged, type PeriodParam, type RatingResponse } from "@/lib/ratings";
 import { getMovieDetails, getPosterUrl, type MovieDetails } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 import { Tv } from "lucide-react";
@@ -21,20 +22,23 @@ interface RatedMovie {
   platform?: string;
 }
 
-const DATE_PRESETS = [
+const DATE_PRESETS: { label: string; value: string; period?: PeriodParam }[] = [
   { label: "Todos", value: "all" },
-  { label: "Última semana", value: "7d" },
-  { label: "Último mês", value: "30d" },
-  { label: "Últimos 3 meses", value: "90d" },
-  { label: "Último ano", value: "1y" },
-  { label: "Personalizado", value: "custom" },
+  { label: "Última semana", value: "7d", period: "LAST_WEEK" },
+  { label: "Último mês", value: "30d", period: "LAST_MONTH" },
+  { label: "Últimos 3 meses", value: "90d", period: "LAST_3_MONTHS" },
+  { label: "Último ano", value: "1y", period: "LAST_YEAR" },
+  { label: "Personalizado", value: "custom", period: "CUSTOM" },
 ];
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 25;
 
 const RatedMovies = () => {
-  const [ratedMovies, setRatedMovies] = useState<RatedMovie[]>([]);
+  const [items, setItems] = useState<RatedMovie[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [genreFilter, setGenreFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
@@ -42,125 +46,131 @@ const RatedMovies = () => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [ratingFilter, setRatingFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const genreParam = searchParams.get("genre");
+  const [currentPage, setCurrentPage] = useState(1); // 1-based for UI
   const [sortOrder, setSortOrder] = useState<"none" | "asc" | "desc">("none");
 
-  useEffect(() => {
-    const loadRatedMovies = async () => {
-      try {
-        const ratings = await getUserRatings();
-        if (ratings.length === 0) { setLoading(false); return; }
+  const [searchParams] = useSearchParams();
+  const genreParam = searchParams.get("genre");
 
-        const results: RatedMovie[] = [];
-        for (const entry of ratings) {
-          try {
-            const movie = await getMovieDetails(entry.movieId);
-            results.push({ movie, rating: entry.rating, date: entry.createdAt, platform: entry.platform });
-          } catch { /* skip */ }
+  // Build sort param for backend (only date sorting; alphabetic is client-side over current page)
+  const backendSort = "createdAt,desc";
+
+  // Reset to page 1 when backend filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [platformFilter, ratingFilter, datePreset, dateFrom, dateTo]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPage = async () => {
+      setLoading(true);
+      try {
+        const params: Parameters<typeof getUserRatingsPaged>[0] = {
+          page: currentPage - 1,
+          size: PAGE_SIZE,
+          sort: backendSort,
+        };
+
+        if (platformFilter !== "all" && platformFilter !== "none") {
+          params.platform = platformFilter;
         }
-        results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        setRatedMovies(results);
+
+        if (ratingFilter !== "all") {
+          params.score = Number(ratingFilter);
+        }
+
+        const preset = DATE_PRESETS.find((p) => p.value === datePreset);
+
+        if (preset?.period) {
+          params.period = preset.period;
+
+          if (preset.period === "CUSTOM") {
+            if (dateFrom) params.startDate = format(dateFrom, "yyyy-MM-dd");
+            if (dateTo) params.endDate = format(dateTo, "yyyy-MM-dd");
+          }
+        }
+        const page = await getUserRatingsPaged(params);
+        if (cancelled) return;
+
+        setTotalElements(page.totalElements);
+        setTotalPages(page.totalPages);
+
+        // Fetch TMDB details only for items on the current page
+        const enriched = await Promise.all(
+          page.content.map(async (entry: RatingResponse) => {
+            try {
+              const movie = await getMovieDetails(entry.movieId);
+              return {
+                movie,
+                rating: entry.rating,
+                date: entry.createdAt,
+                platform: entry.platform,
+              } as RatedMovie;
+            } catch {
+              return null;
+            }
+          })
+        );
+
+        if (cancelled) return;
+        setItems(enriched.filter((x): x is RatedMovie => x !== null));
       } catch (err) {
         console.error("Erro ao carregar avaliações:", err);
+        if (!cancelled) {
+          setItems([]);
+          setTotalElements(0);
+          setTotalPages(0);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
-    loadRatedMovies();
-  }, []);
+    loadPage();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPage, platformFilter, ratingFilter, datePreset, dateFrom, dateTo]);
 
+  // Genres available on the current page (for the gênero select)
+  const allGenres = useMemo(() => {
+    const m = new Map<number, string>();
+    items.forEach((rm) => rm.movie.genres.forEach((g) => m.set(g.id, g.name)));
+    return m;
+  }, [items]);
+
+  // Apply ?genre=<name> when current page genres are loaded
   useEffect(() => {
-    if (!genreParam || ratedMovies.length === 0) return;
+    if (!genreParam || items.length === 0) return;
     const match = Array.from(allGenres.entries()).find(
       ([, name]) => name.toLowerCase() === genreParam.toLowerCase()
     );
-    if (match) {
-      setGenreFilter(String(match[0]));
-      const next = new URLSearchParams(searchParams);
-      next.delete("genre");
-      setSearchParams(next, { replace: true });
+    if (match) setGenreFilter(String(match[0]));
+  }, [genreParam, allGenres, items.length]);
+
+  // Client-side filtering applied ONLY to the current page (search + genre)
+  // Backend already handled platform/rating/date.
+  const filtered = useMemo(() => {
+    const list = items.filter((rm) => {
+      const matchesSearch =
+        !searchQuery.trim() ||
+        rm.movie.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesGenre =
+        genreFilter === "all" ||
+        rm.movie.genres.some((g) => g.id === Number(genreFilter));
+      const matchesNoPlatform =
+        platformFilter !== "none" || !rm.platform;
+      return matchesSearch && matchesGenre && matchesNoPlatform;
+    });
+
+    if (sortOrder === "asc") {
+      list.sort((a, b) => a.movie.title.localeCompare(b.movie.title, "pt-BR"));
+    } else if (sortOrder === "desc") {
+      list.sort((a, b) => b.movie.title.localeCompare(a.movie.title, "pt-BR"));
     }
-  }, [genreParam, ratedMovies]);
-
-  const allGenres = new Map<number, string>();
-  ratedMovies.forEach((rm) => rm.movie.genres.forEach((g) => allGenres.set(g.id, g.name)));
-
-  const getDateRange = (): { from?: Date; to?: Date } => {
-    if (datePreset === "custom") return { from: dateFrom, to: dateTo };
-    if (datePreset === "all") return {};
-    const now = new Date();
-    const from = new Date();
-    switch (datePreset) {
-      case "7d": from.setDate(now.getDate() - 7); break;
-      case "30d": from.setDate(now.getDate() - 30); break;
-      case "90d": from.setDate(now.getDate() - 90); break;
-      case "1y": from.setFullYear(now.getFullYear() - 1); break;
-    }
-    return { from, to: now };
-  };
-
-  const filtered = ratedMovies.filter((rm) => {
-    const matchesSearch =
-      !searchQuery.trim() ||
-      rm.movie.title.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesGenre =
-      genreFilter === "all" ||
-      rm.movie.genres.some((g) => g.id === Number(genreFilter));
-
-    const matchesPlatform =
-      platformFilter === "all" ||
-      (platformFilter === "none"
-        ? !rm.platform
-        : rm.platform === platformFilter);
-
-    const matchesRating =
-      ratingFilter === "all" || rm.rating === Number(ratingFilter);
-
-    const range = getDateRange();
-    const ratingDate = new Date(rm.date + "T00:00:00");
-
-    const from = range.from ? new Date(range.from) : null;
-    const to = range.to ? new Date(range.to) : null;
-
-    if (from) from.setHours(0, 0, 0, 0);
-    if (to) to.setHours(0, 0, 0, 0);
-
-    const matchesDate =
-      (!from || ratingDate >= from) &&
-      (!to || ratingDate <= to);
-
-    return (
-      matchesSearch &&
-      matchesGenre &&
-      matchesPlatform &&
-      matchesRating &&
-      matchesDate
-    );
-  });
-
-  if (sortOrder === "asc") {
-    filtered.sort((a, b) =>
-      a.movie.title.localeCompare(b.movie.title, "pt-BR")
-    );
-  }
-
-  if (sortOrder === "desc") {
-    filtered.sort((a, b) =>
-      b.movie.title.localeCompare(a.movie.title, "pt-BR")
-    );
-  }
-
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-  const handleFilterChange = (fn: () => void) => {
-    fn();
-    setCurrentPage(1);
-  };
+    return list;
+  }, [items, searchQuery, genreFilter, platformFilter, sortOrder]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -171,33 +181,36 @@ const RatedMovies = () => {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <h1 className="font-display text-2xl font-bold text-foreground">Filmes Avaliados</h1>
-          <span className="text-sm text-muted-foreground">({filtered.length})</span>
+          <span className="text-sm text-muted-foreground">({totalElements})</span>
         </div>
 
+        {/* Filters */}
         <div className="flex flex-col gap-3 mb-6">
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Pesquisar por nome do filme..."
                 value={searchQuery}
-                onChange={(e) => handleFilterChange(() => setSearchQuery(e.target.value))}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
               />
             </div>
-            <Select value={genreFilter} onValueChange={(v) => handleFilterChange(() => setGenreFilter(v))}>
+            <Select value={genreFilter} onValueChange={setGenreFilter}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Gênero" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os gêneros</SelectItem>
-                {Array.from(allGenres.entries()).sort(([, a], [, b]) => a.localeCompare(b)).map(([id, name]) => (
-                  <SelectItem key={id} value={String(id)}>{name}</SelectItem>
-                ))}
+                {Array.from(allGenres.entries())
+                  .sort(([, a], [, b]) => a.localeCompare(b))
+                  .map(([id, name]) => (
+                    <SelectItem key={id} value={String(id)}>{name}</SelectItem>
+                  ))}
               </SelectContent>
             </Select>
-            <Select value={platformFilter} onValueChange={(v) => handleFilterChange(() => setPlatformFilter(v))}>
+            <Select value={platformFilter} onValueChange={setPlatformFilter}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <Tv className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Plataforma" />
@@ -207,12 +220,15 @@ const RatedMovies = () => {
                 <SelectItem value="none">Não informado</SelectItem>
                 {PLATFORMS.map((p) => (
                   <SelectItem key={p.value} value={p.value}>
-                    <span className="flex items-center gap-2"><PlatformBadge value={p.value} />{p.label}</span>
+                    <span className="flex items-center gap-2">
+                      <PlatformBadge value={p.value} />
+                      {p.label}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Select value={ratingFilter} onValueChange={(v) => handleFilterChange(() => setRatingFilter(v))}>
+            <Select value={ratingFilter} onValueChange={setRatingFilter}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <Star className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Nota" />
@@ -230,10 +246,16 @@ const RatedMovies = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={datePreset} onValueChange={(v) => handleFilterChange(() => {
-              setDatePreset(v);
-              if (v !== "custom") { setDateFrom(undefined); setDateTo(undefined); }
-            })}>
+            <Select
+              value={datePreset}
+              onValueChange={(v) => {
+                setDatePreset(v);
+                if (v !== "custom") {
+                  setDateFrom(undefined);
+                  setDateTo(undefined);
+                }
+              }}
+            >
               <SelectTrigger className="w-full sm:w-[200px]">
                 <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Período" />
@@ -279,7 +301,14 @@ const RatedMovies = () => {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={dateFrom} onSelect={(d) => handleFilterChange(() => setDateFrom(d))} disabled={(date) => date > new Date() || (dateTo ? date > dateTo : false)} initialFocus className={cn("p-3 pointer-events-auto")} />
+                  <Calendar
+                    mode="single"
+                    selected={dateFrom}
+                    onSelect={setDateFrom}
+                    disabled={(date) => date > new Date() || (dateTo ? date > dateTo : false)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
                 </PopoverContent>
               </Popover>
               <span className="text-sm text-muted-foreground">até</span>
@@ -291,11 +320,18 @@ const RatedMovies = () => {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={dateTo} onSelect={(d) => handleFilterChange(() => setDateTo(d))} disabled={(date) => date > new Date() || (dateFrom ? date < dateFrom : false)} initialFocus className={cn("p-3 pointer-events-auto")} />
+                  <Calendar
+                    mode="single"
+                    selected={dateTo}
+                    onSelect={setDateTo}
+                    disabled={(date) => date > new Date() || (dateFrom ? date < dateFrom : false)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
                 </PopoverContent>
               </Popover>
               {(dateFrom || dateTo) && (
-                <Button variant="ghost" size="sm" onClick={() => handleFilterChange(() => { setDateFrom(undefined); setDateTo(undefined); })}>
+                <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}>
                   Limpar
                 </Button>
               )}
@@ -303,6 +339,7 @@ const RatedMovies = () => {
           )}
         </div>
 
+        {/* Content */}
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {Array.from({ length: PAGE_SIZE }).map((_, i) => (
@@ -313,16 +350,20 @@ const RatedMovies = () => {
           <div className="text-center py-16">
             <Star className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
             <p className="text-muted-foreground">
-              {ratedMovies.length === 0 ? "Você ainda não avaliou nenhum filme." : "Nenhum filme encontrado com os filtros selecionados."}
+              {totalElements === 0
+                ? "Você ainda não avaliou nenhum filme."
+                : "Nenhum filme encontrado com os filtros selecionados."}
             </p>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {paginated.map((rm) => {
+              {filtered.map((rm) => {
                 const posterUrl = getPosterUrl(rm.movie.poster_path);
                 const formattedDate = new Date(rm.date + "T00:00:00").toLocaleDateString("pt-BR", {
-                  day: "2-digit", month: "short", year: "numeric",
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
                 });
                 return (
                   <Link
@@ -332,7 +373,12 @@ const RatedMovies = () => {
                   >
                     <div className="aspect-[2/3] overflow-hidden">
                       {posterUrl ? (
-                        <img src={posterUrl} alt={rm.movie.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                        <img
+                          src={posterUrl}
+                          alt={rm.movie.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-muted">
                           <span className="text-muted-foreground text-sm">Sem imagem</span>
@@ -340,10 +386,18 @@ const RatedMovies = () => {
                       )}
                     </div>
                     <div className="p-3 space-y-1.5">
-                      <h3 className="truncate text-sm font-semibold text-card-foreground">{rm.movie.title}</h3>
+                      <h3 className="truncate text-sm font-semibold text-card-foreground">
+                        {rm.movie.title}
+                      </h3>
                       <div className="flex items-center gap-0.5">
                         {[1, 2, 3, 4, 5].map((s) => (
-                          <Star key={s} className={`h-3.5 w-3.5 ${s <= rm.rating ? "fill-star text-star" : "fill-transparent text-star-empty"}`} />
+                          <Star
+                            key={s}
+                            className={`h-3.5 w-3.5 ${s <= rm.rating
+                                ? "fill-star text-star"
+                                : "fill-transparent text-star-empty"
+                              }`}
+                          />
                         ))}
                       </div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -363,52 +417,11 @@ const RatedMovies = () => {
             </div>
 
             {totalPages > 1 && (
-              <div className="mt-8 flex items-center justify-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter((page) =>
-                    page === 1 ||
-                    page === totalPages ||
-                    Math.abs(page - currentPage) <= 1
-                  )
-                  .reduce<(number | "...")[]>((acc, page, idx, arr) => {
-                    if (idx > 0 && page - (arr[idx - 1] as number) > 1) acc.push("...");
-                    acc.push(page);
-                    return acc;
-                  }, [])
-                  .map((item, idx) =>
-                    item === "..." ? (
-                      <span key={`ellipsis-${idx}`} className="px-1 text-muted-foreground text-sm">...</span>
-                    ) : (
-                      <Button
-                        key={item}
-                        variant={currentPage === item ? "default" : "outline"}
-                        size="sm"
-                        className="w-9"
-                        onClick={() => setCurrentPage(item as number)}
-                      >
-                        {item}
-                      </Button>
-                    )
-                  )}
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(p) => setCurrentPage(p)}
+              />
             )}
           </>
         )}

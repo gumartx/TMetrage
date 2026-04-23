@@ -3,6 +3,8 @@ package com.gusmarg.tmetrage.controllers;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,44 +35,44 @@ public class RatingController {
 
 	private final RatingService ratingService;
 
-    @GetMapping("/{profileName}/recent")
-    public ResponseEntity<List<RatingResponseDTO>> getRecentRatings(@PathVariable String profileName) {
-        return ResponseEntity.ok(ratingService.getRecentRatings(profileName));
-    }
-	
+	@GetMapping("/{profileName}/recent")
+	public ResponseEntity<List<RatingResponseDTO>> getRecentRatings(@PathVariable String profileName) {
+		return ResponseEntity.ok(ratingService.getRecentRatings(profileName));
+	}
+
 	@GetMapping(value = "{movieId}")
 	public ResponseEntity<RatingResponseDTO> getMovieUserRating(@PathVariable Long movieId) {
 		RatingResponseDTO result = ratingService.findMovieUserRating(movieId);
 		return ResponseEntity.ok(result);
 	}
 
-	
 	@GetMapping(value = "/{listId}/lists")
 	public ResponseEntity<List<RatedMovieDTO>> getRatedMovieList(@PathVariable Long listId) {
 		List<RatedMovieDTO> result = ratingService.getRatedMovies(listId);
 		return ResponseEntity.ok(result);
 	}
-	
-	
-	@GetMapping()
-	public ResponseEntity<List<RatingResponseDTO>> getUserRatings(@RequestParam(required = false) Platform plataforma,
-			@RequestParam(required = false) Integer nota, @RequestParam(required = false) Period periodo,
-			@RequestParam(required = false) LocalDate inicio, @RequestParam(required = false) LocalDate fim) {
 
-		RatingFilterDTO filter = new RatingFilterDTO(plataforma, nota, periodo, inicio, fim);
-		
-		List<RatingResponseDTO> result = ratingService.findUserRatings(filter);
+	@GetMapping
+	public ResponseEntity<Page<RatingResponseDTO>> getUserRatings(@RequestParam(required = false) Platform platform,
+			@RequestParam(required = false) Integer score, @RequestParam(required = false) Period period,
+			@RequestParam(required = false) LocalDate startDate, @RequestParam(required = false) LocalDate endDate,
+			Pageable pageable) {
+
+		RatingFilterDTO filter = new RatingFilterDTO(platform, score, period, startDate, endDate);
+
+		Page<RatingResponseDTO> result = ratingService.findUserRatings(filter, pageable);
 		return ResponseEntity.ok(result);
 	}
-	
-	@GetMapping("/public/{profileName}")
-	public ResponseEntity<List<RatingResponseDTO>> getUserRatingsByProfileName(@PathVariable String profileName, @RequestParam(required = false) Platform plataforma,
-			@RequestParam(required = false) Integer nota, @RequestParam(required = false) Period periodo,
-			@RequestParam(required = false) LocalDate inicio, @RequestParam(required = false) LocalDate fim) {
 
-		RatingFilterDTO filter = new RatingFilterDTO(plataforma, nota, periodo, inicio, fim);
-		
-		List<RatingResponseDTO> result = ratingService.findUserRatingsByProfileName(profileName, filter);
+	@GetMapping("/public/{profileName}")
+	public ResponseEntity<Page<RatingResponseDTO>> getUserRatingsByProfileName(@PathVariable String profileName,
+			@RequestParam(required = false) Platform platform, @RequestParam(required = false) Integer score,
+			@RequestParam(required = false) Period period, @RequestParam(required = false) LocalDate startDate,
+			@RequestParam(required = false) LocalDate endDate, Pageable pageable) {
+
+		RatingFilterDTO filter = new RatingFilterDTO(platform, score, period, startDate, endDate);
+
+		Page<RatingResponseDTO> result = ratingService.findUserRatingsByProfileName(profileName, filter, pageable);
 		return ResponseEntity.ok(result);
 	}
 
@@ -79,17 +81,18 @@ public class RatingController {
 		RatingResponseDTO result = ratingService.rateMovie(dto);
 		return ResponseEntity.ok(result);
 	}
-	
+
 	@PutMapping(value = "/{movieId}")
-	public ResponseEntity<RatingResponseDTO> updateRating(@PathVariable Long movieId, @RequestBody RatingUpdateDTO dto) {
+	public ResponseEntity<RatingResponseDTO> updateRating(@PathVariable Long movieId,
+			@RequestBody RatingUpdateDTO dto) {
 		RatingResponseDTO result = ratingService.updateRating(movieId, dto);
 		return ResponseEntity.ok(result);
 	}
-	
+
 	@DeleteMapping(value = "/{movieId}")
 	public ResponseEntity<Void> removeRating(@PathVariable Long movieId) {
-	    ratingService.removeRating(movieId);
-	    return ResponseEntity.noContent().build();
+		ratingService.removeRating(movieId);
+		return ResponseEntity.noContent().build();
 	}
 
 }

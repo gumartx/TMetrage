@@ -9,14 +9,59 @@ export interface RatingResponse {
   createdAt: string;
 }
 
-// Fetch all ratings for the authenticated user
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
+export type PeriodParam = "LAST_WEEK" | "LAST_MONTH" | "LAST_3_MONTHS" | "LAST_YEAR" | "CUSTOM";
+export interface RatingsQueryParams {
+  page?: number;
+  size?: number;
+  sort?: string;
+  platform?: string;
+  score?: number;
+  period?: PeriodParam;
+  startDate?: string;
+  endDate?: string;
+}
+function buildQuery(params: RatingsQueryParams = {}): string {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== "") qs.append(k, String(v));
+  });
+  const s = qs.toString();
+  return s ? `?${s}` : "";
+}
+export async function getUserRatingsPaged(params: RatingsQueryParams = {}): Promise<PageResponse<RatingResponse>> {
+  return apiRequest<PageResponse<RatingResponse>>(`/ratings${buildQuery(params)}`, { auth: true });
+}
+
+export async function getUserRatingsByProfilePaged(
+  profileName: string,
+  params: RatingsQueryParams = {}
+): Promise<PageResponse<RatingResponse>> {
+  return apiRequest<PageResponse<RatingResponse>>(
+    `/ratings/public/${encodeURIComponent(profileName)}${buildQuery(params)}`,
+    { auth: true }
+  );
+}
+
 export async function getUserRatings(): Promise<RatingResponse[]> {
-  return apiRequest<RatingResponse[]>("/ratings", { auth: true });
+  const page = await getUserRatingsPaged({ page: 0, size: 1000, sort: "createdAt,desc" });
+  return page.content;
 }
 
 export async function getUserRatingsByProfileName(username: string): Promise<RatingResponse[]> {
   username = username.startsWith("@") ? username : `@${username}`;
-  return apiRequest<RatingResponse[]>(`/ratings/public/${encodeURIComponent(username)}`, { auth: true });
+  const page = await getUserRatingsByProfilePaged(encodeURIComponent(username), { page: 0, size: 1000, sort: "createdAt,desc" });
+  return page.content;
 }
 
 export async function getRecentRatings(username: string): Promise<RatingResponse[]> {

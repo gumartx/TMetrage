@@ -2,7 +2,6 @@ package com.gusmarg.tmetrage.dto;
 
 import java.time.LocalDate;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gusmarg.tmetrage.dto.enums.Period;
 import com.gusmarg.tmetrage.entities.enums.Platform;
 
@@ -19,20 +18,11 @@ import lombok.Setter;
 @Setter
 public class RatingFilterDTO {
 
-    @JsonProperty("plataforma")
-    private Platform platform;
-
-    @JsonProperty("nota")
-    @Min(1)
-    @Max(5)
-    private Integer score;
-
-    @JsonProperty("periodo")
-    private Period period;
-    
-    @JsonProperty("inicio")
-    private LocalDate startDate;
-
-    @JsonProperty("fim")
-    private LocalDate endDate;
+	private Platform platform;
+	@Min(1)
+	@Max(5)
+	private Integer score;
+	private Period period;
+	private LocalDate startDate;
+	private LocalDate endDate;
 }

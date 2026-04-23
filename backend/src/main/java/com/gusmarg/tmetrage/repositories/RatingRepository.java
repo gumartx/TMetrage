@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -15,7 +17,7 @@ import com.gusmarg.tmetrage.entities.pk.RatingPK;
 public interface RatingRepository extends JpaRepository<Rating, RatingPK> {
 
 	List<Rating> findTop8ByIdUserOrderByCreatedAtDesc(User user);
-	
+
 	Optional<Rating> findByIdUserIdAndIdMovieId(Long userId, Long movieId);
 
 	@Query("""
@@ -24,10 +26,11 @@ public interface RatingRepository extends JpaRepository<Rating, RatingPK> {
 			WHERE r.id.user.id = :userId
 			AND (:platform IS NULL OR r.platform = :platform)
 			AND (:score IS NULL OR r.score = :score)
-			AND (:startDate IS NULL OR r.createdAt >= :startDate)
-			AND (:endDate IS NULL OR r.createdAt <= :endDate)
+			AND r.createdAt >= COALESCE(:startDate, r.createdAt)
+			AND r.createdAt <= COALESCE(:endDate, r.createdAt)
 			""")
-	List<Rating> findByFilters(Long userId, Platform platform, Integer score, LocalDate startDate, LocalDate endDate);
+	Page<Rating> findByFilters(Long userId, Platform platform, Integer score, LocalDate startDate,
+			LocalDate endDate, Pageable pageable);
 
 	@Query("""
 			SELECT AVG(r.score)
@@ -35,7 +38,7 @@ public interface RatingRepository extends JpaRepository<Rating, RatingPK> {
 			WHERE r.id.user.id = :userId
 			""")
 	Double findAvgScoreByUserId(Long userId);
-	
-    List<Rating> findByIdUserIdAndIdMovieIdIn(Long userId, List<Long> movieIds);
-	
+
+	List<Rating> findByIdUserIdAndIdMovieIdIn(Long userId, List<Long> movieIds);
+
 }

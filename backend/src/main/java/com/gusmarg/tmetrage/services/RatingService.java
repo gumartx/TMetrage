@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,7 +59,7 @@ public class RatingService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<RatingResponseDTO> findUserRatings(RatingFilterDTO filter) {
+	public Page<RatingResponseDTO> findUserRatings(RatingFilterDTO filter, Pageable pageable) {
 
 		User user = authService.getAuthenticatedUser();
 
@@ -89,16 +91,16 @@ public class RatingService {
 			}
 		}
 
-		List<Rating> ratings = ratingRepository.findByFilters(user.getId(), filter.getPlatform(), filter.getScore(),
-				startDate, endDate);
+		Page<Rating> ratings = ratingRepository.findByFilters(user.getId(), filter.getPlatform(), filter.getScore(),
+				startDate, endDate, pageable);
 
-		log.info("Encontrado {} avaliação(ões) de '{}'", ratings.size(), user.getProfileName());
+		log.info("Encontrado {} avaliação(ões) de '{}'", ratings.getTotalElements(), user.getProfileName());
 
-		return ratings.stream().map(RatingResponseDTO::new).toList();
+		return ratings.map(RatingResponseDTO::new);
 	}
 
 	@Transactional(readOnly = true)
-	public List<RatingResponseDTO> findUserRatingsByProfileName(String profileName, RatingFilterDTO filter) {
+	public Page<RatingResponseDTO> findUserRatingsByProfileName(String profileName, RatingFilterDTO filter, Pageable pageable) {
 
 		User user = userRepository.findByProfileName(profileName);
 
@@ -130,12 +132,12 @@ public class RatingService {
 			}
 		}
 
-		List<Rating> ratings = ratingRepository.findByFilters(user.getId(), filter.getPlatform(), filter.getScore(),
-				startDate, endDate);
+		Page<Rating> ratings = ratingRepository.findByFilters(user.getId(), filter.getPlatform(), filter.getScore(),
+				startDate, endDate, pageable);
 
-		log.info("Encontrado {} avaliação(ões) de '{}'", ratings.size(), user.getProfileName());
+		log.info("Encontrado {} avaliação(ões) de '{}'", ratings.getTotalElements(), user.getProfileName());
 
-		return ratings.stream().map(RatingResponseDTO::new).toList();
+		return ratings.map(RatingResponseDTO::new);
 	}
 
 	@Transactional
