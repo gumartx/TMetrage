@@ -365,14 +365,16 @@ const ListDetail = () => {
       } else if (datePreset !== "all" && !rating?.createdAt) {
         return false;
       }
-      if (ratingFilter !== "all") {
-        if (!rating || rating.rating !== Number(ratingFilter)) return false;
-      }
+      let referenceRating: number | null | undefined = rating?.rating;
       if (userFilter !== "all") {
-        const hasUserRating = sharedList?.ratings?.some(
+        const userRatingEntry  = sharedList?.ratings?.find(
           (r) => r.movieId === movie.id && r.profileName === userFilter
         );
-        if (!hasUserRating) return false;
+        if (!userRatingEntry) return false;
+        referenceRating = userRatingEntry.rating;
+      }
+      if (ratingFilter !== "all") {
+        if (referenceRating == null || referenceRating !== Number(ratingFilter)) return false;
       }
       return true;
     });
@@ -1110,11 +1112,17 @@ const ListDetail = () => {
                                   to={`/perfil`}
                                   className="peer block h-7 w-7 rounded-full overflow-hidden bg-muted"
                                 >
-                                  <img
-                                    src={getImageUrl(currentUser?.avatar)}
-                                    alt={currentUser.profileName}
-                                    className="h-7 w-7 rounded-full object-cover"
-                                  />
+                                  {currentUser.avatar ? (
+                                    <img
+                                      src={getImageUrl(currentUser.avatar)}
+                                      alt={currentUser.profileName}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="flex items-center justify-center h-full w-full text-[9px] border rounded-full">
+                                      {currentUser.profileName.charAt(1).toUpperCase()}
+                                    </div>
+                                  )}
                                 </Link>
                                 {/* Tooltip */}
                                 <div
