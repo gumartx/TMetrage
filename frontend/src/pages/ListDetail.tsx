@@ -1016,7 +1016,7 @@ const ListDetail = () => {
                                     key={i}
                                     className={`h-3 w-3 ${i < r.rating
                                       ? "fill-yellow-400 text-yellow-400"
-                                      : "text-muted-foreground"
+                                      : "fill-transparent text-star-empty"
                                       }`}
                                   />
                                 ))}
