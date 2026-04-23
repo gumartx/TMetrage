@@ -847,20 +847,25 @@ const ListDetail = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos os usuários</SelectItem>
-                    {sharedUsers.map((u) => (
-                      <SelectItem key={u.profileName} value={u.profileName}>
-                        <span className="flex items-center gap-2">
-                          <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                            {u.avatar ? (
-                              <img src={getImageUrl(u.avatar)} alt={u.name} className="h-full w-full object-cover" />
-                            ) : (
-                              <span className="text-[10px] font-medium text-muted-foreground">{u.profileName.charAt(1).toUpperCase()}</span>
-                            )}
+                    {sharedUsers
+                      .filter(u => {
+                        const normalize = (p?: string | null) => p?.replace(/^@/, "").toLowerCase() ?? "";
+                        return normalize(u.profileName) !== normalize(currentUser?.profileName);
+                      })
+                      .map((u) => (
+                        <SelectItem key={u.profileName} value={u.profileName}>
+                          <span className="flex items-center gap-2">
+                            <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                              {u.avatar ? (
+                                <img src={getImageUrl(u.avatar)} alt={u.name} className="h-full w-full object-cover" />
+                              ) : (
+                                <span className="text-[10px] font-medium text-muted-foreground">{u.profileName.charAt(1).toUpperCase()}</span>
+                              )}
+                            </span>
+                            {u.profileName}
                           </span>
-                          {u.profileName}
-                        </span>
-                      </SelectItem>
-                    ))}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               )}
