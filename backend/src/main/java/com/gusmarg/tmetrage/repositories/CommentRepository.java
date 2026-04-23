@@ -25,13 +25,17 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 	Optional<List<Comment>> findByMovieIdAndParentIsNullOrderByCreatedAtAsc(Long movieId);
 
 	@Query("""
-			    SELECT c FROM Comment c
-			    WHERE c.user.id = :userId 
-			    	   AND (:search IS NULL
-			           OR LOWER(c.message) LIKE LOWER(CONCAT('%', :search, '%'))
-			           OR LOWER(c.movie.title) LIKE LOWER(CONCAT('%', :search, '%')))
-			      AND (:startDate IS NULL OR c.createdAt >= :startDate)
-			      AND (:endDate IS NULL OR c.createdAt <= :endDate)
+			SELECT c
+			FROM Comment c
+			JOIN c.movie m
+			WHERE c.user.id = :userId
+			AND (
+			    :search IS NULL OR
+			    c.message ILIKE :search OR
+			    m.title ILIKE :search
+			)
+			AND c.createdAt >= COALESCE(:startDate, c.createdAt)
+			AND c.createdAt <= COALESCE(:endDate, c.createdAt)
 			""")
 	List<Comment> searchComments(Long userId, String search, LocalDate startDate, LocalDate endDate);
 

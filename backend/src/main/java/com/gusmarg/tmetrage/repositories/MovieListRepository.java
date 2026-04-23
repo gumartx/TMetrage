@@ -13,12 +13,12 @@ import com.gusmarg.tmetrage.entities.MovieList;
 public interface MovieListRepository extends JpaRepository<MovieList, Long> {
 
 	@Query("""
-			SELECT l
-			FROM MovieList l
-			WHERE l.user.id = :userId
-			AND (:name IS NULL OR LOWER(l.name) LIKE LOWER(CONCAT('%', :name, '%')))
-			AND (:month IS NULL OR MONTH(l.createdAt) = :month)
-			AND (:year IS NULL OR YEAR(l.createdAt) = :year)
+			    SELECT l
+			    FROM MovieList l
+			    WHERE l.user.id = :userId
+			    AND (:name IS NULL OR l.name ILIKE :name)
+			    AND (:month IS NULL OR EXTRACT(MONTH FROM l.createdAt) = :month)
+			    AND (:year IS NULL OR EXTRACT(YEAR FROM l.createdAt) = :year)
 			""")
 	List<MovieList> searchUserLists(Long userId, String name, Integer month, Integer year);
 
@@ -54,7 +54,7 @@ public interface MovieListRepository extends JpaRepository<MovieList, Long> {
 			FROM MovieList l
 			WHERE l.user.id = :userId
 			AND l.isPublic = true
-			AND (:name IS NULL OR LOWER(l.name) LIKE LOWER(CONCAT('%', :name, '%')))
+			AND (:name IS NULL OR l.name ILIKE CONCAT('%', CAST(:name AS string), '%'))
 			AND (:month IS NULL OR MONTH(l.createdAt) = :month)
 			AND (:year IS NULL OR YEAR(l.createdAt) = :year)
 			""")

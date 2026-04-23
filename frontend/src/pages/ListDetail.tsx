@@ -657,32 +657,59 @@ const ListDetail = () => {
                         key={user.profileName}
                         className="flex items-center justify-between gap-3 rounded-md border border-border bg-card p-2.5 hover:bg-accent transition-colors"
                       >
-                        <Link
-                          to={`/usuario/${user.profileName}`}
-                          onClick={() => setShowSharedUsers(false)}
-                          className="flex flex-1 items-center gap-3 min-w-0"
-                        >
-                          <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                            {user.avatar ? (
-                              <img
-                                src={getImageUrl(user.avatar)}
-                                alt={user.profileName}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <span className="text-sm font-medium text-muted-foreground">
-                                {user.profileName.charAt(1).toUpperCase()}
-                              </span>
-                            )}
-                          </div>
+                        {user.profileName === currentUser?.profileName ? (
+                          <Link
+                            to={`/perfil`}
+                            onClick={() => setShowSharedUsers(false)}
+                            className="flex flex-1 items-center gap-3 min-w-0"
+                          >
+                            <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                              {user.avatar ? (
+                                <img
+                                  src={getImageUrl(user.avatar)}
+                                  alt={user.profileName}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  {user.profileName.charAt(1).toUpperCase()}
+                                </span>
+                              )}
 
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-card-foreground truncate">
-                              {user.profileName}
-                            </p>
-                          </div>
-                        </Link>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-card-foreground truncate">
+                                {user.profileName}
+                              </p>
+                            </div>
+                          </Link>
+                        ) : (
+                          <Link
+                            to={`/usuario/${user.profileName}`}
+                            onClick={() => setShowSharedUsers(false)}
+                            className="flex flex-1 items-center gap-3 min-w-0"
+                          >
+                            <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                              {user.avatar ? (
+                                <img
+                                  src={getImageUrl(user.avatar)}
+                                  alt={user.profileName}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  {user.profileName.charAt(1).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
 
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-card-foreground truncate">
+                                {user.profileName}
+                              </p>
+                            </div>
+                          </Link>
+                        )}
                         {list.owner !== false && (
                           <Button
                             size="icon"
@@ -707,33 +734,33 @@ const ListDetail = () => {
                   Adicionar Filme
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-h-[80vh] overflow-y-auto">
+              <DialogContent className="max-h-[80vh] flex flex-col overflow-hidden">
                 <DialogHeader>
                   <DialogTitle>Buscar filme para adicionar</DialogTitle>
                 </DialogHeader>
                 <div className="flex gap-2 pt-2">
-                  <div className="flex flex-1 items-center rounded-md border border-border bg-secondary">
+                  <div className="flex flex-1 items-center rounded-md border border-border bg-secondary min-w-0">
                     <input
                       type="text"
                       placeholder="Pesquisar filme..."
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                      className="flex-1 bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                      className="flex-1 bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
                     />
                   </div>
                   <Button size="sm" onClick={handleSearch}>Buscar</Button>
                 </div>
                 {searchResults && (
-                  <div className="mt-4 space-y-2">
+                  <div className="mt-4 space-y-2 overflow-y-auto flex-1">
                     {searchResults.results.slice(0, 10).map((movie) => {
                       const alreadyAdded = list.movies.some((m) => m.id === movie.id);
                       return (
-                        <div key={movie.id} className="flex items-center gap-3 rounded-md border border-border bg-card p-2">
+                        <div key={movie.id} className="flex items-center gap-3 rounded-md border border-border bg-card p-2 min-w-0">
                           {getPosterUrl(movie.poster_path, "w185") ? (
-                            <img src={getPosterUrl(movie.poster_path, "w185")!} alt={movie.title} className="h-16 w-11 rounded object-cover" />
+                            <img src={getPosterUrl(movie.poster_path, "w185")!} alt={movie.title} className="h-16 w-11 rounded object-cover shrink-0" />
                           ) : (
-                            <div className="flex h-16 w-11 items-center justify-center rounded bg-muted">
+                            <div className="flex h-16 w-11 items-center justify-center rounded bg-muted shrink-0">
                               <Film className="h-4 w-4 text-muted-foreground" />
                             </div>
                           )}
@@ -746,6 +773,7 @@ const ListDetail = () => {
                             variant={alreadyAdded ? "secondary" : "default"}
                             disabled={alreadyAdded}
                             onClick={() => handleAddMovie(movie)}
+                            className="shrink-0"
                           >
                             {alreadyAdded ? "Adicionado" : "Adicionar"}
                           </Button>
@@ -998,7 +1026,7 @@ const ListDetail = () => {
                         <>
                           <div className="flex items-center gap-0.5">
                             {list.isShared && (
-                              <div className="relative h-7 w-7 shrink-0">
+                              <div className="relative h-7 w-7 shrink-0 mr-1">
 
                                 <Link
                                   to={`/perfil`}
