@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Trash2, Film, Search, BarChart3, Star, Calendar as CalendarIcon, Filter, Share2, User, Users } from "lucide-react";
+import { ArrowLeft, Trash2, Film, Search, BarChart3, Star, Calendar as CalendarIcon, Filter, Share2, User, Users, ArrowUpAZ, ArrowDownZA } from "lucide-react";
 import { Tv } from "lucide-react";
 import { format } from "date-fns";
 import { getList, getSharedLists, removeMovieFromList, addMovieToList, shareList, unshareList, type MovieList, type MovieListItem, type SharedList, type UserMovieRating, getSharedListDetail } from "@/lib/movieLists";
@@ -56,8 +56,6 @@ const ListDetail = () => {
     profileName: string;
     avatar: string | null;
   } | null>(null);
-
-  // Filters
   const [genreFilter, setGenreFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
   const [datePreset, setDatePreset] = useState("all");
@@ -65,6 +63,9 @@ const ListDetail = () => {
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [ratingFilter, setRatingFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
+  const [titleFilter, setTitleFilter] = useState("");
+  const [sortOrder, setSortOrder] = useState<"none" | "asc" | "desc">("none");
+  const [showTitleSearch, setShowTitleSearch] = useState(false);
 
   const loadList = async () => {
     if (!id) return;
@@ -178,6 +179,19 @@ const ListDetail = () => {
 
     const map = new Map();
 
+    if (sharedList.sharedBy) {
+      const normalize = (p?: string | null) => p?.replace(/^@/, "").toLowerCase() ?? "";
+      const isOwner = normalize(sharedList.sharedBy.profileName) === normalize(currentUser?.profileName);
+
+      if (!isOwner) {
+        map.set(sharedList.sharedBy.profileName, {
+          profileName: sharedList.sharedBy.profileName,
+          name: sharedList.sharedBy.profileName,
+          avatar: sharedList.sharedBy.avatar ?? null,
+        });
+      }
+    }
+
     sharedList.sharedTo.forEach(r => {
       if (!map.has(r.profileName)) {
         map.set(r.profileName, {
@@ -189,7 +203,7 @@ const ListDetail = () => {
     });
 
     return Array.from(map.values());
-  }, [sharedList]);
+  }, [sharedList, currentUser]);
 
   const filteredFollowing = useMemo(() => {
     if (!list) return [];
@@ -319,7 +333,10 @@ const ListDetail = () => {
 
   const filteredMovies = useMemo(() => {
     if (!list) return [];
-    return list.movies.filter((movie) => {
+    const filtered = list.movies.filter((movie) => {
+      if (titleFilter.trim() && !movie.title.toLowerCase().includes(titleFilter.trim().toLowerCase())) {
+        return false;
+      }
       const rating = movieRatings[movie.id];
       if (genreFilter !== "all") {
         const gIds = movieGenres[movie.id] || [];
@@ -359,7 +376,14 @@ const ListDetail = () => {
       }
       return true;
     });
-  }, [list, movieRatings, movieGenres, genreFilter, platformFilter, datePreset, dateFrom, dateTo, ratingFilter, userFilter]);
+    if (sortOrder === "asc") {
+      return [...filtered].sort((a, b) => a.title.localeCompare(b.title, "pt-BR"));
+    }
+    if (sortOrder === "desc") {
+      return [...filtered].sort((a, b) => b.title.localeCompare(a.title, "pt-BR"));
+    }
+    return filtered;
+  }, [list, movieRatings, movieGenres, genreFilter, platformFilter, datePreset, dateFrom, dateTo, ratingFilter, userFilter, titleFilter, sortOrder]);
 
   const handleSearch = () => setSearchTerm(query);
 
@@ -791,6 +815,29 @@ const ListDetail = () => {
         {list.movies.length > 0 && (
           <div className="mt-6 flex flex-col gap-3">
             <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                variant={showTitleSearch ? "default" : "outline"}
+                size="icon"
+                onClick={() => {
+                  setShowTitleSearch((prev) => {
+                    if (prev) setTitleFilter("");
+                    return !prev;
+                  });
+                }}
+                title="Buscar por título"
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+
+              {showTitleSearch && (
+                <Input
+                  autoFocus
+                  placeholder="Buscar filme pelo nome..."
+                  value={titleFilter}
+                  onChange={(e) => setTitleFilter(e.target.value)}
+                  className="w-full sm:w-[220px] transition-all"
+                />
+              )}
               <Select value={genreFilter} onValueChange={setGenreFilter}>
                 <SelectTrigger className="w-full sm:w-[200px]">
                   <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -884,6 +931,31 @@ const ListDetail = () => {
                   ))}
                 </SelectContent>
               </Select>
+
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setSortOrder((prev) =>
+                    prev === "none" ? "asc" : prev === "asc" ? "desc" : "none"
+                  )
+                }
+                className="w-full sm:w-auto"
+                title={
+                  sortOrder === "asc"
+                    ? "Ordem alfabética (A-Z)"
+                    : sortOrder === "desc"
+                      ? "Ordem alfabética (Z-A)"
+                      : "Sem ordenação"
+                }
+              >
+                {sortOrder === "desc" ? (
+                  <ArrowDownZA className="h-4 w-4 mr-2" />
+                ) : (
+                  <ArrowUpAZ className="h-4 w-4 mr-2" />
+                )}
+                {sortOrder === "asc" ? "A-Z" : sortOrder === "desc" ? "Z-A" : "Ordenar"}
+              </Button>
+
             </div>
 
             {datePreset === "custom" && (
@@ -916,6 +988,7 @@ const ListDetail = () => {
                 )}
               </div>
             )}
+
           </div>
         )}
 

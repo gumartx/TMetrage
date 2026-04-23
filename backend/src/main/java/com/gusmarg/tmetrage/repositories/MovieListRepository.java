@@ -33,10 +33,8 @@ public interface MovieListRepository extends JpaRepository<MovieList, Long> {
 	@Query("""
 			SELECT DISTINCT l
 			FROM MovieList l
-			LEFT JOIN ListShare s ON s.list.id = l.id
-			LEFT JOIN s.sharedTo u
 			WHERE l.id = :listId
-			AND (l.user.id = :userId OR u.id = :userId)
+			AND (l.user.id = :userId)
 			""")
 	Optional<MovieList> findAccessibleList(Long listId, Long userId);
 
