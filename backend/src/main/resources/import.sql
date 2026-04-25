@@ -1,4 +1,4 @@
-INSERT INTO tb_user (avatar, background_img_url, bio, email, name, password, profile_name) VALUES ('uploads/avatars/77d24b20-1f55-476b-8d64-36d8a07dc064_teste2.jpg', NULL, NULL, 'gustavo.gmartx@gmail.com', 'Gustavo Martins', '$2a$10$LfpaOMt7Q5vRKeklhcN30ePcCL0vMwvgtrqFh4h7gr720S37IjoNS', '@gumartx');
+/*INSERT INTO tb_user (avatar, background_img_url, bio, email, name, password, profile_name) VALUES ('uploads/avatars/77d24b20-1f55-476b-8d64-36d8a07dc064_teste2.jpg', NULL, NULL, 'gustavo.gmartx@gmail.com', 'Gustavo Martins', '$2a$10$LfpaOMt7Q5vRKeklhcN30ePcCL0vMwvgtrqFh4h7gr720S37IjoNS', '@gumartx');
 INSERT INTO tb_user (avatar, background_img_url, bio, email, name, password, profile_name) VALUES ('uploads/avatars/21f1031f-36d6-4754-ad7c-da23514ccc20_fofo.png', NULL, NULL, 'gustavo@gmail.com', 'Gustavo Martins', '$2a$10$ZtlbC/Degad/bJRvptaGE.poezutFWvoR1MYJHXBg42atp.EuvrGe', '@ane');
 INSERT INTO tb_user (avatar, background_img_url, bio, email, name, password, profile_name) VALUES (NULL, NULL, NULL, 'bru@gmail.com', 'bruna', '$2a$10$8d9a/Trpz/HT0MxRA/1qr.YtHKXEVx7r1yu9BB53lp9uk5MKHeYh2', '@garotagelida');
 
@@ -52,3 +52,4 @@ INSERT INTO tb_comment (created_at, movie_id, parent_id, user_id, message) VALUE
 INSERT INTO tb_comment (created_at, movie_id, parent_id, user_id, message) VALUES ('2026-04-14T20:43:49.52651', 83533, NULL, 1, '57');
 INSERT INTO tb_comment (created_at, movie_id, parent_id, user_id, message) VALUES ('2026-04-01T20:43:49.52651', 83533, NULL, 1, '6');
 INSERT INTO tb_comment (created_at, movie_id, parent_id, user_id, message) VALUES ('2026-04-13T23:43:49.52651', 83533, NULL, 1, 'mais velho');
+*/

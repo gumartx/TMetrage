@@ -11,6 +11,7 @@ import com.gusmarg.tmetrage.dto.UserLoginResponseDTO;
 import com.gusmarg.tmetrage.dto.UserResponseDTO;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.UserRepository;
+import com.gusmarg.tmetrage.services.exceptions.IncorrectPasswordException;
 import com.gusmarg.tmetrage.services.exceptions.ResourceNotFoundException;
 import com.gusmarg.tmetrage.services.utils.EmailService;
 import com.gusmarg.tmetrage.services.utils.JwtService;
@@ -37,7 +38,7 @@ public class AuthService {
 		boolean passwordMatches = passwordEncoder.matches(dto.getPassword(), entity.getPassword());
 
 		if (!passwordMatches) {
-			throw new RuntimeException("Senha incorreta");
+			throw new IncorrectPasswordException("Senha incorreta");
 		}
 
 		String token = jwtService.generateToken(entity.getEmail());

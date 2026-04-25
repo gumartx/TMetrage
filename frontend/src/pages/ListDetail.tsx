@@ -435,26 +435,20 @@ const ListDetail = () => {
         </Button>
 
         {list.isShared && sharedList?.sharedBy && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <img
-              src={getImageUrl(sharedList.sharedBy.avatar)}
-              alt={sharedList.sharedBy.profileName}
-              className="h-6 w-6 rounded-full"
-            />
-
-            <span>
-              Lista de{" "}
-              {sharedList.sharedBy.profileName === currentUser?.profileName ? (
-                <Link to={`/perfil`} className="font-semibold hover:text-blue-300 transition-colors">
-                  <strong>{sharedList.sharedBy.profileName}</strong>
+          <div className="mb-2 flex items-center gap-2">
+                <span className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                  {sharedList.sharedBy.avatar ? (
+                    <img src={getImageUrl(sharedList.sharedBy.avatar)} alt={sharedList.sharedBy.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-[10px] font-medium text-muted-foreground">
+                      {sharedList.sharedBy.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </span>
+                <Link to={`/usuario/${sharedList.sharedBy.profileName}`} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                  {sharedList.sharedBy.profileName}
                 </Link>
-              ) : (
-                <Link to={`/usuario/${sharedList.sharedBy.profileName}`} className="font-semibold hover:text-blue-300 transition-colors">
-                  <strong>{sharedList.sharedBy.profileName}</strong>
-                </Link>
-              )}
-            </span>
-          </div>
+            </div>
         )}
 
         <div className="flex items-start justify-between gap-4">

@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import Pagination from "@/components/Pagination";
 import { PLATFORMS, PlatformBadge } from "@/components/UserRating";
 import { getUserRatingsByProfilePaged, type PeriodParam, type RatingResponse } from "@/lib/ratings";
-import { getMovieDetails, getPosterUrl, type MovieDetails } from "@/lib/tmdb";
+import { getMovieDetails, getPosterUrl, getGenres, type MovieDetails, type Genre } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 import { Tv } from "lucide-react";
 
@@ -31,7 +31,7 @@ const DATE_PRESETS: { label: string; value: string; period?: PeriodParam }[] = [
   { label: "Personalizado", value: "custom", period: "CUSTOM" },
 ];
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 10;
 
 const UserRatedMovies = () => {
   const { username } = useParams<{ username: string }>();
@@ -41,7 +41,9 @@ const UserRatedMovies = () => {
   const [loading, setLoading] = useState(true);
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [allGenres, setAllGenres] = useState<Genre[]>([]);
 
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [genreFilter, setGenreFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
@@ -52,14 +54,38 @@ const UserRatedMovies = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOrder, setSortOrder] = useState<"none" | "asc" | "desc">("none");
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const genreParam = searchParams.get("genre");
 
   const backendSort = "createdAt,desc";
 
   useEffect(() => {
+    getGenres().then(setAllGenres).catch(() => setAllGenres([]));
+  }, []);
+
+  useEffect(() => {
+    if (!genreParam || allGenres.length === 0) return;
+    const match = allGenres.find(
+      (g) => g.name.toLowerCase() === genreParam.toLowerCase()
+    );
+    if (match) {
+      setGenreFilter(String(match.id));
+      const next = new URLSearchParams(searchParams);
+      next.delete("genre");
+      setSearchParams(next, { replace: true });
+    }
+  }, [genreParam, allGenres, searchParams, setSearchParams]);
+
+  // Debounce search input -> searchQuery
+  useEffect(() => {
+    const t = setTimeout(() => setSearchQuery(searchInput.trim()), 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // Reset to page 1 when backend filters change
+  useEffect(() => {
     setCurrentPage(1);
-  }, [platformFilter, ratingFilter, datePreset, dateFrom, dateTo, username]);
+  }, [searchQuery, platformFilter, ratingFilter, genreFilter, datePreset, dateFrom, dateTo, username]);
 
   useEffect(() => {
     if (!username) return;
@@ -74,11 +100,17 @@ const UserRatedMovies = () => {
           sort: backendSort,
         };
 
+        if (searchQuery) {
+          params.title = searchQuery;
+        }
         if (platformFilter !== "all" && platformFilter !== "none") {
           params.platform = platformFilter;
         }
         if (ratingFilter !== "all") {
           params.score = Number(ratingFilter);
+        }
+        if (genreFilter !== "all") {
+          params.genreId = Number(genreFilter);
         }
         const preset = DATE_PRESETS.find((p) => p.value === datePreset);
         if (preset?.period) {
@@ -129,33 +161,12 @@ const UserRatedMovies = () => {
     return () => {
       cancelled = true;
     };
-  }, [username, currentPage, platformFilter, ratingFilter, datePreset, dateFrom, dateTo]);
-
-  const allGenres = useMemo(() => {
-    const m = new Map<number, string>();
-    items.forEach((rm) => rm.movie.genres.forEach((g) => m.set(g.id, g.name)));
-    return m;
-  }, [items]);
-
-  useEffect(() => {
-    if (!genreParam || items.length === 0) return;
-    const match = Array.from(allGenres.entries()).find(
-      ([, name]) => name.toLowerCase() === genreParam.toLowerCase()
-    );
-    if (match) setGenreFilter(String(match[0]));
-  }, [genreParam, allGenres, items.length]);
+  }, [username, currentPage, searchQuery, platformFilter, ratingFilter, genreFilter, datePreset, dateFrom, dateTo]);
 
   const filtered = useMemo(() => {
     const list = items.filter((rm) => {
-      const matchesSearch =
-        !searchQuery.trim() ||
-        rm.movie.title.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesGenre =
-        genreFilter === "all" ||
-        rm.movie.genres.some((g) => g.id === Number(genreFilter));
-      const matchesNoPlatform =
-        platformFilter !== "none" || !rm.platform;
-      return matchesSearch && matchesGenre && matchesNoPlatform;
+      const matchesNoPlatform = platformFilter !== "none" || !rm.platform;
+      return matchesNoPlatform;
     });
 
     if (sortOrder === "asc") {
@@ -164,7 +175,7 @@ const UserRatedMovies = () => {
       list.sort((a, b) => b.movie.title.localeCompare(a.movie.title, "pt-BR"));
     }
     return list;
-  }, [items, searchQuery, genreFilter, platformFilter, sortOrder]);
+  }, [items, platformFilter, sortOrder]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -182,7 +193,7 @@ const UserRatedMovies = () => {
           <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Pesquisar por nome do filme..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+              <Input placeholder="Pesquisar por nome do filme..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="pl-9" />
             </div>
             <Select value={genreFilter} onValueChange={setGenreFilter}>
               <SelectTrigger className="w-full sm:w-[200px]">
@@ -191,9 +202,11 @@ const UserRatedMovies = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os gêneros</SelectItem>
-                {Array.from(allGenres.entries()).sort(([, a], [, b]) => a.localeCompare(b)).map(([id, name]) => (
-                  <SelectItem key={id} value={String(id)}>{name}</SelectItem>
-                ))}
+                {[...allGenres]
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((g) => (
+                    <SelectItem key={g.id} value={String(g.id)}>{g.name}</SelectItem>
+                  ))}
               </SelectContent>
             </Select>
             <Select value={platformFilter} onValueChange={setPlatformFilter}>

@@ -23,7 +23,6 @@ public class RatingResponseDTO {
     private LocalDate createdAt;
     private Platform platform;
  
-
     public RatingResponseDTO(Rating entity) {
     	movieId = entity.getMovie().getId();
     	movieTitle = entity.getMovie().getTitle();

@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import Pagination from "@/components/Pagination";
 import { PLATFORMS, PlatformBadge } from "@/components/UserRating";
 import { getUserRatingsPaged, type PeriodParam, type RatingResponse } from "@/lib/ratings";
-import { getMovieDetails, getPosterUrl, type MovieDetails } from "@/lib/tmdb";
+import { getMovieDetails, getPosterUrl, getGenres, type MovieDetails, type Genre } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 import { Tv } from "lucide-react";
 
@@ -31,14 +31,16 @@ const DATE_PRESETS: { label: string; value: string; period?: PeriodParam }[] = [
   { label: "Personalizado", value: "custom", period: "CUSTOM" },
 ];
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 10;
 
 const RatedMovies = () => {
   const [items, setItems] = useState<RatedMovie[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [allGenres, setAllGenres] = useState<Genre[]>([]);
 
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [genreFilter, setGenreFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
@@ -46,19 +48,39 @@ const RatedMovies = () => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [ratingFilter, setRatingFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1); // 1-based for UI
+  const [currentPage, setCurrentPage] = useState(1); 
   const [sortOrder, setSortOrder] = useState<"none" | "asc" | "desc">("none");
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const genreParam = searchParams.get("genre");
 
-  // Build sort param for backend (only date sorting; alphabetic is client-side over current page)
   const backendSort = "createdAt,desc";
 
-  // Reset to page 1 when backend filters change
+  useEffect(() => {
+    getGenres().then(setAllGenres).catch(() => setAllGenres([]));
+  }, []);
+
+  useEffect(() => {
+    if (!genreParam || allGenres.length === 0) return;
+    const match = allGenres.find(
+      (g) => g.name.toLowerCase() === genreParam.toLowerCase()
+    );
+    if (match) {
+      setGenreFilter(String(match.id));
+      const next = new URLSearchParams(searchParams);
+      next.delete("genre");
+      setSearchParams(next, { replace: true });
+    }
+  }, [genreParam, allGenres, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setSearchQuery(searchInput.trim()), 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
   useEffect(() => {
     setCurrentPage(1);
-  }, [platformFilter, ratingFilter, datePreset, dateFrom, dateTo]);
+  }, [searchQuery, platformFilter, ratingFilter, genreFilter, datePreset, dateFrom, dateTo]);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,31 +94,33 @@ const RatedMovies = () => {
           sort: backendSort,
         };
 
+        if (searchQuery) {
+          params.title = searchQuery;
+        }
         if (platformFilter !== "all" && platformFilter !== "none") {
           params.platform = platformFilter;
         }
-
         if (ratingFilter !== "all") {
           params.score = Number(ratingFilter);
         }
-
+        if (genreFilter !== "all") {
+          params.genreId = Number(genreFilter);
+        }
         const preset = DATE_PRESETS.find((p) => p.value === datePreset);
-
         if (preset?.period) {
           params.period = preset.period;
-
           if (preset.period === "CUSTOM") {
             if (dateFrom) params.startDate = format(dateFrom, "yyyy-MM-dd");
             if (dateTo) params.endDate = format(dateTo, "yyyy-MM-dd");
           }
         }
+
         const page = await getUserRatingsPaged(params);
         if (cancelled) return;
 
         setTotalElements(page.totalElements);
         setTotalPages(page.totalPages);
 
-        // Fetch TMDB details only for items on the current page
         const enriched = await Promise.all(
           page.content.map(async (entry: RatingResponse) => {
             try {
@@ -131,37 +155,12 @@ const RatedMovies = () => {
     return () => {
       cancelled = true;
     };
-  }, [currentPage, platformFilter, ratingFilter, datePreset, dateFrom, dateTo]);
+  }, [currentPage, searchQuery, platformFilter, ratingFilter, genreFilter, datePreset, dateFrom, dateTo]);
 
-  // Genres available on the current page (for the gênero select)
-  const allGenres = useMemo(() => {
-    const m = new Map<number, string>();
-    items.forEach((rm) => rm.movie.genres.forEach((g) => m.set(g.id, g.name)));
-    return m;
-  }, [items]);
-
-  // Apply ?genre=<name> when current page genres are loaded
-  useEffect(() => {
-    if (!genreParam || items.length === 0) return;
-    const match = Array.from(allGenres.entries()).find(
-      ([, name]) => name.toLowerCase() === genreParam.toLowerCase()
-    );
-    if (match) setGenreFilter(String(match[0]));
-  }, [genreParam, allGenres, items.length]);
-
-  // Client-side filtering applied ONLY to the current page (search + genre)
-  // Backend already handled platform/rating/date.
   const filtered = useMemo(() => {
     const list = items.filter((rm) => {
-      const matchesSearch =
-        !searchQuery.trim() ||
-        rm.movie.title.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesGenre =
-        genreFilter === "all" ||
-        rm.movie.genres.some((g) => g.id === Number(genreFilter));
-      const matchesNoPlatform =
-        platformFilter !== "none" || !rm.platform;
-      return matchesSearch && matchesGenre && matchesNoPlatform;
+      const matchesNoPlatform = platformFilter !== "none" || !rm.platform;
+      return matchesNoPlatform;
     });
 
     if (sortOrder === "asc") {
@@ -170,7 +169,7 @@ const RatedMovies = () => {
       list.sort((a, b) => b.movie.title.localeCompare(a.movie.title, "pt-BR"));
     }
     return list;
-  }, [items, searchQuery, genreFilter, platformFilter, sortOrder]);
+  }, [items, platformFilter, sortOrder]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -191,8 +190,8 @@ const RatedMovies = () => {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Pesquisar por nome do filme..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-9"
               />
             </div>
@@ -203,10 +202,10 @@ const RatedMovies = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os gêneros</SelectItem>
-                {Array.from(allGenres.entries())
-                  .sort(([, a], [, b]) => a.localeCompare(b))
-                  .map(([id, name]) => (
-                    <SelectItem key={id} value={String(id)}>{name}</SelectItem>
+                {[...allGenres]
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((g) => (
+                    <SelectItem key={g.id} value={String(g.id)}>{g.name}</SelectItem>
                   ))}
               </SelectContent>
             </Select>
@@ -393,10 +392,11 @@ const RatedMovies = () => {
                         {[1, 2, 3, 4, 5].map((s) => (
                           <Star
                             key={s}
-                            className={`h-3.5 w-3.5 ${s <= rm.rating
+                            className={`h-3.5 w-3.5 ${
+                              s <= rm.rating
                                 ? "fill-star text-star"
                                 : "fill-transparent text-star-empty"
-                              }`}
+                            }`}
                           />
                         ))}
                       </div>

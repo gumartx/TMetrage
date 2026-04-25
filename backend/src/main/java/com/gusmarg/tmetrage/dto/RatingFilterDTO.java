@@ -18,11 +18,13 @@ import lombok.Setter;
 @Setter
 public class RatingFilterDTO {
 
+	private String title;
 	private Platform platform;
 	@Min(1)
 	@Max(5)
 	private Integer score;
 	private Period period;
+	private Long genreId;
 	private LocalDate startDate;
 	private LocalDate endDate;
 }

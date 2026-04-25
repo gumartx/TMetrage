@@ -18,6 +18,7 @@ import com.gusmarg.tmetrage.entities.Movie;
 import com.gusmarg.tmetrage.entities.MovieList;
 import com.gusmarg.tmetrage.entities.Rating;
 import com.gusmarg.tmetrage.entities.User;
+import com.gusmarg.tmetrage.repositories.GenreRepository;
 import com.gusmarg.tmetrage.repositories.MovieListRepository;
 import com.gusmarg.tmetrage.repositories.MovieRepository;
 import com.gusmarg.tmetrage.repositories.RatingRepository;
@@ -38,6 +39,7 @@ public class MovieListService {
 	private final TMDBService tmdbService;
 	private final RatingRepository ratingRepository;
 	private final MovieRepository movieRepository;
+	private final GenreRepository genreRepository;
 	private final MovieListRepository movieListRepository;
 	private final UserRepository userRepository;
 
@@ -187,7 +189,7 @@ public class MovieListService {
 		validateListPermission(entity, user);
 
 		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
-			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository);
+			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository, genreRepository);
 		});
 
 		entity.getMovies().add(movie);

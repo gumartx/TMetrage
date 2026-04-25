@@ -28,7 +28,7 @@ function timeAgo(dateStr: string): string {
 }
 
 interface CommentWithMovie extends Comment {
-    movieTitle?: string;
+    movieTitle: string;
     moviePoster?: string | null;
 }
 

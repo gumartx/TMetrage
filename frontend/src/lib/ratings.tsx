@@ -25,8 +25,10 @@ export interface RatingsQueryParams {
   page?: number;
   size?: number;
   sort?: string;
+  title?: string;
   platform?: string;
   score?: number;
+  genreId?: number;
   period?: PeriodParam;
   startDate?: string;
   endDate?: string;

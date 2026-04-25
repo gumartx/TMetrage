@@ -21,16 +21,20 @@ public interface RatingRepository extends JpaRepository<Rating, RatingPK> {
 	Optional<Rating> findByIdUserIdAndIdMovieId(Long userId, Long movieId);
 
 	@Query("""
-			SELECT r
+			SELECT DISTINCT r
 			FROM Rating r
+			JOIN r.id.movie m
+			JOIN m.genres g
 			WHERE r.id.user.id = :userId
+			AND (:title IS NULL OR m.title ILIKE CONCAT('%', CAST(:title AS string), '%'))
 			AND (:platform IS NULL OR r.platform = :platform)
 			AND (:score IS NULL OR r.score = :score)
+			AND (:genreId IS NULL OR g.id = :genreId)
 			AND r.createdAt >= COALESCE(:startDate, r.createdAt)
 			AND r.createdAt <= COALESCE(:endDate, r.createdAt)
 			""")
-	Page<Rating> findByFilters(Long userId, Platform platform, Integer score, LocalDate startDate,
-			LocalDate endDate, Pageable pageable);
+	Page<Rating> findByFilters(Long userId, String title, Platform platform, Integer score, Long genreId,
+			LocalDate startDate, LocalDate endDate, Pageable pageable);
 
 	@Query("""
 			SELECT AVG(r.score)

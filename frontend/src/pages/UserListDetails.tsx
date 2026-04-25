@@ -24,7 +24,7 @@ const UserListDetail = () => {
   const [movieGenres, setMovieGenres] = useState<Record<number, number[]>>({});
   const [showChart, setShowChart] = useState(false);
   const [genreFilter, setGenreFilter] = useState("all");
-  const [ratingFilter, setRatingFilter] = useState("all"); // ✅ novo
+  const [ratingFilter, setRatingFilter] = useState("all");
 
   useEffect(() => {
     if (!username || !id) return;
@@ -72,7 +72,8 @@ const UserListDetail = () => {
     if (!list || !genres) return new Map<number, string>();
     const map = new Map<number, string>();
     list.movies.forEach((movie) => {
-      (movieGenres[movie.id] || []).forEach((gid) => {
+      const gIds = movieGenres[movie.id] || [];
+      gIds.forEach((gid) => {
         const g = genres.find((g) => g.id === gid);
         if (g) map.set(gid, g.name);
       });
@@ -84,7 +85,8 @@ const UserListDetail = () => {
     if (!list || !genres) return [];
     const counts: Record<number, number> = {};
     list.movies.forEach((movie) => {
-      (movieGenres[movie.id] || []).forEach((gid) => {
+      const gIds = movieGenres[movie.id] || [];
+      gIds.forEach((gid) => {
         counts[gid] = (counts[gid] || 0) + 1;
       });
     });
@@ -96,18 +98,32 @@ const UserListDetail = () => {
       .sort((a, b) => b.value - a.value);
   }, [list, genres, movieGenres]);
 
+  const genreMoviesMap = useMemo(() => {
+    if (!list || !genres) return new Map<string, string[]>();
+    const map = new Map<string, string[]>();
+
+    list.movies.forEach((movie) => {
+      (movieGenres[movie.id] || []).forEach((gid) => {
+        const genreName = genres.find((g) => g.id === gid)?.name;
+        if (!genreName) return;
+        if (!map.has(genreName)) map.set(genreName, []);
+        map.get(genreName)!.push(movie.title);
+      });
+    });
+
+    return map;
+  }, [list, genres, movieGenres]);
+
   const totalMovies = list?.movies.length ?? 0;
   const totalGenres = genreChartData.length;
 
   const filteredMovies = useMemo(() => {
     if (!list) return [];
     return list.movies.filter((movie) => {
-      // Filtro de gênero
       if (genreFilter !== "all") {
         const gIds = movieGenres[movie.id] || [];
         if (!gIds.includes(Number(genreFilter))) return false;
       }
-      // ✅ Filtro de nota — usa movie.rating que já vem do backend
       if (ratingFilter !== "all") {
         if (ratingFilter === "none") {
           if (movie.rating != null && movie.rating > 0) return false;
@@ -192,70 +208,104 @@ const UserListDetail = () => {
                   </DialogTitle>
                 </DialogHeader>
                 {genreChartData.length > 0 ? (
-                  <div className="pt-4 pb-2 overflow-visible flex gap-6">
-                    <div className="flex-1">
-                      <ResponsiveContainer width="100%" height={480}>
-                        <PieChart margin={{ top: 20, right: 80, bottom: 20, left: 80 }}>
-                          <Pie
-                            data={genreChartData}
-                            cx="50%"
-                            cy="45%"
-                            innerRadius={80}
-                            outerRadius={130}
-                            paddingAngle={3}
-                            dataKey="value"
-                            label={({ name, percent, x, y, textAnchor, index }) => (
-                              <text x={x} y={y} textAnchor={textAnchor} fill={CHART_COLORS[index % CHART_COLORS.length]} fontSize={12} fontWeight={500}>
-                                {`${name} (${(percent * 100).toFixed(0)}%)`}
-                              </text>
-                            )}
-                            labelLine={true}
-                          >
-                            {genreChartData.map((_, index) => (
-                              <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "hsl(215, 25%, 16%)",
-                              border: "1px solid hsl(215, 20%, 25%)",
-                              borderRadius: "8px",
-                              color: "white",
-                            }}
-                            formatter={(value: number) => [
-                              <span style={{ color: "white" }}>{`${value} filme${value > 1 ? "s" : ""}`}</span>,
-                              <span style={{ color: "white" }}>Quantidade</span>,
-                            ]}
-                            labelStyle={{ color: "white" }}
-                          />
-                          <Legend
-                            verticalAlign="bottom"
-                            wrapperStyle={{ paddingTop: "30px" }}
-                            formatter={(value) => <span style={{ color: "white", fontSize: "13px" }}>{value}</span>}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="w-[180px] flex flex-col gap-4 justify-center">
-                      <div className="rounded-lg border border-border bg-card p-4 text-center">
-                        <p className="text-xs text-muted-foreground">Filmes na lista</p>
-                        <p className="text-2xl font-bold text-foreground">{totalMovies}</p>
+                    <div className="pt-4 pb-2 overflow-visible flex gap-6">
+                      <div className="flex-1">
+                        <ResponsiveContainer width="100%" height={480}>
+                          <PieChart margin={{ top: 20, right: 80, bottom: 20, left: 80 }}>
+                            <Pie
+                              data={genreChartData}
+                              cx="50%"
+                              cy="45%"
+                              innerRadius={80}
+                              outerRadius={130}
+                              paddingAngle={3}
+                              dataKey="value"
+                              label={({ name, percent, x, y, textAnchor, index }) => (
+                                <text x={x} y={y} textAnchor={textAnchor} fill={CHART_COLORS[index % CHART_COLORS.length]} fontSize={12} fontWeight={500}>
+                                  {`${name} (${(percent * 100).toFixed(0)}%)`}
+                                </text>
+                              )}
+                              labelLine={true}
+                            >
+                              {genreChartData.map((_, index) => (
+                                <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: "hsl(215, 25%, 16%)",
+                                border: "1px solid hsl(215, 20%, 25%)",
+                                borderRadius: "8px",
+                                color: "white",
+                                maxWidth: "220px",
+                              }}
+                              content={({ active, payload }) => {
+                                if (!active || !payload?.length) return null;
+                                const genreName = payload[0].name as string;
+                                const count = payload[0].value as number;
+                                const movies = genreMoviesMap.get(genreName) || [];
+
+                                return (
+                                  <div
+                                    style={{
+                                      backgroundColor: "hsl(215, 25%, 16%)",
+                                      border: "1px solid hsl(215, 20%, 25%)",
+                                      borderRadius: "8px",
+                                      padding: "10px 12px",
+                                      maxWidth: "220px",
+                                    }}
+                                  >
+                                    <p style={{ color: "white", fontWeight: 600, marginBottom: 6 }}>
+                                      {genreName} ({count} {count === 1 ? "filme" : "filmes"})
+                                    </p>
+                                    <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                                      {movies.map((title) => (
+                                        <li
+                                          key={title}
+                                          style={{
+                                            color: "hsl(215, 20%, 75%)",
+                                            fontSize: "11px",
+                                            paddingTop: "2px",
+                                            borderTop: "1px solid hsl(215, 20%, 25%)",
+                                            marginTop: "3px",
+                                          }}
+                                        >
+                                          {title}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                );
+                              }}
+                            />
+                            <Legend
+                              verticalAlign="bottom"
+                              wrapperStyle={{ paddingTop: "30px" }}
+                              formatter={(value) => <span style={{ color: "white", fontSize: "13px" }}>{value}</span>}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
                       </div>
-                      <div className="rounded-lg border border-border bg-card p-4 text-center">
-                        <p className="text-xs text-muted-foreground">Gêneros diferentes</p>
-                        <p className="text-2xl font-bold text-foreground">{totalGenres}</p>
+                      <div className="w-[180px] flex flex-col gap-4 justify-center">
+                        <div className="rounded-lg border border-border bg-card p-4 text-center">
+                          <p className="text-xs text-muted-foreground">Filmes na lista</p>
+                          <p className="text-2xl font-bold text-foreground">{totalMovies}</p>
+                        </div>
+                        <div className="rounded-lg border border-border bg-card p-4 text-center">
+                          <p className="text-xs text-muted-foreground">Gêneros diferentes</p>
+                          <p className="text-2xl font-bold text-foreground">{totalGenres}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground py-8 text-center">Nenhum dado de gênero disponível.</p>
-                )}
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-8 text-center">Nenhum dado de gênero disponível.</p>
+                  )}
               </DialogContent>
             </Dialog>
           )}
         </div>
 
-        {/* ✅ Filtros: gênero + nota */}
+        {/* Filtros: gênero + nota */}
         {list.movies.length > 0 && (
           <div className="mt-6 flex flex-col sm:flex-row gap-3">
             <Select value={genreFilter} onValueChange={setGenreFilter}>
@@ -335,11 +385,10 @@ const UserListDetail = () => {
                         {[1, 2, 3, 4, 5].map((s) => (
                           <Star
                             key={s}
-                            className={`h-3.5 w-3.5 ${
-                              s <= movie.rating!
+                            className={`h-3.5 w-3.5 ${s <= movie.rating!
                                 ? "fill-star text-star"
                                 : "fill-transparent text-star-empty"
-                            }`}
+                              }`}
                           />
                         ))}
                       </div>

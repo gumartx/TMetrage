@@ -41,7 +41,7 @@ public class MovieListResponseDTO {
 		this.isPublic = entity.isPublic();
 		this.isShared = entity.isShared();
 		for (Movie movie : entity.getMovies()) {
-			movies.add(new MovieDTO(movie.getId(), movie.getTitle(), movie.getPosterPath()));
+			movies.add(new MovieDTO(movie));
 		}
 	}
 

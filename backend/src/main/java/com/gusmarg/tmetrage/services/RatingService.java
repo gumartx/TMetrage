@@ -22,6 +22,7 @@ import com.gusmarg.tmetrage.entities.MovieList;
 import com.gusmarg.tmetrage.entities.Rating;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.entities.pk.RatingPK;
+import com.gusmarg.tmetrage.repositories.GenreRepository;
 import com.gusmarg.tmetrage.repositories.MovieListRepository;
 import com.gusmarg.tmetrage.repositories.MovieRepository;
 import com.gusmarg.tmetrage.repositories.RatingRepository;
@@ -41,6 +42,7 @@ public class RatingService {
 	private final RatingRepository ratingRepository;
 	private final MovieListRepository movieListRepository;
 	private final MovieRepository movieRepository;
+	private final GenreRepository genreRepository;
 	private final TMDBService tmdbService;
 
 	@Transactional(readOnly = true)
@@ -49,7 +51,7 @@ public class RatingService {
 		User user = authService.getAuthenticatedUser();
 
 		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
-			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository);
+			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository, genreRepository);
 		});
 
 		log.info("Avaliação de usuário '{}' no filme '{}'", user.getProfileName(), movie.getTitle());
@@ -91,7 +93,7 @@ public class RatingService {
 			}
 		}
 
-		Page<Rating> ratings = ratingRepository.findByFilters(user.getId(), filter.getPlatform(), filter.getScore(),
+		Page<Rating> ratings = ratingRepository.findByFilters(user.getId(), filter.getTitle(), filter.getPlatform(), filter.getScore(), filter.getGenreId(),
 				startDate, endDate, pageable);
 
 		log.info("Encontrado {} avaliação(ões) de '{}'", ratings.getTotalElements(), user.getProfileName());
@@ -132,7 +134,7 @@ public class RatingService {
 			}
 		}
 
-		Page<Rating> ratings = ratingRepository.findByFilters(user.getId(), filter.getPlatform(), filter.getScore(),
+		Page<Rating> ratings = ratingRepository.findByFilters(user.getId(), filter.getTitle(), filter.getPlatform(), filter.getScore(), filter.getGenreId(),
 				startDate, endDate, pageable);
 
 		log.info("Encontrado {} avaliação(ões) de '{}'", ratings.getTotalElements(), user.getProfileName());
@@ -146,7 +148,7 @@ public class RatingService {
 		User user = authService.getAuthenticatedUser();
 
 		Movie movie = movieRepository.findById(dto.getMovieId()).orElseGet(() -> {
-			return TMDBSaveData.saveMovieFromTMDB(dto.getMovieId(), tmdbService, movieRepository);
+			return TMDBSaveData.saveMovieFromTMDB(dto.getMovieId(), tmdbService, movieRepository, genreRepository);
 		});
 
 		RatingPK id = new RatingPK(user, movie);
@@ -170,7 +172,7 @@ public class RatingService {
 		User user = authService.getAuthenticatedUser();
 
 		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
-			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository);
+			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository, genreRepository);
 		});
 
 		RatingPK id = new RatingPK(user, movie);
@@ -194,7 +196,7 @@ public class RatingService {
 		RatingPK id = new RatingPK();
 
 		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
-			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository);
+			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository, genreRepository);
 		});
 
 		id.setUser(user);

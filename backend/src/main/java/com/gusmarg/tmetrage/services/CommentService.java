@@ -15,6 +15,7 @@ import com.gusmarg.tmetrage.entities.Comment;
 import com.gusmarg.tmetrage.entities.Movie;
 import com.gusmarg.tmetrage.entities.User;
 import com.gusmarg.tmetrage.repositories.CommentRepository;
+import com.gusmarg.tmetrage.repositories.GenreRepository;
 import com.gusmarg.tmetrage.repositories.MovieRepository;
 import com.gusmarg.tmetrage.repositories.UserRepository;
 import com.gusmarg.tmetrage.services.exceptions.ResourceNotFoundException;
@@ -31,6 +32,7 @@ public class CommentService {
 	private final TMDBService tmdbService;
 	private final CommentRepository commentRepository;
 	private final MovieRepository movieRepository;
+	private final GenreRepository genreRepository;
 	private final AuthService authService;
 	private final UserRepository userRepository;
 
@@ -53,7 +55,7 @@ public class CommentService {
 		User user = authService.getAuthenticatedUser();
 
 		Movie movie = movieRepository.findById(movieId).orElseGet(() -> {
-			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository);
+			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository, genreRepository);
 		});
 
 		Comment comment = new Comment();

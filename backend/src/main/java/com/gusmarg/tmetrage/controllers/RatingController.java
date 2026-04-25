@@ -53,24 +53,25 @@ public class RatingController {
 	}
 
 	@GetMapping
-	public ResponseEntity<Page<RatingResponseDTO>> getUserRatings(@RequestParam(required = false) Platform platform,
+	public ResponseEntity<Page<RatingResponseDTO>> getUserRatings(@RequestParam(required = false) String title, @RequestParam(required = false) Platform platform,
 			@RequestParam(required = false) Integer score, @RequestParam(required = false) Period period,
-			@RequestParam(required = false) LocalDate startDate, @RequestParam(required = false) LocalDate endDate,
-			Pageable pageable) {
+			@RequestParam(required = false) Long genreId, @RequestParam(required = false) LocalDate startDate,
+			@RequestParam(required = false) LocalDate endDate, Pageable pageable) {
 
-		RatingFilterDTO filter = new RatingFilterDTO(platform, score, period, startDate, endDate);
+		RatingFilterDTO filter = new RatingFilterDTO(title, platform, score, period, genreId, startDate, endDate);
 
 		Page<RatingResponseDTO> result = ratingService.findUserRatings(filter, pageable);
 		return ResponseEntity.ok(result);
 	}
 
 	@GetMapping("/public/{profileName}")
-	public ResponseEntity<Page<RatingResponseDTO>> getUserRatingsByProfileName(@PathVariable String profileName,
+	public ResponseEntity<Page<RatingResponseDTO>> getUserRatingsByProfileName(@RequestParam(required = false) String title,@PathVariable String profileName,
 			@RequestParam(required = false) Platform platform, @RequestParam(required = false) Integer score,
-			@RequestParam(required = false) Period period, @RequestParam(required = false) LocalDate startDate,
-			@RequestParam(required = false) LocalDate endDate, Pageable pageable) {
+			@RequestParam(required = false) Long genreId, @RequestParam(required = false) Period period,
+			@RequestParam(required = false) LocalDate startDate, @RequestParam(required = false) LocalDate endDate,
+			Pageable pageable) {
 
-		RatingFilterDTO filter = new RatingFilterDTO(platform, score, period, startDate, endDate);
+		RatingFilterDTO filter = new RatingFilterDTO(title, platform, score, period, genreId, startDate, endDate);
 
 		Page<RatingResponseDTO> result = ratingService.findUserRatingsByProfileName(profileName, filter, pageable);
 		return ResponseEntity.ok(result);
