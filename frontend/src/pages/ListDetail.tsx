@@ -8,7 +8,7 @@ import { getMovieDetails, searchMovies, getPosterUrl, getGenres } from "@/lib/tm
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { PLATFORMS, PlatformBadge } from "@/components/UserRating";
-import { getFollowing, getCurrentUserProfile } from "@/lib/profile"; // ✅ import adicionado
+import { getFollowing, getCurrentUserProfile } from "@/lib/profile";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/dialog";
 import { getMovieRatingsList, getUserRatings, type RatingResponse } from "@/lib/ratings";
 import { getImageUrl } from "@/lib/files";
-import { link } from "fs";
 
 const DATE_PRESETS = [
   { label: "Todos", value: "all" },
@@ -423,7 +422,7 @@ const ListDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="container py-10">
+      <main className="container px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
         <Button
           variant="ghost"
           size="sm"
@@ -451,11 +450,11 @@ const ListDetail = () => {
             </div>
         )}
 
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">{list.name}</h1>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <h1 className="break-words font-display text-2xl font-bold text-foreground sm:text-3xl">{list.name}</h1>
             {list.description && (
-              <p className="mt-1 text-sm text-muted-foreground">{list.description}</p>
+              <p className="mt-1 max-w-3xl break-words text-sm text-muted-foreground">{list.description}</p>
             )}
             <p className="mt-2 text-xs text-muted-foreground">
               {list.movies.length} {list.movies.length === 1 ? "filme" : "filmes"}
@@ -463,16 +462,16 @@ const ListDetail = () => {
             </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
             {list.movies.length > 0 && (
               <Dialog open={showChart} onOpenChange={setShowChart}>
                 <DialogTrigger asChild>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outline" className="flex-1 sm:flex-none">
                     <BarChart3 className="mr-1.5 h-4 w-4" />
                     Gerar Gráfico
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[850px]">
+                <DialogContent className="max-h-[90svh] w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-[850px]">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <BarChart3 className="h-5 w-5 text-primary" />
@@ -480,16 +479,16 @@ const ListDetail = () => {
                     </DialogTitle>
                   </DialogHeader>
                   {genreChartData.length > 0 ? (
-                    <div className="pt-4 pb-2 overflow-visible flex gap-6">
-                      <div className="flex-1">
-                        <ResponsiveContainer width="100%" height={480}>
-                          <PieChart margin={{ top: 20, right: 80, bottom: 20, left: 80 }}>
+                    <div className="flex flex-col gap-4 overflow-visible pb-2 pt-4 lg:flex-row lg:gap-6">
+                      <div className="h-[320px] min-w-0 flex-1 sm:h-[420px] lg:h-[480px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart margin={{ top: 12, right: 12, bottom: 12, left: 12 }}>
                             <Pie
                               data={genreChartData}
                               cx="50%"
                               cy="45%"
-                              innerRadius={80}
-                              outerRadius={130}
+                              innerRadius="42%"
+                              outerRadius="68%"
                               paddingAngle={3}
                               dataKey="value"
                               label={({ name, percent, x, y, textAnchor, index }) => (
@@ -558,7 +557,7 @@ const ListDetail = () => {
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
-                      <div className="w-[180px] flex flex-col gap-4 justify-center">
+                      <div className="grid w-full grid-cols-2 gap-3 lg:w-[180px] lg:grid-cols-1 lg:justify-center">
                         <div className="rounded-lg border border-border bg-card p-4 text-center">
                           <p className="text-xs text-muted-foreground">Filmes na lista</p>
                           <p className="text-2xl font-bold text-foreground">{totalMovies}</p>
@@ -585,22 +584,22 @@ const ListDetail = () => {
                     <Share2 className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[450px]">
+                <DialogContent className="max-h-[90svh] w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-[450px]">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <Share2 className="h-5 w-5 text-primary" />
                       Compartilhar Lista
                     </DialogTitle>
                   </DialogHeader>
-                  <div className="flex gap-2 pt-2">
-                    <div className="flex flex-1 items-center rounded-md border border-border bg-secondary">
+                  <div className="flex flex-col gap-2 pt-2 sm:flex-row">
+                    <div className="flex min-w-0 flex-1 items-center rounded-md border border-border bg-secondary">
                       <Search className="ml-3 h-4 w-4 text-muted-foreground" />
                       <input
                         type="text"
                         placeholder="Buscar por nome ou usuário..."
                         value={shareSearch}
                         onChange={(e) => setShareSearch(e.target.value)}
-                        className="flex-1 bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                        className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                       />
                     </div>
                   </div>
@@ -664,7 +663,7 @@ const ListDetail = () => {
                     <Users className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[450px]">
+                <DialogContent className="max-h-[90svh] w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-[450px]">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <Users className="h-5 w-5 text-primary" />
@@ -754,11 +753,11 @@ const ListDetail = () => {
                   Adicionar Filme
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-h-[80vh] flex flex-col overflow-hidden">
+              <DialogContent className="flex max-h-[90svh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-lg">
                 <DialogHeader>
                   <DialogTitle>Buscar filme para adicionar</DialogTitle>
                 </DialogHeader>
-                <div className="flex gap-2 pt-2">
+                <div className="flex flex-col gap-2 pt-2 sm:flex-row">
                   <div className="flex flex-1 items-center rounded-md border border-border bg-secondary min-w-0">
                     <input
                       type="text"
@@ -769,14 +768,14 @@ const ListDetail = () => {
                       className="flex-1 bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
                     />
                   </div>
-                  <Button size="sm" onClick={handleSearch}>Buscar</Button>
+                  <Button size="sm" onClick={handleSearch} className="w-full sm:w-auto">Buscar</Button>
                 </div>
                 {searchResults && (
                   <div className="mt-4 space-y-2 overflow-y-auto flex-1">
                     {searchResults.results.slice(0, 10).map((movie) => {
                       const alreadyAdded = list.movies.some((m) => m.id === movie.id);
                       return (
-                        <div key={movie.id} className="flex items-center gap-3 rounded-md border border-border bg-card p-2 min-w-0">
+                        <div key={movie.id} className="flex min-w-0 items-center gap-3 rounded-md border border-border bg-card p-2">
                           {getPosterUrl(movie.poster_path, "w185") ? (
                             <img src={getPosterUrl(movie.poster_path, "w185")!} alt={movie.title} className="h-16 w-11 rounded object-cover shrink-0" />
                           ) : (
@@ -793,7 +792,7 @@ const ListDetail = () => {
                             variant={alreadyAdded ? "secondary" : "default"}
                             disabled={alreadyAdded}
                             onClick={() => handleAddMovie(movie)}
-                            className="shrink-0"
+                            className="shrink-0 px-2 text-xs sm:px-3 sm:text-sm"
                           >
                             {alreadyAdded ? "Adicionado" : "Adicionar"}
                           </Button>
@@ -810,7 +809,7 @@ const ListDetail = () => {
         {/* Filters */}
         {list.movies.length > 0 && (
           <div className="mt-6 flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[auto_repeat(5,minmax(180px,200px))_auto]">
               <Button
                 variant={showTitleSearch ? "default" : "outline"}
                 size="icon"
@@ -831,11 +830,11 @@ const ListDetail = () => {
                   placeholder="Buscar filme pelo nome..."
                   value={titleFilter}
                   onChange={(e) => setTitleFilter(e.target.value)}
-                  className="w-full sm:w-[220px] transition-all"
+                  className="w-full transition-all"
                 />
               )}
               <Select value={genreFilter} onValueChange={setGenreFilter}>
-                <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectTrigger className="w-full min-w-0">
                   <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Gênero" />
                 </SelectTrigger>
@@ -851,7 +850,7 @@ const ListDetail = () => {
                 setPlatformFilter(v);
                 if (v !== "all") setUserFilter("all");
               }}>
-                <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectTrigger className="w-full min-w-0">
                   <Tv className="h-4 w-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Plataforma" />
                 </SelectTrigger>
@@ -867,7 +866,7 @@ const ListDetail = () => {
               </Select>
 
               <Select value={ratingFilter} onValueChange={setRatingFilter}>
-                <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectTrigger className="w-full min-w-0">
                   <Star className="h-4 w-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Nota" />
                 </SelectTrigger>
@@ -887,7 +886,7 @@ const ListDetail = () => {
 
               {sharedUsers.length > 0 && (
                 <Select value={userFilter} onValueChange={setUserFilter}>
-                  <SelectTrigger className="w-full sm:w-[200px]">
+                  <SelectTrigger className="w-full min-w-0">
                     <User className="h-4 w-4 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Usuário" />
                   </SelectTrigger>
@@ -921,7 +920,7 @@ const ListDetail = () => {
                 if (v !== "custom") { setDateFrom(undefined); setDateTo(undefined); }
                 if (v !== "all") setUserFilter("all");
               }}>
-                <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectTrigger className="w-full min-w-0">
                   <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Período" />
                 </SelectTrigger>
@@ -959,10 +958,10 @@ const ListDetail = () => {
             </div>
 
             {datePreset === "custom" && (
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[180px_auto_180px_auto]">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-[180px] justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal sm:w-[180px]", !dateFrom && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "Data inicial"}
                     </Button>
@@ -974,7 +973,7 @@ const ListDetail = () => {
                 <span className="text-sm text-muted-foreground">até</span>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-[180px] justify-start text-left font-normal", !dateTo && "text-muted-foreground")}>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal sm:w-[180px]", !dateTo && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dateTo ? format(dateTo, "dd/MM/yyyy") : "Data final"}
                     </Button>
@@ -1006,7 +1005,7 @@ const ListDetail = () => {
             <p className="mt-4 text-muted-foreground">Nenhum filme encontrado com os filtros selecionados.</p>
           </div>
         ) : (
-          <div className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className="mt-8 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-4 sm:gap-5 xl:grid-cols-6">
             {filteredMovies.map((movie) => {
               const url = getPosterUrl(movie.poster_path);
               const rating = movieRatings[movie.id];
@@ -1037,13 +1036,13 @@ const ListDetail = () => {
                         </div>
                       )}
                     </div>
-                    <div className="p-3 space-y-1.5">
-                      <h3 className="truncate text-sm font-semibold text-card-foreground">{movie.title}</h3>
+                    <div className="space-y-1.5 p-3">
+                      <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-5 text-card-foreground">{movie.title}</h3>
 
                       {othersRatings.length > 0 && (
                         <div className="space-y-1.5 pb-1.5 border-b border-border">
                           {othersRatings.map((r) => (
-                            <div key={r.profileName} className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <div key={r.profileName} className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
 
                               <div className="relative h-5 w-5 shrink-0">
 
@@ -1083,7 +1082,7 @@ const ListDetail = () => {
 
                               </div>
 
-                              <div className="flex items-center gap-0.5">
+                              <div className="flex min-w-0 flex-wrap items-center gap-0.5">
                                 {Array.from({ length: 5 }).map((_, i) => (
                                   <Star
                                     key={i}
@@ -1102,7 +1101,7 @@ const ListDetail = () => {
 
                       {rating && (
                         <>
-                          <div className="flex items-center gap-0.5">
+                          <div className="flex flex-wrap items-center gap-0.5">
                             {list.isShared && (
                               <div className="relative h-7 w-7 shrink-0 mr-1">
 
@@ -1151,13 +1150,13 @@ const ListDetail = () => {
                           {ratingDate && (
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <CalendarIcon className="h-3 w-3" />
-                              <span>{ratingDate}</span>
+                              <span className="truncate">{ratingDate}</span>
                             </div>
                           )}
                           {rating.platform && (
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                               <PlatformBadge value={rating.platform} />
-                              <span>{PLATFORMS.find((p) => p.value === rating.platform)?.label || rating.platform}</span>
+                              <span className="truncate">{PLATFORMS.find((p) => p.value === rating.platform)?.label || rating.platform}</span>
                             </div>
                           )}
                         </>
@@ -1166,7 +1165,7 @@ const ListDetail = () => {
                   </Link>
                   <button
                     onClick={() => handleRemove(movie.id)}
-                    className="absolute right-2 top-2 rounded-full bg-background/80 p-1.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                    className="absolute right-2 top-2 rounded-full bg-background/80 p-1.5 text-muted-foreground opacity-100 transition-opacity hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>

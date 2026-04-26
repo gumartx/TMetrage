@@ -152,7 +152,7 @@ const UserListDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="container py-10">
+      <main className="container px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
         <Button
           variant="ghost"
           size="sm"
@@ -163,8 +163,8 @@ const UserListDetail = () => {
           Voltar
         </Button>
 
-        <div className="flex items-start justify-between gap-4">
-          <div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
             {list.ownerUser && (
               <div className="mb-2 flex items-center gap-2">
                 <span className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
@@ -182,9 +182,9 @@ const UserListDetail = () => {
               </div>
             )}
 
-            <h1 className="font-display text-2xl font-bold text-foreground">{list.name}</h1>
+            <h1 className="break-words font-display text-2xl font-bold text-foreground sm:text-3xl">{list.name}</h1>
             {list.description && (
-              <p className="mt-1 text-sm text-muted-foreground">{list.description}</p>
+              <p className="mt-1 max-w-3xl break-words text-sm text-muted-foreground">{list.description}</p>
             )}
             <p className="mt-2 text-xs text-muted-foreground">
               {list.movies.length} {list.movies.length === 1 ? "filme" : "filmes"}
@@ -195,12 +195,12 @@ const UserListDetail = () => {
           {list.movies.length > 0 && (
             <Dialog open={showChart} onOpenChange={setShowChart}>
               <DialogTrigger asChild>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" className="w-full sm:w-auto">
                   <BarChart3 className="mr-1.5 h-4 w-4" />
                   Gerar Gráfico
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[850px]">
+              <DialogContent className="max-h-[90svh] w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-[850px]">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5 text-primary" />
@@ -208,16 +208,16 @@ const UserListDetail = () => {
                   </DialogTitle>
                 </DialogHeader>
                 {genreChartData.length > 0 ? (
-                    <div className="pt-4 pb-2 overflow-visible flex gap-6">
-                      <div className="flex-1">
-                        <ResponsiveContainer width="100%" height={480}>
-                          <PieChart margin={{ top: 20, right: 80, bottom: 20, left: 80 }}>
+                    <div className="flex flex-col gap-4 overflow-visible pb-2 pt-4 lg:flex-row lg:gap-6">
+                      <div className="h-[320px] min-w-0 flex-1 sm:h-[420px] lg:h-[480px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart margin={{ top: 12, right: 12, bottom: 12, left: 12 }}>
                             <Pie
                               data={genreChartData}
                               cx="50%"
                               cy="45%"
-                              innerRadius={80}
-                              outerRadius={130}
+                              innerRadius="42%"
+                              outerRadius="68%"
                               paddingAngle={3}
                               dataKey="value"
                               label={({ name, percent, x, y, textAnchor, index }) => (
@@ -286,7 +286,7 @@ const UserListDetail = () => {
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
-                      <div className="w-[180px] flex flex-col gap-4 justify-center">
+                      <div className="grid w-full grid-cols-2 gap-3 lg:w-[180px] lg:grid-cols-1 lg:justify-center">
                         <div className="rounded-lg border border-border bg-card p-4 text-center">
                           <p className="text-xs text-muted-foreground">Filmes na lista</p>
                           <p className="text-2xl font-bold text-foreground">{totalMovies}</p>
@@ -307,9 +307,9 @@ const UserListDetail = () => {
 
         {/* Filtros: gênero + nota */}
         {list.movies.length > 0 && (
-          <div className="mt-6 flex flex-col sm:flex-row gap-3">
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(180px,200px))]">
             <Select value={genreFilter} onValueChange={setGenreFilter}>
-              <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectTrigger className="w-full min-w-0">
                 <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Gênero" />
               </SelectTrigger>
@@ -324,7 +324,7 @@ const UserListDetail = () => {
             </Select>
 
             <Select value={ratingFilter} onValueChange={setRatingFilter}>
-              <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectTrigger className="w-full min-w-0">
                 <Star className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Nota" />
               </SelectTrigger>
@@ -358,7 +358,7 @@ const UserListDetail = () => {
             <p className="mt-4 text-muted-foreground">Nenhum filme encontrado com os filtros selecionados.</p>
           </div>
         ) : (
-          <div className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className="mt-8 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-4 sm:gap-5 xl:grid-cols-6">
             {filteredMovies.map((movie) => {
               const url = getPosterUrl(movie.poster_path);
               return (
@@ -377,7 +377,7 @@ const UserListDetail = () => {
                     )}
                   </div>
                   <div className="p-3 space-y-1.5">
-                    <h3 className="truncate text-sm font-semibold text-card-foreground">
+                    <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-5 text-card-foreground">
                       {movie.title}
                     </h3>
                     {movie.rating != null && movie.rating > 0 ? (
