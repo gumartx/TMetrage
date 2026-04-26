@@ -25,6 +25,7 @@ public class MovieListResponseDTO {
 	private String description;
 	private List<MovieDTO> movies = new ArrayList<>();
 	private boolean owner;
+	private UserSearchDTO ownerUser;
 	private LocalDate createdAt;
 	@JsonProperty("isPublic")
 	private boolean isPublic = false;
@@ -35,6 +36,7 @@ public class MovieListResponseDTO {
 	public MovieListResponseDTO(MovieList entity, User user, boolean owner) {
 		id = entity.getId();
 		name = entity.getName();
+		ownerUser = new UserSearchDTO(entity.getUser());
 		description = entity.getDescription();
 		createdAt = entity.getCreatedAt();
 		this.owner = owner;

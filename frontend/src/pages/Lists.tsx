@@ -6,29 +6,15 @@ import { getPosterUrl } from "@/lib/tmdb";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { getImageUrl } from "@/lib/files";
 
@@ -45,9 +31,7 @@ const VisibilityToggle = ({
       onClick={() => onChange(false)}
       className={cn(
         "flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all",
-        !value
-          ? "bg-primary text-primary-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground hover:bg-accent"
+        !value ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-accent"
       )}
     >
       <Lock className="h-3.5 w-3.5" />
@@ -58,9 +42,7 @@ const VisibilityToggle = ({
       onClick={() => onChange(true)}
       className={cn(
         "flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all",
-        value
-          ? "bg-primary text-primary-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground hover:bg-accent"
+        value ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-accent"
       )}
     >
       <Globe className="h-3.5 w-3.5" />
@@ -90,41 +72,23 @@ const Lists = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const loadLists = async () => {
-    try {
-      const data = await getLists();
-      setLists(data);
-    } catch { /* */ }
+    try { const data = await getLists(); setLists(data); } catch {/**/ }
   };
 
   const loadShared = async () => {
-    try {
-      const data = await getSharedLists();
-      setSharedLists(data);
-    } catch { /* */ }
+    try { const data = await getSharedLists(); setSharedLists(data); } catch {/**/ }
   };
 
-  const isShared = (listId: string) => {
-    return sharedLists.some(
-      (s) => s.list.id === listId && !s.list.owner
-    );
-  };
+  const isShared = (listId: string) =>
+    sharedLists.some((s) => s.list.id === listId && !s.list.owner);
 
-  useEffect(() => {
-    loadLists();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === "shared") {
-      loadShared();
-    }
-  }, [activeTab]);
+  useEffect(() => { loadLists(); }, []);
+  useEffect(() => { if (activeTab === "shared") loadShared(); }, [activeTab]);
 
   const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
   const filteredLists = lists.filter((list) => {
-    const matchesSearch =
-      list.name.toLowerCase().includes(search.toLowerCase())
-    if (!matchesSearch) return false;
+    if (!list.name.toLowerCase().includes(search.toLowerCase())) return false;
     if (filterYear === null && filterMonth === null) return true;
     const created = new Date(list.createdAt);
     if (filterYear !== null && created.getFullYear() !== filterYear) return false;
@@ -136,10 +100,7 @@ const Lists = () => {
     s.list.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const clearDateFilter = () => {
-    setFilterMonth(null);
-    setFilterYear(null);
-  };
+  const clearDateFilter = () => { setFilterMonth(null); setFilterYear(null); };
 
   const dateFilterLabel = filterYear !== null || filterMonth !== null
     ? `${filterMonth !== null ? months[filterMonth] : ""} ${filterYear ?? ""}`.trim()
@@ -149,10 +110,7 @@ const Lists = () => {
     if (!name.trim()) return;
     await createList(name.trim(), description.trim() || null, isPublic);
     await loadLists();
-    setName("");
-    setDescription("");
-    setIsPublic(false);
-    setOpen(false);
+    setName(""); setDescription(""); setIsPublic(false); setOpen(false);
   };
 
   const handleDelete = async () => {
@@ -175,33 +133,28 @@ const Lists = () => {
   const handleEdit = async () => {
     if (!editId || !editName.trim()) return;
     await updateList(editId, editName.trim(), editDescription.trim() || null, editIsPublic);
-    setLists((prev) =>
-      prev.map((l) =>
-        l.id === editId
-          ? { ...l, name: editName, description: editDescription, isPublic: editIsPublic }
-          : l
-      )
-    );
-    setSharedLists((prev) =>
-      prev.map((s) =>
-        s.list.id === editId
-          ? { ...s, list: { ...s.list, name: editName, description: editDescription, isPublic: editIsPublic } }
-          : s
-      )
-    );
+    setLists((prev) => prev.map((l) =>
+      l.id === editId ? { ...l, name: editName, description: editDescription, isPublic: editIsPublic } : l
+    ));
+    setSharedLists((prev) => prev.map((s) =>
+      s.list.id === editId
+        ? { ...s, list: { ...s.list, name: editName, description: editDescription, isPublic: editIsPublic } }
+        : s
+    ));
     setEditOpen(false);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="container py-10">
-        <div className="flex items-center justify-between">
+      <main className="container px-4 py-6 sm:py-10">
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-1">
             <button
               onClick={() => setActiveTab("mine")}
               className={cn(
-                "px-4 py-2 text-lg font-bold rounded-md transition-colors",
+                "px-3 py-2 text-base sm:text-lg font-bold rounded-md transition-colors",
                 activeTab === "mine" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -210,7 +163,7 @@ const Lists = () => {
             <button
               onClick={() => { setActiveTab("shared"); loadShared(); }}
               className={cn(
-                "px-4 py-2 text-lg font-bold rounded-md transition-colors flex items-center gap-2",
+                "px-3 py-2 text-base sm:text-lg font-bold rounded-md transition-colors flex items-center gap-1.5",
                 activeTab === "shared" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -222,12 +175,12 @@ const Lists = () => {
           {activeTab === "mine" && (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button size="sm">
+                <Button size="sm" className="w-full sm:w-auto">
                   <Plus className="mr-1.5 h-4 w-4" />
                   Nova Lista
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="w-[calc(100%-2rem)] sm:max-w-md rounded-lg">
                 <DialogHeader>
                   <DialogTitle>Criar nova lista</DialogTitle>
                 </DialogHeader>
@@ -248,9 +201,7 @@ const Lists = () => {
                     <p className="text-sm text-muted-foreground">Visibilidade</p>
                     <VisibilityToggle value={isPublic} onChange={setIsPublic} />
                     <p className="text-xs text-muted-foreground">
-                      {isPublic
-                        ? "Qualquer pessoa pode visualizar esta lista."
-                        : "Somente você e quem você compartilhar pode ver."}
+                      {isPublic ? "Qualquer pessoa pode visualizar esta lista." : "Somente você e quem você compartilhar pode ver."}
                     </p>
                   </div>
                   <Button onClick={handleCreate} className="w-full" disabled={!name.trim()}>
@@ -263,7 +214,7 @@ const Lists = () => {
         </div>
 
         {((activeTab === "mine" && lists.length > 0) || (activeTab === "shared" && sharedLists.length > 0)) && (
-          <div className="mt-6 flex gap-3">
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -276,8 +227,8 @@ const Lists = () => {
             {activeTab === "mine" && (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-[180px] justify-start text-left font-normal">
-                    <CalendarDays className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <Button variant="outline" className="w-full sm:w-[180px] justify-start text-left font-normal">
+                    <CalendarDays className="mr-2 h-4 w-4 text-muted-foreground shrink-0" />
                     {dateFilterLabel || <span className="text-muted-foreground">Filtrar por data</span>}
                     {dateFilterLabel && (
                       <X
@@ -319,33 +270,32 @@ const Lists = () => {
           </div>
         )}
 
-        <div className="mt-6 border-t border-border" />
+        <div className="mt-5 border-t border-border" />
 
-        {/* My Lists Tab */}
         {activeTab === "mine" && (
           <>
             {lists.length === 0 ? (
-              <div className="mt-20 flex flex-col items-center text-center">
-                <List className="h-16 w-16 text-muted-foreground" />
-                <p className="mt-4 text-lg font-medium text-muted-foreground">Você ainda não criou nenhuma lista</p>
+              <div className="mt-20 flex flex-col items-center text-center px-4">
+                <List className="h-14 w-14 text-muted-foreground" />
+                <p className="mt-4 text-base font-medium text-muted-foreground">Você ainda não criou nenhuma lista</p>
                 <p className="mt-1 text-sm text-muted-foreground">Crie uma lista para organizar seus filmes favoritos</p>
               </div>
             ) : filteredLists.length === 0 ? (
-              <div className="mt-12 flex flex-col items-center text-center">
-                <Search className="h-12 w-12 text-muted-foreground" />
+              <div className="mt-12 flex flex-col items-center text-center px-4">
+                <Search className="h-10 w-10 text-muted-foreground" />
                 <p className="mt-3 text-sm text-muted-foreground">Nenhuma lista encontrada para "{search}"</p>
               </div>
             ) : (
-              <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredLists.map((list) => (
                   <div
                     key={list.id}
                     className={cn(
-                      "group relative rounded-lg border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5",
+                      "group relative rounded-lg border bg-card p-4 sm:p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5",
                       list.isShared ? "border-blue-400 bg-blue-500/5" : "border-border"
                     )}
                   >
-                    <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="absolute right-3 top-3 flex gap-1 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
                       <button
                         onClick={(e) => { e.preventDefault(); openEdit(list); }}
                         className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -362,9 +312,9 @@ const Lists = () => {
 
                     <Link to={`/listas/${list.id}`} className="block">
                       <div className="flex items-center gap-2 pr-16">
-                        <h3 className="text-lg font-semibold text-card-foreground truncate">{list.name}</h3>
+                        <h3 className="text-base sm:text-lg font-semibold text-card-foreground truncate">{list.name}</h3>
                         {list.isPublic ? (
-                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-400 dark:text-blue-400">
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-400">
                             <Globe className="h-2.5 w-2.5" />
                             Pública
                           </span>
@@ -378,25 +328,25 @@ const Lists = () => {
                       {list.description && (
                         <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{list.description}</p>
                       )}
-                      <div className="mt-4 flex items-center overflow-hidden">
+                      <div className="mt-3 flex items-center overflow-hidden">
                         {list.movies.length === 0 ? (
-                          <div className="flex h-[100px] w-full items-center justify-center rounded-md bg-muted">
-                            <Film className="h-8 w-8 text-muted-foreground" />
+                          <div className="flex h-[80px] sm:h-[100px] w-full items-center justify-center rounded-md bg-muted">
+                            <Film className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground" />
                           </div>
                         ) : (
                           <>
                             {list.movies.slice(0, 7).map((m) => {
                               const url = getPosterUrl(m.poster_path, "w185");
                               return url ? (
-                                <img key={m.id} src={url} alt={m.title} className="h-[100px] w-[67px] shrink-0 -ml-8 first:ml-0 rounded-md object-cover border border-border" />
+                                <img key={m.id} src={url} alt={m.title} className="h-[80px] w-[54px] sm:h-[100px] sm:w-[67px] shrink-0 -ml-6 sm:-ml-8 first:ml-0 rounded-md object-cover border border-border" />
                               ) : (
-                                <div key={m.id} className="flex h-[100px] w-[67px] shrink-0 -ml-8 first:ml-0 items-center justify-center rounded-md bg-muted border border-border">
+                                <div key={m.id} className="flex h-[80px] w-[54px] sm:h-[100px] sm:w-[67px] shrink-0 -ml-6 sm:-ml-8 first:ml-0 items-center justify-center rounded-md bg-muted border border-border">
                                   <Film className="h-4 w-4 text-muted-foreground" />
                                 </div>
                               );
                             })}
                             {list.movies.length > 4 && (
-                              <div className="flex h-[100px] w-[67px] shrink-0 -ml-8 items-center justify-center rounded-md bg-muted border border-border text-xs font-semibold">
+                              <div className="flex h-[80px] w-[54px] sm:h-[100px] sm:w-[67px] shrink-0 -ml-6 sm:-ml-8 items-center justify-center rounded-md bg-muted border border-border text-xs font-semibold">
                                 +{list.movies.length - 4}
                               </div>
                             )}
@@ -415,25 +365,24 @@ const Lists = () => {
           </>
         )}
 
-        {/* Shared Lists Tab */}
         {activeTab === "shared" && (
           <>
             {sharedLists.length === 0 ? (
-              <div className="mt-20 flex flex-col items-center text-center">
-                <Share2 className="h-16 w-16 text-muted-foreground" />
-                <p className="mt-4 text-lg font-medium text-muted-foreground">Nenhuma lista compartilhada</p>
+              <div className="mt-20 flex flex-col items-center text-center px-4">
+                <Share2 className="h-14 w-14 text-muted-foreground" />
+                <p className="mt-4 text-base font-medium text-muted-foreground">Nenhuma lista compartilhada</p>
                 <p className="mt-1 text-sm text-muted-foreground">Compartilhe listas com seus amigos na página de detalhes da lista</p>
               </div>
             ) : filteredSharedLists.length === 0 ? (
-              <div className="mt-12 flex flex-col items-center text-center">
-                <Search className="h-12 w-12 text-muted-foreground" />
+              <div className="mt-12 flex flex-col items-center text-center px-4">
+                <Search className="h-10 w-10 text-muted-foreground" />
                 <p className="mt-3 text-sm text-muted-foreground">Nenhuma lista compartilhada encontrada para "{search}"</p>
               </div>
             ) : (
-              <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredSharedLists.map((shared) => (
-                  <div key={shared.id} className="group relative rounded-lg border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
-                    <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div key={shared.id} className="group relative rounded-lg border bg-card p-4 sm:p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
+                    <div className="absolute right-3 top-3 flex gap-1 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
                       <button
                         onClick={(e) => { e.preventDefault(); openEdit(shared.list); }}
                         className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -484,29 +433,29 @@ const Lists = () => {
                           )}
                         </div>
                       )}
-                      <h3 className="text-lg font-semibold text-card-foreground pr-8">{shared.list.name}</h3>
+                      <h3 className="text-base sm:text-lg font-semibold text-card-foreground pr-8">{shared.list.name}</h3>
                       {shared.list.description && (
                         <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{shared.list.description}</p>
                       )}
-                      <div className="mt-4 flex gap-2">
+                      <div className="mt-3 flex items-center overflow-hidden">
                         {shared.list.movies.length === 0 ? (
-                          <div className="flex h-[100px] w-full items-center justify-center rounded-md bg-muted">
-                            <Film className="h-8 w-8 text-muted-foreground" />
+                          <div className="flex h-[80px] sm:h-[100px] w-full items-center justify-center rounded-md bg-muted">
+                            <Film className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground" />
                           </div>
                         ) : (
                           <>
                             {shared.list.movies.slice(0, 7).map((m) => {
                               const url = getPosterUrl(m.poster_path, "w185");
                               return url ? (
-                                <img key={m.id} src={url} alt={m.title} className="h-[100px] w-[67px] shrink-0 -ml-8 first:ml-0 rounded-md object-cover border border-border" />
+                                <img key={m.id} src={url} alt={m.title} className="h-[80px] w-[54px] sm:h-[100px] sm:w-[67px] shrink-0 -ml-6 sm:-ml-8 first:ml-0 rounded-md object-cover border border-border" />
                               ) : (
-                                <div key={m.id} className="flex h-[100px] w-[67px] shrink-0 -ml-8 first:ml-0 items-center justify-center rounded-md bg-muted border border-border">
+                                <div key={m.id} className="flex h-[80px] w-[54px] sm:h-[100px] sm:w-[67px] shrink-0 -ml-6 sm:-ml-8 first:ml-0 items-center justify-center rounded-md bg-muted border border-border">
                                   <Film className="h-4 w-4 text-muted-foreground" />
                                 </div>
                               );
                             })}
                             {shared.list.movies.length > 4 && (
-                              <div className="flex h-[100px] w-[67px] shrink-0 -ml-8 items-center justify-center rounded-md bg-muted border border-border text-xs font-semibold">
+                              <div className="flex h-[80px] w-[54px] sm:h-[100px] sm:w-[67px] shrink-0 -ml-6 sm:-ml-8 items-center justify-center rounded-md bg-muted border border-border text-xs font-semibold">
                                 +{shared.list.movies.length - 4}
                               </div>
                             )}
@@ -525,9 +474,8 @@ const Lists = () => {
           </>
         )}
 
-        {/* Edit Dialog */}
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent>
+          <DialogContent className="w-[calc(100%-2rem)] sm:max-w-md rounded-lg">
             <DialogHeader>
               <DialogTitle>Editar lista</DialogTitle>
             </DialogHeader>
@@ -549,9 +497,7 @@ const Lists = () => {
                   <p className="text-sm text-muted-foreground">Visibilidade</p>
                   <VisibilityToggle value={editIsPublic} onChange={setEditIsPublic} />
                   <p className="text-xs text-muted-foreground">
-                    {editIsPublic
-                      ? "Qualquer pessoa pode visualizar esta lista."
-                      : "Somente você e quem você compartilhar pode ver."}
+                    {editIsPublic ? "Qualquer pessoa pode visualizar esta lista." : "Somente você e quem você compartilhar pode ver."}
                   </p>
                 </div>
               )}
@@ -562,18 +508,20 @@ const Lists = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Delete Confirmation */}
         <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-          <AlertDialogContent>
+          <AlertDialogContent className="w-[calc(100%-2rem)] sm:max-w-md rounded-lg">
             <AlertDialogHeader>
               <AlertDialogTitle>Excluir lista</AlertDialogTitle>
               <AlertDialogDescription>
                 Tem certeza que deseja excluir esta lista? Essa ação não pode ser desfeita.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+              <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="w-full sm:w-auto bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
                 Excluir
               </AlertDialogAction>
             </AlertDialogFooter>
