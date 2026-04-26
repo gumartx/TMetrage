@@ -2,19 +2,28 @@ import { getImageUrl } from "@/lib/files";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getGenreColor } from "@/lib/genreColors";
 import { Link } from "react-router-dom";
-import { Search, Star, Film, List, Users, UserPlus, Camera, Pencil, X, Upload, Lock, MessageCircle, Loader2 } from "lucide-react";
+import {
+  Search,
+  Star,
+  Film,
+  List,
+  Users,
+  UserPlus,
+  Camera,
+  Pencil,
+  X,
+  Upload,
+  Lock,
+  MessageCircle,
+  Loader2,
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,11 +60,15 @@ const Profile = () => {
   const [topGenres, setTopGenres] = useState<{ name: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<{ name: string; profileName: string; avatar: string }[]>([]);
+  const [searchResults, setSearchResults] = useState<
+    { name: string; profileName: string; avatar: string }[]
+  >([]);
   const [editOpen, setEditOpen] = useState(false);
   const [followDialog, setFollowDialog] = useState<"followers" | "following" | null>(null);
   const [followSearch, setFollowSearch] = useState("");
-  const [followList, setFollowList] = useState<{ name: string; profileName: string; avatar: string }[]>([]);
+  const [followList, setFollowList] = useState<
+    { name: string; profileName: string; avatar: string }[]
+  >([]);
   const [editName, setEditName] = useState("");
   const [editProfileName, setEditProfileName] = useState("");
   const [editBio, setEditBio] = useState("");
@@ -95,9 +108,7 @@ const Profile = () => {
           movieIds.add(rating.movieId);
         });
 
-        const movies = await Promise.all(
-          [...movieIds].map((id) => getMovieDetails(id))
-        );
+        const movies = await Promise.all([...movieIds].map((id) => getMovieDetails(id)));
 
         const genreCount: Record<string, number> = {};
 
@@ -133,7 +144,7 @@ const Profile = () => {
         const filtered = results.filter(
           (u) =>
             u.profileName.replace("@", "").toLowerCase() !==
-            profile?.profileName.replace("@", "").toLowerCase()
+            profile?.profileName.replace("@", "").toLowerCase(),
         );
 
         setSearchResults(filtered);
@@ -156,14 +167,12 @@ const Profile = () => {
           name: updated.name,
           profileName: updated.profileName,
           avatar: updated.avatar,
-        })
+        }),
       );
 
       window.dispatchEvent(new Event("profileUpdated"));
 
-      setProfile((prev) =>
-        prev ? { ...prev, avatar: updated.avatar } : prev
-      );
+      setProfile((prev) => (prev ? { ...prev, avatar: updated.avatar } : prev));
       setAvatarDialogOpen(false);
       toast.success("Avatar atualizado!");
     } catch (err) {
@@ -194,17 +203,22 @@ const Profile = () => {
       });
       setProfile(updated);
       // Update localStorage for navbar
-      const formattedUsername = updated.profileName.startsWith("@") ? updated.profileName : `@${updated.profileName}`;
-      localStorage.setItem("tmetrage_profile", JSON.stringify({
-        name: updated.name,
-        profileName: formattedUsername,
-        username: formattedUsername,
-        bio: updated.bio,
-        avatar: updated.avatar,
-        cover: updated.cover,
-        followers: updated.followers,
-        following: updated.following,
-      }));
+      const formattedUsername = updated.profileName.startsWith("@")
+        ? updated.profileName
+        : `@${updated.profileName}`;
+      localStorage.setItem(
+        "tmetrage_profile",
+        JSON.stringify({
+          name: updated.name,
+          profileName: formattedUsername,
+          username: formattedUsername,
+          bio: updated.bio,
+          avatar: updated.avatar,
+          cover: updated.cover,
+          followers: updated.followers,
+          following: updated.following,
+        }),
+      );
       setEditOpen(false);
       toast.success("Perfil atualizado!");
     } catch (err) {
@@ -279,7 +293,9 @@ const Profile = () => {
     );
   }
 
-  const displayUsername = profile.profileName.startsWith("@") ? profile.profileName : `@${profile.profileName}`;
+  const displayUsername = profile.profileName.startsWith("@")
+    ? profile.profileName
+    : `@${profile.profileName}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -302,7 +318,7 @@ const Profile = () => {
       />
 
       {/* Cover Image */}
-      <div className="relative h-56 w-full bg-secondary overflow-hidden group">
+      <div className="group relative h-40 w-full overflow-hidden bg-secondary sm:h-48 md:h-56">
         {profile.cover && (
           <img
             src={getImageUrl(profile.cover)}
@@ -311,7 +327,7 @@ const Profile = () => {
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute inset-0 flex items-center justify-center opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
           <Button
             variant="secondary"
             size="sm"
@@ -323,16 +339,16 @@ const Profile = () => {
         </div>
       </div>
 
-      <div className="container relative">
+      <div className="container relative px-4 sm:px-6 lg:px-8">
         {/* Avatar */}
-        <div className="relative -mt-16 mb-4 flex items-end gap-6">
+        <div className="relative -mt-12 mb-4 flex flex-col items-start gap-4 sm:-mt-16 sm:flex-row sm:items-end sm:gap-6">
           <div
-            className="relative group cursor-pointer"
+            className="group relative shrink-0 cursor-pointer"
             onClick={() => setAvatarDialogOpen(true)}
           >
-            <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
+            <Avatar className="h-24 w-24 border-4 border-background shadow-lg sm:h-32 sm:w-32">
               <AvatarImage src={getImageUrl(profile.avatar)} />
-              <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-display">
+              <AvatarFallback className="bg-primary text-2xl font-display text-primary-foreground sm:text-3xl">
                 {profile.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
@@ -341,16 +357,18 @@ const Profile = () => {
             </div>
           </div>
 
-          <div className="pb-2 flex-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="font-display text-2xl font-bold text-foreground">{profile.name}</h1>
-                <p className="text-sm text-muted-foreground">{displayUsername}</p>
+          <div className="w-full min-w-0 flex-1 pb-2">
+            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <h1 className="break-words font-display text-2xl font-bold text-foreground">
+                  {profile.name}
+                </h1>
+                <p className="break-all text-sm text-muted-foreground">{displayUsername}</p>
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className="w-full gap-2 sm:w-auto"
                 onClick={() => {
                   setEditName(profile.name);
                   setEditProfileName(profile.profileName);
@@ -365,13 +383,13 @@ const Profile = () => {
           </div>
         </div>
 
-        <p className="text-sm text-muted-foreground max-w-xl mb-6">{profile.bio}</p>
+        <p className="mb-6 max-w-xl break-words text-sm text-muted-foreground">{profile.bio}</p>
 
         {/* Followers / Following */}
-        <div className="flex gap-6 mb-8">
+        <div className="mb-8 flex flex-wrap gap-x-6 gap-y-3">
           <button
             onClick={() => handleOpenFollowDialog("followers")}
-            className="flex items-center gap-2 text-sm hover:opacity-80 transition-opacity"
+            className="flex min-w-0 items-center gap-2 text-sm transition-opacity hover:opacity-80"
           >
             <Users className="h-4 w-4 text-primary" />
             <span className="font-semibold text-foreground">{profile.followers}</span>
@@ -379,7 +397,7 @@ const Profile = () => {
           </button>
           <button
             onClick={() => handleOpenFollowDialog("following")}
-            className="flex items-center gap-2 text-sm hover:opacity-80 transition-opacity"
+            className="flex min-w-0 items-center gap-2 text-sm transition-opacity hover:opacity-80"
           >
             <UserPlus className="h-4 w-4 text-primary" />
             <span className="font-semibold text-foreground">{profile.following}</span>
@@ -388,42 +406,50 @@ const Profile = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-8">
+        <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           <Link to="/filmes-avaliados">
             <Card className="bg-card border-border cursor-pointer transition-colors hover:border-primary/40">
-              <CardContent className="flex flex-col items-center justify-center py-6">
+              <CardContent className="flex min-h-32 flex-col items-center justify-center px-2 py-5 text-center sm:py-6">
                 <Film className="h-6 w-6 text-primary mb-2" />
                 <span className="text-2xl font-bold text-foreground">{profile.totalRatings}</span>
-                <span className="text-xs text-muted-foreground">Filmes avaliados</span>
+                <span className="text-center text-xs leading-tight text-muted-foreground">
+                  Filmes avaliados
+                </span>
               </CardContent>
             </Card>
           </Link>
           <Card className="bg-card border-border">
-            <CardContent className="flex flex-col items-center justify-center py-6">
+            <CardContent className="flex min-h-32 flex-col items-center justify-center px-2 py-5 text-center sm:py-6">
               <Star className="h-6 w-6 text-star mb-2" />
               <span className="text-2xl font-bold text-foreground">
                 {profile.avgRating > 0 ? profile.avgRating.toFixed(1) : "—"}
               </span>
-              <span className="text-xs text-muted-foreground">Nota média</span>
+              <span className="text-center text-xs leading-tight text-muted-foreground">
+                Nota média
+              </span>
             </CardContent>
           </Card>
           <Link to="/listas">
             <Card className="bg-card border-border cursor-pointer transition-colors hover:border-primary/40">
-              <CardContent className="flex flex-col items-center justify-center py-6">
+              <CardContent className="flex min-h-32 flex-col items-center justify-center px-2 py-5 text-center sm:py-6">
                 <List className="h-6 w-6 text-primary mb-2" />
                 <span className="text-2xl font-bold text-foreground">
                   {profile.totalLists > 0 ? profile.totalLists : "—"}
                 </span>
-                <span className="text-xs text-muted-foreground">Listas criadas</span>
+                <span className="text-center text-xs leading-tight text-muted-foreground">
+                  Listas criadas
+                </span>
               </CardContent>
             </Card>
           </Link>
           <Link to="/comentarios">
             <Card className="bg-card border-border cursor-pointer transition-colors hover:border-primary/40">
-              <CardContent className="flex flex-col items-center justify-center py-6">
+              <CardContent className="flex min-h-32 flex-col items-center justify-center px-2 py-5 text-center sm:py-6">
                 <MessageCircle className="h-6 w-6 text-accent mb-2" />
                 <span className="text-2xl font-bold text-foreground">{profile.totalComments}</span>
-                <span className="text-xs text-muted-foreground">Comentários</span>
+                <span className="text-center text-xs leading-tight text-muted-foreground">
+                  Comentários
+                </span>
               </CardContent>
             </Card>
           </Link>
@@ -431,7 +457,9 @@ const Profile = () => {
 
         {/* Favorite Genres */}
         <div className="mb-8">
-          <h2 className="font-display text-lg font-semibold text-foreground mb-3">Gêneros Favoritos</h2>
+          <h2 className="font-display text-lg font-semibold text-foreground mb-3">
+            Gêneros Favoritos
+          </h2>
           {topGenres?.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {topGenres?.map((g) => {
@@ -440,7 +468,7 @@ const Profile = () => {
                   <Link
                     key={g.name}
                     to={`/filmes-avaliados?genre=${encodeURIComponent(g.name)}`}
-                    className="rounded-full px-4 py-1.5 text-sm font-medium transition-transform hover:scale-105 hover:opacity-90"
+                    className="max-w-full rounded-full px-3 py-1.5 text-sm font-medium transition-transform hover:scale-105 hover:opacity-90 sm:px-4"
                     style={{ backgroundColor: colors.bg, color: colors.text }}
                   >
                     {g.name} <span style={{ color: colors.text, opacity: 0.75 }}>({g.count})</span>
@@ -458,8 +486,8 @@ const Profile = () => {
         {/* Profile Search */}
         <div className="mb-10">
           <h2 className="font-display text-lg font-semibold text-foreground mb-3">Buscar Perfis</h2>
-          <div className="flex max-w-md items-center gap-2">
-            <div className="relative flex-1">
+          <div className="flex w-full max-w-md items-center gap-2">
+            <div className="relative min-w-0 flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Pesquisar por nome ou @usuário"
@@ -471,15 +499,15 @@ const Profile = () => {
           </div>
 
           {searchQuery.trim() && (
-            <div className="mt-3 space-y-2 max-w-md">
+            <div className="mt-3 max-w-md space-y-2">
               {searchResults.length > 0 ? (
                 searchResults.map((u) => (
                   <Link
                     key={u.profileName}
                     to={`/usuario/${u.profileName.replace("@", "")}`}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary/40"
+                    className="flex min-w-0 items-center gap-3 rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary/40"
                   >
-                    <Avatar className="h-9 w-9">
+                    <Avatar className="h-9 w-9 shrink-0">
                       {u.avatar ? (
                         <AvatarImage src={getImageUrl(u.avatar)} />
                       ) : (
@@ -488,13 +516,13 @@ const Profile = () => {
                         </AvatarFallback>
                       )}
                     </Avatar>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">{u.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words text-sm font-medium text-foreground">{u.name}</p>
+                      <p className="break-all text-xs text-muted-foreground">
                         {u.profileName.startsWith("@") ? u.profileName : `@${u.profileName}`}
                       </p>
                     </div>
-                    <span className="text-xs text-primary font-medium">Ver perfil →</span>
+                    <span className="shrink-0 text-xs font-medium text-primary">Ver perfil →</span>
                   </Link>
                 ))
               ) : (
@@ -507,12 +535,12 @@ const Profile = () => {
 
       {/* Avatar Preview Dialog */}
       <Dialog open={avatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-h-[90svh] w-[calc(100vw-2rem)] max-w-sm overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Foto de perfil</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-4">
-            <Avatar className="h-48 w-48 border-2 border-border">
+            <Avatar className="h-36 w-36 border-2 border-border sm:h-48 sm:w-48">
               <AvatarImage src={getImageUrl(profile.avatar)} />
               <AvatarFallback className="bg-primary text-primary-foreground text-6xl font-display">
                 {profile.name.charAt(0)}
@@ -536,9 +564,7 @@ const Profile = () => {
                     await removeAvatar();
 
                     // atualizar perfil na tela
-                    setProfile((prev) =>
-                      prev ? { ...prev, avatar: null } : prev
-                    );
+                    setProfile((prev) => (prev ? { ...prev, avatar: null } : prev));
 
                     // atualizar localStorage (usado pela navbar)
                     const saved = localStorage.getItem("tmetrage_profile");
@@ -568,7 +594,7 @@ const Profile = () => {
 
       {/* Edit Profile Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90svh] w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Editar perfil</DialogTitle>
           </DialogHeader>
@@ -633,14 +659,14 @@ const Profile = () => {
                     Excluir conta
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent className="w-[calc(100vw-2rem)] max-w-lg">
                   <AlertDialogHeader>
                     <AlertDialogTitle>Excluir conta</AlertDialogTitle>
                     <AlertDialogDescription>
                       Tem certeza que deseja excluir sua conta? Essa ação não pode ser desfeita.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                  <AlertDialogFooter>
+                  <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleDeleteAccount}
@@ -657,12 +683,19 @@ const Profile = () => {
       </Dialog>
 
       {/* Followers / Following Dialog */}
-      <Dialog open={followDialog !== null} onOpenChange={(open) => { if (!open) { setFollowDialog(null); setFollowSearch(""); setFollowList([]); } }}>
-        <DialogContent>
+      <Dialog
+        open={followDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setFollowDialog(null);
+            setFollowSearch("");
+            setFollowList([]);
+          }
+        }}
+      >
+        <DialogContent className="max-h-[90svh] w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>
-              {followDialog === "followers" ? "Seguidores" : "Seguindo"}
-            </DialogTitle>
+            <DialogTitle>{followDialog === "followers" ? "Seguidores" : "Seguindo"}</DialogTitle>
           </DialogHeader>
           <div className="relative mb-2">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -673,21 +706,26 @@ const Profile = () => {
               className="pl-9"
             />
           </div>
-          <div className="space-y-2 max-h-[350px] overflow-y-auto">
+          <div className="max-h-[55svh] space-y-2 overflow-y-auto pr-1">
             {followList
-              .filter((u) =>
-                !followSearch.trim() ||
-                u.name.toLowerCase().includes(followSearch.toLowerCase()) ||
-                u.profileName.toLowerCase().includes(followSearch.toLowerCase())
+              .filter(
+                (u) =>
+                  !followSearch.trim() ||
+                  u.name.toLowerCase().includes(followSearch.toLowerCase()) ||
+                  u.profileName.toLowerCase().includes(followSearch.toLowerCase()),
               )
               .map((u) => (
                 <Link
                   key={u.profileName}
                   to={`/usuario/${u.profileName.replace("@", "")}`}
-                  onClick={() => { setFollowDialog(null); setFollowSearch(""); setFollowList([]); }}
-                  className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary/40"
+                  onClick={() => {
+                    setFollowDialog(null);
+                    setFollowSearch("");
+                    setFollowList([]);
+                  }}
+                  className="flex min-w-0 items-center gap-3 rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary/40"
                 >
-                  <Avatar className="h-9 w-9">
+                  <Avatar className="h-9 w-9 shrink-0">
                     {u.avatar ? (
                       <AvatarImage src={getImageUrl(u.avatar)} />
                     ) : (
@@ -696,17 +734,19 @@ const Profile = () => {
                       </AvatarFallback>
                     )}
                   </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground">{u.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words text-sm font-semibold text-foreground">{u.name}</p>
+                    <p className="break-all text-xs text-muted-foreground">
                       {u.profileName.startsWith("@") ? u.profileName : `@${u.profileName}`}
                     </p>
                   </div>
-                  <span className="text-xs text-primary font-medium">Ver perfil →</span>
+                  <span className="shrink-0 text-xs font-medium text-primary">Ver perfil →</span>
                 </Link>
               ))}
             {followList.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">Nenhum usuário encontrado.</p>
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nenhum usuário encontrado.
+              </p>
             )}
           </div>
         </DialogContent>
@@ -714,7 +754,7 @@ const Profile = () => {
 
       {/* Change Password Dialog */}
       <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-h-[90svh] w-[calc(100vw-2rem)] max-w-sm overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Alterar senha</DialogTitle>
           </DialogHeader>
@@ -746,9 +786,7 @@ const Profile = () => {
                 placeholder="Confirme a nova senha"
               />
             </div>
-            {passwordError && (
-              <p className="text-sm text-destructive">{passwordError}</p>
-            )}
+            {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
             <Button
               className="w-full"
               disabled={!currentPassword || !newPassword || !confirmPassword}
