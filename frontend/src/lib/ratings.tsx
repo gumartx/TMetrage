@@ -49,6 +49,7 @@ export async function getUserRatingsByProfilePaged(
   profileName: string,
   params: RatingsQueryParams = {}
 ): Promise<PageResponse<RatingResponse>> {
+  profileName = profileName.startsWith("@") ? profileName : `@${profileName}`;
   return apiRequest<PageResponse<RatingResponse>>(
     `/ratings/public/${encodeURIComponent(profileName)}${buildQuery(params)}`,
     { auth: true }
