@@ -31,7 +31,7 @@ const DATE_PRESETS: { label: string; value: string; period?: PeriodParam }[] = [
   { label: "Personalizado", value: "custom", period: "CUSTOM" },
 ];
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 25;
 
 const RatedMovies = () => {
   const [items, setItems] = useState<RatedMovie[]>([]);
