@@ -435,19 +435,19 @@ const ListDetail = () => {
 
         {list.isShared && sharedList?.sharedBy && (
           <div className="mb-2 flex items-center gap-2">
-                <span className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                  {sharedList.sharedBy.avatar ? (
-                    <img src={getImageUrl(sharedList.sharedBy.avatar)} alt={sharedList.sharedBy.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-[10px] font-medium text-muted-foreground">
-                      {sharedList.sharedBy.name.charAt(0).toUpperCase()}
-                    </span>
-                  )}
+            <span className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+              {sharedList.sharedBy.avatar ? (
+                <img src={getImageUrl(sharedList.sharedBy.avatar)} alt={sharedList.sharedBy.name} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-[10px] font-medium text-muted-foreground">
+                  {sharedList.sharedBy.name.charAt(0).toUpperCase()}
                 </span>
-                <Link to={`/usuario/${sharedList.sharedBy.profileName}`} className="text-xs text-muted-foreground hover:text-primary transition-colors">
-                  {sharedList.sharedBy.profileName}
-                </Link>
-            </div>
+              )}
+            </span>
+            <Link to={`/usuario/${sharedList.sharedBy.profileName}`} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              {sharedList.sharedBy.profileName}
+            </Link>
+          </div>
         )}
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -809,7 +809,7 @@ const ListDetail = () => {
         {/* Filters */}
         {list.movies.length > 0 && (
           <div className="mt-6 flex flex-col gap-3">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[auto_repeat(5,minmax(180px,200px))_auto]">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <Button
                 variant={showTitleSearch ? "default" : "outline"}
                 size="icon"
@@ -820,6 +820,7 @@ const ListDetail = () => {
                   });
                 }}
                 title="Buscar por título"
+                className="shrink-0"
               >
                 <Search className="h-4 w-4" />
               </Button>
@@ -830,12 +831,13 @@ const ListDetail = () => {
                   placeholder="Buscar filme pelo nome..."
                   value={titleFilter}
                   onChange={(e) => setTitleFilter(e.target.value)}
-                  className="w-full transition-all"
+                  className="min-w-[180px] flex-1 basis-full transition-all sm:basis-[220px]"
                 />
               )}
+
               <Select value={genreFilter} onValueChange={setGenreFilter}>
-                <SelectTrigger className="w-full min-w-0">
-                  <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectTrigger className="min-w-0 flex-1 basis-[calc(50%-0.5rem)] sm:basis-[180px] sm:flex-none sm:w-[180px]">
+                  <Filter className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
                   <SelectValue placeholder="Gênero" />
                 </SelectTrigger>
                 <SelectContent>
@@ -850,8 +852,8 @@ const ListDetail = () => {
                 setPlatformFilter(v);
                 if (v !== "all") setUserFilter("all");
               }}>
-                <SelectTrigger className="w-full min-w-0">
-                  <Tv className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectTrigger className="min-w-0 flex-1 basis-[calc(50%-0.5rem)] sm:basis-[180px] sm:flex-none sm:w-[180px]">
+                  <Tv className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
                   <SelectValue placeholder="Plataforma" />
                 </SelectTrigger>
                 <SelectContent>
@@ -866,8 +868,8 @@ const ListDetail = () => {
               </Select>
 
               <Select value={ratingFilter} onValueChange={setRatingFilter}>
-                <SelectTrigger className="w-full min-w-0">
-                  <Star className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectTrigger className="min-w-0 flex-1 basis-[calc(50%-0.5rem)] sm:basis-[160px] sm:flex-none sm:w-[160px]">
+                  <Star className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
                   <SelectValue placeholder="Nota" />
                 </SelectTrigger>
                 <SelectContent>
@@ -886,8 +888,8 @@ const ListDetail = () => {
 
               {sharedUsers.length > 0 && (
                 <Select value={userFilter} onValueChange={setUserFilter}>
-                  <SelectTrigger className="w-full min-w-0">
-                    <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <SelectTrigger className="min-w-0 flex-1 basis-[calc(50%-0.5rem)] sm:basis-[180px] sm:flex-none sm:w-[180px]">
+                    <User className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
                     <SelectValue placeholder="Usuário" />
                   </SelectTrigger>
                   <SelectContent>
@@ -920,8 +922,8 @@ const ListDetail = () => {
                 if (v !== "custom") { setDateFrom(undefined); setDateTo(undefined); }
                 if (v !== "all") setUserFilter("all");
               }}>
-                <SelectTrigger className="w-full min-w-0">
-                  <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectTrigger className="min-w-0 flex-1 basis-[calc(50%-0.5rem)] sm:basis-[180px] sm:flex-none sm:w-[180px]">
+                  <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
                   <SelectValue placeholder="Período" />
                 </SelectTrigger>
                 <SelectContent>
@@ -938,7 +940,7 @@ const ListDetail = () => {
                     prev === "none" ? "asc" : prev === "asc" ? "desc" : "none"
                   )
                 }
-                className="w-full sm:w-auto"
+                className="shrink-0"
                 title={
                   sortOrder === "asc"
                     ? "Ordem alfabética (A-Z)"
@@ -954,8 +956,8 @@ const ListDetail = () => {
                 )}
                 {sortOrder === "asc" ? "A-Z" : sortOrder === "desc" ? "Z-A" : "Ordenar"}
               </Button>
-
             </div>
+
 
             {datePreset === "custom" && (
               <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[180px_auto_180px_auto]">
