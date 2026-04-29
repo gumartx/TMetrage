@@ -16,18 +16,25 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.gusmarg.tmetrage.components.TMDBSaveData;
 import com.gusmarg.tmetrage.dto.CurrentUserDTO;
+import com.gusmarg.tmetrage.dto.MovieDTO;
 import com.gusmarg.tmetrage.dto.UserDetailsDTO;
 import com.gusmarg.tmetrage.dto.UserRegisterDTO;
 import com.gusmarg.tmetrage.dto.UserRegisterResponseDTO;
 import com.gusmarg.tmetrage.dto.UserSearchDTO;
 import com.gusmarg.tmetrage.dto.UserUpdateDTO;
 import com.gusmarg.tmetrage.dto.UserUpdatePasswordDTO;
+import com.gusmarg.tmetrage.entities.Movie;
 import com.gusmarg.tmetrage.entities.User;
+import com.gusmarg.tmetrage.repositories.GenreRepository;
+import com.gusmarg.tmetrage.repositories.MovieRepository;
 import com.gusmarg.tmetrage.repositories.RatingRepository;
 import com.gusmarg.tmetrage.repositories.UserRepository;
 import com.gusmarg.tmetrage.services.exceptions.EmailAlreadyExistsException;
+import com.gusmarg.tmetrage.services.exceptions.FavoriteMovieLimitException;
 import com.gusmarg.tmetrage.services.exceptions.ResourceNotFoundException;
+import com.gusmarg.tmetrage.services.utils.TMDBService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,49 +47,92 @@ public class UserService implements UserDetailsService {
 	private final AuthService authService;
 	private final UserRepository userRepository;
 	private final RatingRepository ratingRepository;
-    private final PasswordEncoder passwordEncoder;
+	private final PasswordEncoder passwordEncoder;
+	private final MovieRepository movieRepository;
+	private final GenreRepository genreRepository;
+	private final TMDBService tmdbService;
+
+	@Transactional(readOnly = true)
+	public List<MovieDTO> getFavorites(String profileName) {
+		User user = userRepository.findByProfileName(profileName);
+		List<MovieDTO> favorites = user.getFavoriteMovies().stream().map(m -> new MovieDTO(m)).toList();
+		return favorites;
+	}
+
+	@Transactional
+	public void addFavorites(Long movieId) {
+
+		User user = authService.getAuthenticatedUser();
+		
+		Movie movie =movieRepository.findById(movieId).orElseGet(() -> {
+			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository, genreRepository);
+		});
+		
+		if (user.getFavoriteMovies().size() >= 4)
+			throw new FavoriteMovieLimitException("Máximo de 4 filmes favoritos");
+
+		user.getFavoriteMovies().add(movie);
+		
+		userRepository.save(user);
+	}
+	
+	@Transactional
+	public void removeFavorites(Long movieId) {
+
+		User user = authService.getAuthenticatedUser();
+		
+		Movie movie =movieRepository.findById(movieId).orElseGet(() -> {
+			return TMDBSaveData.saveMovieFromTMDB(movieId, tmdbService, movieRepository, genreRepository);
+		});
+		
+		if (user.getFavoriteMovies().size() == 0)
+			throw new FavoriteMovieLimitException("Não há filmes para remover");
+
+		user.getFavoriteMovies().remove(movie);
+		
+		userRepository.save(user);
+	}
 
 	@Transactional(readOnly = true)
 	public UserDetailsDTO showUserDetails() {
-		
+
 		User user = authService.getAuthenticatedUser();
 
 		Double avgScore = ratingRepository.findAvgScoreByUserId(user.getId());
 
-		if(avgScore == null) {
+		if (avgScore == null) {
 			avgScore = 0.0;
 		}
-		
+
 		log.info("Detalhes do perfil: {}", user.getProfileName());
 
 		return new UserDetailsDTO(user, avgScore);
 	}
-	
 
 	@Transactional(readOnly = true)
 	public List<UserSearchDTO> getUserFollowers() {
 
 		User user = authService.getAuthenticatedUser();
-		
+
 		Set<User> result = userRepository.findFollowersByUserId(user.getId());
-		
+
 		log.info("'{}' seguidores de '{}'", result.size(), user.getProfileName());
-		
+
 		return result.stream().map(u -> new UserSearchDTO(u)).toList();
 	}
-	
+
 	@Transactional(readOnly = true)
 	public List<UserSearchDTO> getUserFollowing() {
 
 		User user = authService.getAuthenticatedUser();
-		
+
 		Set<User> result = userRepository.findFollowingByUserId(user.getId());
-		
+
 		log.info("'{}' seguidos de '{}'", result.size(), user.getProfileName());
-		
+
 		return result.stream().map(u -> new UserSearchDTO(u)).toList();
 	}
-    
+
 	@Transactional(readOnly = true)
 	public List<UserSearchDTO> searchUsers(String search) {
 
@@ -90,8 +140,8 @@ public class UserService implements UserDetailsService {
 
 		log.info("Buscando por: {}", search);
 
-		return result.stream().map(
-				user -> new UserSearchDTO(user.getId(), user.getName(), user.getProfileName(), user.getAvatar()))
+		return result.stream()
+				.map(user -> new UserSearchDTO(user.getId(), user.getName(), user.getProfileName(), user.getAvatar()))
 				.toList();
 	}
 
@@ -121,11 +171,11 @@ public class UserService implements UserDetailsService {
 
 	@Transactional
 	public UserRegisterResponseDTO register(UserRegisterDTO dto) {
-		
-		if(userRepository.existsByEmail(dto.getEmail())) {
-		    throw new EmailAlreadyExistsException("Email já cadastrado");
+
+		if (userRepository.existsByEmail(dto.getEmail())) {
+			throw new EmailAlreadyExistsException("Email já cadastrado");
 		}
-		
+
 		User entity = new User();
 		entity.setName(dto.getName());
 		entity.setProfileName(dto.getProfileName());
@@ -141,7 +191,7 @@ public class UserService implements UserDetailsService {
 	@Transactional
 	public UserDetailsDTO updateProfile(UserUpdateDTO dto) {
 		User currentUser = authService.getAuthenticatedUser();
-		
+
 		currentUser.setName(dto.getName());
 		currentUser.setProfileName(dto.getProfileName());
 		currentUser.setBio(dto.getBio());
@@ -151,157 +201,157 @@ public class UserService implements UserDetailsService {
 
 		return new UserDetailsDTO(currentUser);
 	}
-	
+
 	@Transactional
 	public void deleteProfile() {
 		User user = authService.getAuthenticatedUser();
 		String profile = user.getProfileName();
-		
+
 		userRepository.deleteById(user.getId());
 
 		log.info("Perfil deletado: {}", profile);
 	}
-	
+
 	@Transactional
 	public void changePassword(UserUpdatePasswordDTO dto) {
-		
+
 		User currentUser = authService.getAuthenticatedUser();
-		
+
 		boolean passwordMatches = passwordEncoder.matches(dto.getCurrentPassword(), currentUser.getPassword());
-		
-		if(!passwordMatches) {
+
+		if (!passwordMatches) {
 			throw new RuntimeException("Senha atual incorreta");
 		}
-		
+
 		String newPassword = passwordEncoder.encode(dto.getNewPassword());
-		
+
 		currentUser.setPassword(newPassword);
-		
+
 		userRepository.save(currentUser);
-		
+
 		log.info("Senha alterada");
 	}
-	
+
 	@Transactional
 	public void toggleFollow(String profileName) {
 		User user = authService.getAuthenticatedUser();
 
-	    if (user.getProfileName().equals(profileName)) {
-	        throw new RuntimeException("Você não pode seguir a si mesmo");
-	    }
-		
-	    User userFollow = userRepository.findByProfileName(profileName);
+		if (user.getProfileName().equals(profileName)) {
+			throw new RuntimeException("Você não pode seguir a si mesmo");
+		}
+
+		User userFollow = userRepository.findByProfileName(profileName);
 
 		if (user.getFollowing().contains(userFollow)) {
 
-		    user.getFollowing().remove(userFollow);
+			user.getFollowing().remove(userFollow);
 
-		    log.info("Usuário '{}' deixou de seguir '{}'", user.getProfileName(), userFollow.getProfileName());
+			log.info("Usuário '{}' deixou de seguir '{}'", user.getProfileName(), userFollow.getProfileName());
 
 		} else {
-		    user.getFollowing().add(userFollow);
+			user.getFollowing().add(userFollow);
 
-		    log.info("Usuário '{}' passou a seguir '{}'", user.getProfileName(), userFollow.getProfileName());
+			log.info("Usuário '{}' passou a seguir '{}'", user.getProfileName(), userFollow.getProfileName());
 		}
 	}
 
 	@Transactional
 	public UserDetailsDTO updateAvatar(MultipartFile file) throws IOException {
 
-	    User user = authService.getAuthenticatedUser();
+		User user = authService.getAuthenticatedUser();
 
-	    Path uploadDir = Paths.get("uploads/avatars");
+		Path uploadDir = Paths.get("uploads/avatars");
 
-	    if (!Files.exists(uploadDir)) {
-	        Files.createDirectories(uploadDir);
-	    }
-	    
-	    if (user.getAvatar() != null) {
-	        Path oldFile = Paths.get(user.getAvatar());
-	        Files.deleteIfExists(oldFile);
-	    }
+		if (!Files.exists(uploadDir)) {
+			Files.createDirectories(uploadDir);
+		}
 
-	    String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+		if (user.getAvatar() != null) {
+			Path oldFile = Paths.get(user.getAvatar());
+			Files.deleteIfExists(oldFile);
+		}
 
-	    Path filePath = uploadDir.resolve(fileName);
+		String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
 
-	    Files.write(filePath, file.getBytes());
+		Path filePath = uploadDir.resolve(fileName);
 
-	    user.setAvatar("uploads/avatars/" + fileName);
+		Files.write(filePath, file.getBytes());
 
-	    userRepository.save(user);
-	    
-	    log.info("Usuário '{}' alterou foto de perfil", user.getProfileName());
+		user.setAvatar("uploads/avatars/" + fileName);
 
-	    return new UserDetailsDTO(user);
+		userRepository.save(user);
+
+		log.info("Usuário '{}' alterou foto de perfil", user.getProfileName());
+
+		return new UserDetailsDTO(user);
 	}
-	
+
 	@Transactional
 	public UserDetailsDTO updateCover(MultipartFile file) throws IOException {
 
-	    User user = authService.getAuthenticatedUser();
+		User user = authService.getAuthenticatedUser();
 
-	    Path uploadDir = Paths.get("uploads/covers");
+		Path uploadDir = Paths.get("uploads/covers");
 
-	    if (!Files.exists(uploadDir)) {
-	        Files.createDirectories(uploadDir);
-	    }
+		if (!Files.exists(uploadDir)) {
+			Files.createDirectories(uploadDir);
+		}
 
-	    if (user.getBackgroundImgUrl() != null) {
-	        Path oldFile = Paths.get(user.getBackgroundImgUrl());
-	        Files.deleteIfExists(oldFile);
-	    }
+		if (user.getBackgroundImgUrl() != null) {
+			Path oldFile = Paths.get(user.getBackgroundImgUrl());
+			Files.deleteIfExists(oldFile);
+		}
 
-	    String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+		String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
 
-	    Path filePath = uploadDir.resolve(fileName);
+		Path filePath = uploadDir.resolve(fileName);
 
-	    Files.write(filePath, file.getBytes());
+		Files.write(filePath, file.getBytes());
 
-	    user.setBackgroundImgUrl("uploads/covers/" + fileName);
+		user.setBackgroundImgUrl("uploads/covers/" + fileName);
 
-	    userRepository.save(user);
-	    
-	    log.info("Usuário '{}' alterou plano de fundo do perfil", user.getProfileName());
+		userRepository.save(user);
 
-	    return new UserDetailsDTO(user);
+		log.info("Usuário '{}' alterou plano de fundo do perfil", user.getProfileName());
+
+		return new UserDetailsDTO(user);
 	}
 
 	@Transactional
 	public void removeAvatar() {
-	    User user = authService.getAuthenticatedUser();
+		User user = authService.getAuthenticatedUser();
 
-	    String avatarPath = user.getAvatar();
+		String avatarPath = user.getAvatar();
 
-	    if (avatarPath != null) {
+		if (avatarPath != null) {
 
-	        try {
-	            Path path = Paths.get(avatarPath);
-	            Files.deleteIfExists(path);
-	        } catch (IOException e) {
-	            throw new RuntimeException("Erro ao remover avatar");
-	        }
+			try {
+				Path path = Paths.get(avatarPath);
+				Files.deleteIfExists(path);
+			} catch (IOException e) {
+				throw new RuntimeException("Erro ao remover avatar");
+			}
 
-	        user.setAvatar(null);
-	        userRepository.save(user);
-	    }
+			user.setAvatar(null);
+			userRepository.save(user);
+		}
 
 		log.info("Imagem de perfil de '{}' removida", user.getProfileName());
 	}
-	
 
 	@Transactional(readOnly = true)
 	public CurrentUserDTO currentUser() {
 		User user = authService.getAuthenticatedUser();
 
 		log.info("Usuário '{}' autenticado", user.getProfileName());
-		
+
 		return new CurrentUserDTO(user);
 	}
-	
+
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		return userRepository.findByEmail(username).orElseThrow(() -> new ResourceNotFoundException("Email não cadastrado"));
+		return userRepository.findByEmail(username)
+				.orElseThrow(() -> new ResourceNotFoundException("Email não cadastrado"));
 	}
 
 }

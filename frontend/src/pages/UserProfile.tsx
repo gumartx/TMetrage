@@ -13,6 +13,7 @@ import {
   MessageCircle,
   Loader2,
   List,
+  Heart,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import Navbar from "@/components/Navbar";
@@ -229,6 +230,50 @@ const UserProfile = () => {
             <span className="text-muted-foreground">seguindo</span>
           </div>
         </div>
+
+        {/* Favorite Movies */}
+        {profile.favoriteMovies && profile.favoriteMovies.length > 0 && (
+          <section className="mb-8">
+            <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-semibold text-foreground">
+              <Heart className="h-5 w-5 text-primary" />
+              Filmes favoritos
+            </h2>
+            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5 sm:gap-3 md:grid-cols-6 lg:grid-cols-8">
+              {profile.favoriteMovies.map((movie) => {
+                const poster = getPosterUrl(movie.poster_path);
+                return (
+                  <Link
+                    key={movie.id}
+                    to={`/movie/${movie.id}`}
+                    className="group relative block overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/40 hover:shadow-lg"
+                  >
+                    <div className="aspect-square overflow-hidden">
+                      {poster ? (
+                        <img
+                          src={poster}
+                          alt={movie.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-muted">
+                          <Film className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Title — sempre visível em mobile, no hover em desktop */}
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/55 to-transparent p-2 opacity-100 transition-opacity duration-200 sm:opacity-0 sm:group-hover:opacity-100">
+                      <p className="line-clamp-2 text-[11px] font-semibold leading-tight text-white sm:text-xs">
+                        {movie.title}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Stats */}
         <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">

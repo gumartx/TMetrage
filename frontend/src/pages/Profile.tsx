@@ -16,6 +16,9 @@ import {
   Lock,
   MessageCircle,
   Loader2,
+  Heart,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Input } from "@/components/ui/input";
@@ -49,9 +52,13 @@ import {
   getFollowing,
   UserProfile,
   getUserProfile,
+  getFavoriteMovies,
+  addFavoriteMovie,
+  removeFavoriteMovie,
+  FavoriteMovie,
 } from "@/lib/profile";
 import { removeToken } from "@/lib/api";
-import { getMovieDetails } from "@/lib/tmdb";
+import { getMovieDetails, searchMovies, getPosterUrl, type Movie } from "@/lib/tmdb";
 import { getLists } from "@/lib/movieLists";
 import { getUserRatings } from "@/lib/ratings";
 
@@ -81,6 +88,11 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const [favorites, setFavorites] = useState<FavoriteMovie[]>([]);
+  const [favDialogOpen, setFavDialogOpen] = useState(false);
+  const [favSearchQuery, setFavSearchQuery] = useState("");
+  const [favSearchResults, setFavSearchResults] = useState<Movie[]>([]);
+  const [favSearching, setFavSearching] = useState(false);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -96,6 +108,68 @@ const Profile = () => {
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
+
+  const loadFavorites = useCallback(async () => {
+    if (!profile?.profileName) return;
+    try {
+      const list = await getFavoriteMovies(profile.profileName);
+      setFavorites(list);
+    } catch (err) {
+      console.error("Erro ao carregar favoritos:", err);
+    }
+  }, [profile?.profileName]);
+
+  useEffect(() => {
+    loadFavorites();
+  }, [loadFavorites]);
+
+  useEffect(() => {
+    if (!favDialogOpen) return;
+    if (!favSearchQuery.trim()) {
+      setFavSearchResults([]);
+      return;
+    }
+    setFavSearching(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await searchMovies(favSearchQuery);
+        setFavSearchResults(res.results.slice(0, 12));
+      } catch {
+        setFavSearchResults([]);
+      } finally {
+        setFavSearching(false);
+      }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [favSearchQuery, favDialogOpen]);
+
+  const handleAddFavorite = async (movie: Movie) => {
+    if (favorites.some((f) => f.id === movie.id)) {
+      toast.info("Esse filme já está nos seus favoritos.");
+      return;
+    }
+    try {
+      await addFavoriteMovie(movie.id);
+      setFavorites((prev) => [
+        ...prev,
+        { id: movie.id, title: movie.title, poster_path: movie.poster_path },
+      ]);
+      toast.success("Adicionado aos favoritos!");
+    } catch (err) {
+      toast.error(err.message || "Só é possível adicionar até 4 filmes aos favoritos.");
+    }
+  };
+
+  const handleRemoveFavorite = async (movieId: number) => {
+    try {
+      await removeFavoriteMovie(movieId);
+      setFavorites((prev) => prev.filter((f) => f.id !== movieId));
+      toast.success("Removido dos favoritos.");
+    } catch (err) {
+      toast.error(err.message || "Erro ao remover favorito");
+    }
+  };
+
 
   useEffect(() => {
     const loadGenresFromRatings = async () => {
@@ -404,6 +478,87 @@ const Profile = () => {
             <span className="text-muted-foreground">seguindo</span>
           </button>
         </div>
+
+        {/* Favorite Movies */}
+        <section className="mb-8">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-foreground">
+              <Heart className="h-5 w-5 text-primary" />
+              Filmes favoritos
+            </h2>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => {
+                setFavSearchQuery("");
+                setFavSearchResults([]);
+                setFavDialogOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Adicionar</span>
+            </Button>
+          </div>
+
+          {favorites.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Você ainda não tem filmes favoritos. Clique em "Adicionar" para começar.
+            </p>
+          ) : (
+            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5 sm:gap-3 md:grid-cols-6 lg:grid-cols-8">
+              {favorites.map((movie) => {
+                const poster = getPosterUrl(movie.poster_path);
+                return (
+                  <div
+                    key={movie.id}
+                    className="group relative overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/40 hover:shadow-lg"
+                  >
+                    <Link to={`/movie/${movie.id}`} className="block">
+                      <div className="aspect-square overflow-hidden">
+                        {poster ? (
+                          <img
+                            src={poster}
+                            alt={movie.title}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-muted">
+                            <Film className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+
+                    {/* Title — always visible on mobile, on hover for desktop */}
+                    <div
+                      className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/55 to-transparent p-2 opacity-100 transition-opacity duration-200 sm:opacity-0 sm:group-hover:opacity-100"
+                    >
+                      <p className="line-clamp-2 text-[11px] font-semibold leading-tight text-white sm:text-xs">
+                        {movie.title}
+                      </p>
+                    </div>
+
+                    {/* Remove button (desktop hover, always visible mobile) */}
+                    <button
+                      type="button"
+                      aria-label="Remover dos favoritos"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleRemoveFavorite(movie.id);
+                      }}
+                      className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-background/80 text-foreground opacity-100 backdrop-blur transition-opacity hover:bg-destructive hover:text-destructive-foreground sm:opacity-0 sm:group-hover:opacity-100"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
 
         {/* Stats Grid */}
         <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
@@ -795,6 +950,120 @@ const Profile = () => {
               Salvar nova senha
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Favorite Movie Dialog */}
+      <Dialog open={favDialogOpen} onOpenChange={setFavDialogOpen}>
+        <DialogContent className="max-h-[90svh] w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Heart className="h-5 w-5 text-primary" />
+              Adicionar filmes favoritos
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              autoFocus
+              placeholder="Pesquise um filme pelo título..."
+              value={favSearchQuery}
+              onChange={(e) => setFavSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          <div className="mt-3 max-h-[55svh] overflow-y-auto pr-1">
+            {favSearching ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : favSearchQuery.trim() === "" ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                Digite o nome de um filme para começar.
+              </p>
+            ) : favSearchResults.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                Nenhum filme encontrado.
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {favSearchResults.map((movie) => {
+                  const poster = getPosterUrl(movie.poster_path);
+                  const isFav = favorites.some((f) => f.id === movie.id);
+                  return (
+                    <div
+                      key={movie.id}
+                      className="flex gap-2 rounded-lg border border-border bg-card p-2"
+                    >
+                      <div className="h-20 w-14 shrink-0 overflow-hidden rounded bg-muted">
+                        {poster ? (
+                          <img
+                            src={poster}
+                            alt={movie.title}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center">
+                            <Film className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex min-w-0 flex-1 flex-col justify-between">
+                        <p className="line-clamp-2 text-xs font-semibold leading-tight text-foreground">
+                          {movie.title}
+                        </p>
+                        <Button
+                          size="sm"
+                          variant={isFav ? "secondary" : "default"}
+                          disabled={isFav}
+                          className="h-7 gap-1 px-2 text-[11px]"
+                          onClick={() => handleAddFavorite(movie)}
+                        >
+                          {isFav ? (
+                            "Adicionado"
+                          ) : (
+                            <>
+                              <Plus className="h-3 w-3" />
+                              Adicionar
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {favorites.length > 0 && (
+            <div className="border-t border-border pt-3">
+              <p className="mb-2 text-xs font-medium text-muted-foreground">
+                Seus favoritos ({favorites.length})
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {favorites.map((f) => (
+                  <span
+                    key={f.id}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-secondary-foreground"
+                  >
+                    {f.title}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFavorite(f.id)}
+                      className="text-muted-foreground hover:text-destructive"
+                      aria-label={`Remover ${f.title}`}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

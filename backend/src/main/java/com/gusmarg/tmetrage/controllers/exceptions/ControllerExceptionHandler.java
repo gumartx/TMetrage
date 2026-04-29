@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.gusmarg.tmetrage.services.exceptions.DatabaseException;
+import com.gusmarg.tmetrage.services.exceptions.FavoriteMovieLimitException;
 import com.gusmarg.tmetrage.services.exceptions.IncorrectPasswordException;
 import com.gusmarg.tmetrage.services.exceptions.ResourceNotFoundException;
 
@@ -49,6 +50,17 @@ public class ControllerExceptionHandler {
 		err.setTimestamp(Instant.now());
 		err.setStatus(status.value());
 		err.setError("Auth exception");
+		err.setMessage(e.getMessage());
+		err.setPath(request.getRequestURI());
+		return ResponseEntity.status(status).body(err);
+	}	
+	@ExceptionHandler(FavoriteMovieLimitException.class)
+	public ResponseEntity<StandardError> database(FavoriteMovieLimitException e, HttpServletRequest request) {
+		HttpStatus status = HttpStatus.BAD_REQUEST;
+		StandardError err = new StandardError();
+		err.setTimestamp(Instant.now());
+		err.setStatus(status.value());
+		err.setError("exception");
 		err.setMessage(e.getMessage());
 		err.setPath(request.getRequestURI());
 		return ResponseEntity.status(status).body(err);

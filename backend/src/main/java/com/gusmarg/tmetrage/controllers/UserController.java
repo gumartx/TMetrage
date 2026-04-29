@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.gusmarg.tmetrage.dto.CurrentUserDTO;
+import com.gusmarg.tmetrage.dto.MovieDTO;
 import com.gusmarg.tmetrage.dto.UserDetailsDTO;
 import com.gusmarg.tmetrage.dto.UserSearchDTO;
 import com.gusmarg.tmetrage.dto.UserUpdateDTO;
@@ -33,6 +34,24 @@ public class UserController {
 
 	private final UserService userService;
 
+	@GetMapping("/{profileName}/favorites")
+	public ResponseEntity<List<MovieDTO>> getFavorites(@PathVariable String profileName) {
+	    List<MovieDTO> favorites = userService.getFavorites(profileName);
+	    return ResponseEntity.ok(favorites);
+	}
+
+	@PostMapping("/favorites")
+	public ResponseEntity<Void> addFavorites(@RequestBody Long movieIds) {
+	    userService.addFavorites(movieIds);
+	    return ResponseEntity.noContent().build();
+	}
+	
+	@DeleteMapping("/favorites")
+	public ResponseEntity<Void> removeFavorites(@RequestBody Long movieIds) {
+	    userService.removeFavorites(movieIds);
+	    return ResponseEntity.noContent().build();
+	}
+	
 	@GetMapping("/me")
 	public ResponseEntity<CurrentUserDTO> currentUser() {
 		return ResponseEntity.ok(userService.currentUser());

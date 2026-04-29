@@ -18,6 +18,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
@@ -49,6 +50,15 @@ public class User implements UserDetails {
 	private String avatar;
 	private String backgroundImgUrl;
 
+	@ManyToMany
+	@JoinTable(
+	    name = "tb_user_favorite_movies",
+	    joinColumns = @JoinColumn(name = "user_id"),
+	    inverseJoinColumns = @JoinColumn(name = "movie_id")
+	)
+	@OrderColumn(name = "position")
+	private List<Movie> favoriteMovies = new ArrayList<>();
+	
 	@OneToMany(mappedBy = "user")
 	private List<MovieList> lists = new ArrayList<>();
 	

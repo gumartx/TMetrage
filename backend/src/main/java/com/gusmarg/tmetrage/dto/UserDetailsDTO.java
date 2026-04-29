@@ -22,6 +22,7 @@ public class UserDetailsDTO extends UserDTO {
 	private List<RatingDTO> ratings;
 	private List<ReviewDTO> reviews;
 	private Boolean isFollowing;
+	private List<MovieDTO> favoriteMovies;
 
 	public UserDetailsDTO(User entity, Double avgScore) {
 		super(entity, avgScore);
@@ -34,6 +35,10 @@ public class UserDetailsDTO extends UserDTO {
 				.toList();
 		reviews = entity.getComments().stream().map(c -> new ReviewDTO(c.getId(), c.getMovie().getId(), c.getMovie().getTitle(),
 				c.getMovie().getPosterPath(), c.getMessage(), c.getCreatedAt())).toList();
+		
+		this.favoriteMovies = entity.getFavoriteMovies().stream()
+			    .map(m -> new MovieDTO(m))
+			    .toList();
 	}
 
 	public UserDetailsDTO(User entity) {

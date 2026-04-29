@@ -5,6 +5,13 @@ export interface CurrentUser {
     avatar?: string;
 }
 
+export interface FavoriteMovie {
+    id: number;
+    title: string;
+    poster_path: string | null;
+    genres?: { id: number; name: string }[];
+}
+
 export interface UserProfile {
     id: string | number;
     name: string;
@@ -23,6 +30,7 @@ export interface UserProfile {
     topGenres?: { name: string; count: number }[];
     ratings: { movieId: number; movieTitle: string; posterPath: string | null; rating: number; date: string }[];
     reviews: { id: number; movieId: number; movieTitle: string; posterPath: string | null; content: string; date: string }[];
+    favoriteMovies?: FavoriteMovie[];
 }
 
 export async function getCurrentUserProfile(): Promise<CurrentUser> {
@@ -120,6 +128,31 @@ export async function toggleFollow(profileName: string): Promise<{ following: bo
     profileName = profileName.startsWith("@") ? profileName : `@${profileName}`;
     return apiRequest(`/users/${profileName}/follow`, {
         method: "PUT",
+        auth: true,
+    });
+}
+
+// ===== Favorite movies =====
+
+export async function getFavoriteMovies(profileName: string): Promise<FavoriteMovie[]> {
+    const username = profileName.startsWith("@") ? profileName : `@${profileName}`;
+    return apiRequest<FavoriteMovie[]>(`/users/${encodeURIComponent(username)}/favorites`, {
+        auth: true,
+    });
+}
+
+export async function addFavoriteMovie(movieId: number): Promise<void> {
+    await apiRequest("/users/favorites", {
+        method: "POST",
+        body: movieId,
+        auth: true,
+    });
+}
+
+export async function removeFavoriteMovie(movieId: number): Promise<void> {
+    await apiRequest("/users/favorites", {
+        method: "DELETE",
+        body: movieId,
         auth: true,
     });
 }

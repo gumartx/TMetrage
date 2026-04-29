@@ -33,6 +33,9 @@ public class Movie {
 	private String title;
 	private String posterPath;
 
+	@ManyToMany(mappedBy = "favoriteMovies")
+	private Set<User> users = new HashSet<>();
+	
 	@ManyToMany
 	@JoinTable(name = "tb_movie_genre", joinColumns = @JoinColumn(name = "movie_id"), inverseJoinColumns = @JoinColumn(name = "genre_id"))
 	private List<Genre> genres = new ArrayList<>();
