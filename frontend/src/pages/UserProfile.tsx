@@ -238,7 +238,7 @@ const UserProfile = () => {
               <Heart className="h-5 w-5 text-primary" />
               Filmes favoritos
             </h2>
-            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5 sm:gap-3 md:grid-cols-6 lg:grid-cols-8">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5 sm:gap-3 md:grid-cols-6 lg:grid-cols-8">
               {profile.favoriteMovies.map((movie) => {
                 const poster = getPosterUrl(movie.poster_path);
                 return (

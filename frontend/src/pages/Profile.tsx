@@ -506,7 +506,7 @@ const Profile = () => {
               Você ainda não tem filmes favoritos. Clique em "Adicionar" para começar.
             </p>
           ) : (
-            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5 sm:gap-3 md:grid-cols-6 lg:grid-cols-8">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5 sm:gap-3 md:grid-cols-6 lg:grid-cols-8">
               {favorites.map((movie) => {
                 const poster = getPosterUrl(movie.poster_path);
                 return (
