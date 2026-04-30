@@ -1,9 +1,35 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Trash2, Film, Search, BarChart3, Star, Calendar as CalendarIcon, Filter, Share2, User, Users, ArrowUpAZ, ArrowDownZA } from "lucide-react";
+import {
+  ArrowLeft,
+  Trash2,
+  Film,
+  Search,
+  BarChart3,
+  Star,
+  Calendar as CalendarIcon,
+  Filter,
+  Share2,
+  User,
+  Users,
+  ArrowUpAZ,
+  ArrowDownZA,
+} from "lucide-react";
 import { Tv } from "lucide-react";
 import { format } from "date-fns";
-import { getList, getSharedLists, removeMovieFromList, addMovieToList, shareList, unshareList, type MovieList, type MovieListItem, type SharedList, type UserMovieRating, getSharedListDetail } from "@/lib/movieLists";
+import {
+  getList,
+  getSharedLists,
+  removeMovieFromList,
+  addMovieToList,
+  shareList,
+  unshareList,
+  type MovieList,
+  type MovieListItem,
+  type SharedList,
+  type UserMovieRating,
+  getSharedListDetail,
+} from "@/lib/movieLists";
 import { getMovieDetails, searchMovies, getPosterUrl, getGenres } from "@/lib/tmdb";
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
@@ -12,7 +38,13 @@ import { getFollowing, getCurrentUserProfile } from "@/lib/profile";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -50,7 +82,9 @@ const ListDetail = () => {
   const [showSharedUsers, setShowSharedUsers] = useState(false);
   const [query, setQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [following, setFollowing] = useState<{ name: string; profileName: string; avatar: string }[]>([]);
+  const [following, setFollowing] = useState<
+    { name: string; profileName: string; avatar: string }[]
+  >([]);
   const [currentUser, setCurrentUser] = useState<{
     profileName: string;
     avatar: string | null;
@@ -89,7 +123,7 @@ const ListDetail = () => {
         setCurrentUser({
           profileName: u.profileName,
           avatar: u.avatar ?? null,
-        })
+        }),
       )
       .catch(() => setCurrentUser(null));
   }, []);
@@ -100,7 +134,9 @@ const ListDetail = () => {
 
   useEffect(() => {
     if (showShare) {
-      getFollowing().then(setFollowing).catch(() => { });
+      getFollowing()
+        .then(setFollowing)
+        .catch(() => {});
     }
   }, [showShare]);
 
@@ -137,7 +173,7 @@ const ListDetail = () => {
           } catch (err) {
             console.error("Erro ao buscar gêneros:", movie.id, err);
           }
-        })
+        }),
       );
 
       setMovieGenres(map);
@@ -164,12 +200,12 @@ const ListDetail = () => {
   const getMovieSharedRatings = (movieId: number) => {
     if (!sharedList?.ratings) return [];
 
-    return sharedList.ratings.filter(r => r.movieId === movieId);
+    return sharedList.ratings.filter((r) => r.movieId === movieId);
   };
 
   const toggleUserSelection = (profileName: string) => {
     setSelectedUsers((prev) =>
-      prev.includes(profileName) ? prev.filter((u) => u !== profileName) : [...prev, profileName]
+      prev.includes(profileName) ? prev.filter((u) => u !== profileName) : [...prev, profileName],
     );
   };
 
@@ -180,7 +216,8 @@ const ListDetail = () => {
 
     if (sharedList.sharedBy) {
       const normalize = (p?: string | null) => p?.replace(/^@/, "").toLowerCase() ?? "";
-      const isOwner = normalize(sharedList.sharedBy.profileName) === normalize(currentUser?.profileName);
+      const isOwner =
+        normalize(sharedList.sharedBy.profileName) === normalize(currentUser?.profileName);
 
       if (!isOwner) {
         map.set(sharedList.sharedBy.profileName, {
@@ -191,12 +228,12 @@ const ListDetail = () => {
       }
     }
 
-    sharedList.sharedTo.forEach(r => {
+    sharedList.sharedTo.forEach((r) => {
       if (!map.has(r.profileName)) {
         map.set(r.profileName, {
           profileName: r.profileName,
           name: r.profileName,
-          avatar: r.avatar ?? null
+          avatar: r.avatar ?? null,
         });
       }
     });
@@ -207,14 +244,14 @@ const ListDetail = () => {
   const filteredFollowing = useMemo(() => {
     if (!list) return [];
 
-    const sharedSet = new Set(sharedUsers.map(u => u.profileName));
-    const availableUsers = following.filter(u => !sharedSet.has(u.profileName));
+    const sharedSet = new Set(sharedUsers.map((u) => u.profileName));
+    const availableUsers = following.filter((u) => !sharedSet.has(u.profileName));
 
     if (!shareSearch.trim()) return availableUsers;
 
     const q = shareSearch.toLowerCase();
     return availableUsers.filter(
-      u => u.name.toLowerCase().includes(q) || u.profileName.toLowerCase().includes(q)
+      (u) => u.name.toLowerCase().includes(q) || u.profileName.toLowerCase().includes(q),
     );
   }, [following, shareSearch, list, sharedUsers]);
 
@@ -261,9 +298,15 @@ const ListDetail = () => {
   });
 
   const CHART_COLORS = [
-    "hsl(199, 89%, 48%)", "hsl(45, 93%, 58%)", "hsl(142, 71%, 45%)",
-    "hsl(280, 65%, 60%)", "hsl(0, 84%, 60%)", "hsl(25, 95%, 53%)",
-    "hsl(330, 80%, 55%)", "hsl(180, 60%, 45%)", "hsl(210, 70%, 55%)",
+    "hsl(199, 89%, 48%)",
+    "hsl(45, 93%, 58%)",
+    "hsl(142, 71%, 45%)",
+    "hsl(280, 65%, 60%)",
+    "hsl(0, 84%, 60%)",
+    "hsl(25, 95%, 53%)",
+    "hsl(330, 80%, 55%)",
+    "hsl(180, 60%, 45%)",
+    "hsl(210, 70%, 55%)",
     "hsl(60, 70%, 50%)",
   ];
 
@@ -322,10 +365,18 @@ const ListDetail = () => {
     const now = new Date();
     const from = new Date();
     switch (datePreset) {
-      case "7d": from.setDate(now.getDate() - 7); break;
-      case "30d": from.setDate(now.getDate() - 30); break;
-      case "90d": from.setDate(now.getDate() - 90); break;
-      case "1y": from.setFullYear(now.getFullYear() - 1); break;
+      case "7d":
+        from.setDate(now.getDate() - 7);
+        break;
+      case "30d":
+        from.setDate(now.getDate() - 30);
+        break;
+      case "90d":
+        from.setDate(now.getDate() - 90);
+        break;
+      case "1y":
+        from.setFullYear(now.getFullYear() - 1);
+        break;
     }
     return { from, to: now };
   };
@@ -333,7 +384,10 @@ const ListDetail = () => {
   const filteredMovies = useMemo(() => {
     if (!list) return [];
     const filtered = list.movies.filter((movie) => {
-      if (titleFilter.trim() && !movie.title.toLowerCase().includes(titleFilter.trim().toLowerCase())) {
+      if (
+        titleFilter.trim() &&
+        !movie.title.toLowerCase().includes(titleFilter.trim().toLowerCase())
+      ) {
         return false;
       }
       const rating = movieRatings[movie.id];
@@ -367,7 +421,7 @@ const ListDetail = () => {
       let referenceRating: number | null | undefined = rating?.rating;
       if (userFilter !== "all") {
         const userRatingEntry = sharedList?.ratings?.find(
-          (r) => r.movieId === movie.id && r.profileName === userFilter
+          (r) => r.movieId === movie.id && r.profileName === userFilter,
         );
         if (!userRatingEntry) return false;
         referenceRating = userRatingEntry.rating;
@@ -384,11 +438,30 @@ const ListDetail = () => {
       return [...filtered].sort((a, b) => b.title.localeCompare(a.title, "pt-BR"));
     }
     return filtered;
-  }, [list, movieRatings, movieGenres, genreFilter, platformFilter, datePreset, dateFrom, dateTo, ratingFilter, userFilter, titleFilter, sortOrder]);
+  }, [
+    list,
+    movieRatings,
+    movieGenres,
+    genreFilter,
+    platformFilter,
+    datePreset,
+    dateFrom,
+    dateTo,
+    ratingFilter,
+    userFilter,
+    titleFilter,
+    sortOrder,
+  ]);
 
   const handleSearch = () => setSearchTerm(query);
 
-  const handleAddMovie = async (movie: { id: number; title: string; poster_path: string | null; vote_average: number; genre_ids: number[] }) => {
+  const handleAddMovie = async (movie: {
+    id: number;
+    title: string;
+    poster_path: string | null;
+    vote_average: number;
+    genre_ids: number[];
+  }) => {
     if (!id) return;
     const item: MovieListItem = {
       id: movie.id,
@@ -413,7 +486,9 @@ const ListDetail = () => {
         <Navbar />
         <div className="container py-20 text-center">
           <p className="text-muted-foreground">Lista não encontrada.</p>
-          <Button variant="ghost" className="mt-4" onClick={() => navigate("/listas")}>Voltar</Button>
+          <Button variant="ghost" className="mt-4" onClick={() => navigate("/listas")}>
+            Voltar
+          </Button>
         </div>
       </div>
     );
@@ -437,14 +512,21 @@ const ListDetail = () => {
           <div className="mb-2 flex items-center gap-2">
             <span className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
               {sharedList.sharedBy.avatar ? (
-                <img src={getImageUrl(sharedList.sharedBy.avatar)} alt={sharedList.sharedBy.name} className="h-full w-full object-cover" />
+                <img
+                  src={getImageUrl(sharedList.sharedBy.avatar)}
+                  alt={sharedList.sharedBy.name}
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <span className="text-[10px] font-medium text-muted-foreground">
                   {sharedList.sharedBy.name.charAt(0).toUpperCase()}
                 </span>
               )}
             </span>
-            <Link to={`/usuario/${sharedList.sharedBy.profileName}`} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+            <Link
+              to={`/usuario/${sharedList.sharedBy.profileName}`}
+              className="text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
               {sharedList.sharedBy.profileName}
             </Link>
           </div>
@@ -452,13 +534,18 @@ const ListDetail = () => {
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
-            <h1 className="break-words font-display text-2xl font-bold text-foreground sm:text-3xl">{list.name}</h1>
+            <h1 className="break-words font-display text-2xl font-bold text-foreground sm:text-3xl">
+              {list.name}
+            </h1>
             {list.description && (
-              <p className="mt-1 max-w-3xl break-words text-sm text-muted-foreground">{list.description}</p>
+              <p className="mt-1 max-w-3xl break-words text-sm text-muted-foreground">
+                {list.description}
+              </p>
             )}
             <p className="mt-2 text-xs text-muted-foreground">
               {list.movies.length} {list.movies.length === 1 ? "filme" : "filmes"}
-              {filteredMovies.length !== list.movies.length && ` (${filteredMovies.length} exibidos)`}
+              {filteredMovies.length !== list.movies.length &&
+                ` (${filteredMovies.length} exibidos)`}
             </p>
           </div>
 
@@ -479,10 +566,10 @@ const ListDetail = () => {
                     </DialogTitle>
                   </DialogHeader>
                   {genreChartData.length > 0 ? (
-                    <div className="flex flex-col gap-4 overflow-visible pb-2 pt-4 lg:flex-row lg:gap-6">
-                      <div className="h-[320px] min-w-0 flex-1 sm:h-[420px] lg:h-[480px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart margin={{ top: 12, right: 12, bottom: 12, left: 12 }}>
+                    <div className="grid gap-4 pb-2 pt-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-6">
+                      <div className="h-[320px] min-w-0 overflow-hidden rounded-lg border border-border bg-card/40 p-2 sm:h-[420px] sm:p-4 lg:h-[480px]">
+                        <ResponsiveContainer width="100%" height="100%" minHeight={280}>
+                          <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
                             <Pie
                               data={genreChartData}
                               cx="50%"
@@ -491,25 +578,40 @@ const ListDetail = () => {
                               outerRadius="68%"
                               paddingAngle={3}
                               dataKey="value"
+                              strokeWidth={2}
                               label={({ name, percent, x, y, textAnchor, index }) => (
-                                <text x={x} y={y} textAnchor={textAnchor} fill={CHART_COLORS[index % CHART_COLORS.length]} fontSize={12} fontWeight={500}>
+                                <text
+                                  x={x}
+                                  y={y}
+                                  textAnchor={textAnchor}
+                                  dominantBaseline="central"
+                                  className="text-[10px] font-semibold sm:text-xs"
+                                  fill={CHART_COLORS[index % CHART_COLORS.length]}
+                                >
                                   {`${name} (${(percent * 100).toFixed(0)}%)`}
                                 </text>
                               )}
-                              labelLine={true}
+                              labelLine={({ points, index }) => (
+                                <polyline
+                                  points={points.map((point) => `${point.x},${point.y}`).join(" ")}
+                                  fill="none"
+                                  stroke={CHART_COLORS[index % CHART_COLORS.length]}
+                                  strokeWidth={1.6}
+                                  strokeOpacity={0.85}
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              )}
                             >
                               {genreChartData.map((_, index) => (
-                                <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={CHART_COLORS[index % CHART_COLORS.length]}
+                                />
                               ))}
                             </Pie>
                             <Tooltip
-                              contentStyle={{
-                                backgroundColor: "hsl(215, 25%, 16%)",
-                                border: "1px solid hsl(215, 20%, 25%)",
-                                borderRadius: "8px",
-                                color: "white",
-                                maxWidth: "220px",
-                              }}
+                              wrapperStyle={{ maxWidth: "min(260px, calc(100vw - 3rem))" }}
                               content={({ active, payload }) => {
                                 if (!active || !payload?.length) return null;
                                 const genreName = payload[0].name as string;
@@ -517,29 +619,15 @@ const ListDetail = () => {
                                 const movies = genreMoviesMap.get(genreName) || [];
 
                                 return (
-                                  <div
-                                    style={{
-                                      backgroundColor: "hsl(215, 25%, 16%)",
-                                      border: "1px solid hsl(215, 20%, 25%)",
-                                      borderRadius: "8px",
-                                      padding: "10px 12px",
-                                      maxWidth: "220px",
-                                    }}
-                                  >
-                                    <p style={{ color: "white", fontWeight: 600, marginBottom: 6 }}>
+                                  <div className="max-w-[min(260px,calc(100vw-3rem))] rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-xl">
+                                    <p className="mb-2 break-words text-sm font-semibold">
                                       {genreName} ({count} {count === 1 ? "filme" : "filmes"})
                                     </p>
-                                    <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                                    <ul className="max-h-40 space-y-1 overflow-y-auto text-xs text-muted-foreground">
                                       {movies.map((title) => (
                                         <li
                                           key={title}
-                                          style={{
-                                            color: "hsl(215, 20%, 75%)",
-                                            fontSize: "11px",
-                                            paddingTop: "2px",
-                                            borderTop: "1px solid hsl(215, 20%, 25%)",
-                                            marginTop: "3px",
-                                          }}
+                                          className="break-words border-t border-border pt-1 first:border-t-0 first:pt-0"
                                         >
                                           {title}
                                         </li>
@@ -549,36 +637,66 @@ const ListDetail = () => {
                                 );
                               }}
                             />
-                            <Legend
-                              verticalAlign="bottom"
-                              wrapperStyle={{ paddingTop: "30px" }}
-                              formatter={(value) => <span style={{ color: "white", fontSize: "13px" }}>{value}</span>}
-                            />
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
-                      <div className="grid w-full grid-cols-2 gap-3 lg:w-[180px] lg:grid-cols-1 lg:justify-center">
-                        <div className="rounded-lg border border-border bg-card p-4 text-center">
-                          <p className="text-xs text-muted-foreground">Filmes na lista</p>
-                          <p className="text-2xl font-bold text-foreground">{totalMovies}</p>
+
+                      <div className="flex min-w-0 flex-col gap-3">
+                        <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
+                          <div className="rounded-lg border border-border bg-card p-3 text-center sm:p-4">
+                            <p className="text-xs text-muted-foreground">Filmes na lista</p>
+                            <p className="text-2xl font-bold text-foreground">{totalMovies}</p>
+                          </div>
+                          <div className="rounded-lg border border-border bg-card p-3 text-center sm:p-4">
+                            <p className="text-xs text-muted-foreground">Gêneros diferentes</p>
+                            <p className="text-2xl font-bold text-foreground">{totalGenres}</p>
+                          </div>
                         </div>
-                        <div className="rounded-lg border border-border bg-card p-4 text-center">
-                          <p className="text-xs text-muted-foreground">Gêneros diferentes</p>
-                          <p className="text-2xl font-bold text-foreground">{totalGenres}</p>
+
+                        <div className="rounded-lg border border-border bg-card p-3">
+                          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                            {genreChartData.map((genre, index) => (
+                              <div
+                                key={genre.name}
+                                className="flex min-w-0 items-center gap-2 rounded-md px-1 py-0.5 text-sm transition-colors hover:bg-accent/60"
+                              >
+                                <span
+                                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                  style={{
+                                    backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+                                  }}
+                                />
+                                <span className="min-w-0 flex-1 truncate text-muted-foreground">
+                                  {genre.name}
+                                </span>
+                                <span className="shrink-0 font-medium text-foreground">
+                                  {genre.value}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground py-8 text-center">Nenhum dado de gênero disponível.</p>
+                    <p className="text-sm text-muted-foreground py-8 text-center">
+                      Nenhum dado de gênero disponível.
+                    </p>
                   )}
                 </DialogContent>
               </Dialog>
             )}
             {list.owner !== false && (
-              <Dialog open={showShare} onOpenChange={(v) => {
-                setShowShare(v);
-                if (!v) { setShareSearch(""); setSelectedUsers([]); }
-              }}>
+              <Dialog
+                open={showShare}
+                onOpenChange={(v) => {
+                  setShowShare(v);
+                  if (!v) {
+                    setShareSearch("");
+                    setSelectedUsers([]);
+                  }
+                }}
+              >
                 <DialogTrigger asChild>
                   <Button size="sm" variant="outline">
                     <Share2 className="h-4 w-4" />
@@ -613,12 +731,16 @@ const ListDetail = () => {
                             "flex items-center gap-3 rounded-md border p-2.5 cursor-pointer transition-colors",
                             selectedUsers.includes(user.profileName)
                               ? "border-primary bg-primary/10"
-                              : "border-border bg-card hover:bg-accent"
+                              : "border-border bg-card hover:bg-accent",
                           )}
                         >
                           <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
                             {user.avatar ? (
-                              <img src={getImageUrl(user.avatar)} alt={user.name} className="h-full w-full object-cover" />
+                              <img
+                                src={getImageUrl(user.avatar)}
+                                alt={user.name}
+                                className="h-full w-full object-cover"
+                              />
                             ) : (
                               <span className="text-sm font-medium text-muted-foreground">
                                 {user.profileName.charAt(1).toUpperCase()}
@@ -626,13 +748,21 @@ const ListDetail = () => {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-card-foreground truncate">{user.name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{user.profileName}</p>
+                            <p className="text-sm font-medium text-card-foreground truncate">
+                              {user.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {user.profileName}
+                            </p>
                           </div>
-                          <div className={cn(
-                            "h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0",
-                            selectedUsers.includes(user.profileName) ? "border-primary bg-primary" : "border-muted-foreground"
-                          )}>
+                          <div
+                            className={cn(
+                              "h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0",
+                              selectedUsers.includes(user.profileName)
+                                ? "border-primary bg-primary"
+                                : "border-muted-foreground",
+                            )}
+                          >
                             {selectedUsers.includes(user.profileName) && (
                               <div className="h-2 w-2 rounded-full bg-primary-foreground" />
                             )}
@@ -641,7 +771,9 @@ const ListDetail = () => {
                       ))
                     ) : (
                       <p className="text-sm text-muted-foreground text-center py-6">
-                        {following.length === 0 ? "Você ainda não segue ninguém." : "Nenhum usuário encontrado."}
+                        {following.length === 0
+                          ? "Você ainda não segue ninguém."
+                          : "Nenhum usuário encontrado."}
                       </p>
                     )}
                   </div>
@@ -694,7 +826,6 @@ const ListDetail = () => {
                                   {user.profileName.charAt(1).toUpperCase()}
                                 </span>
                               )}
-
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-card-foreground truncate">
@@ -746,7 +877,16 @@ const ListDetail = () => {
                 </DialogContent>
               </Dialog>
             )}
-            <Dialog open={searchOpen} onOpenChange={(v) => { setSearchOpen(v); if (!v) { setQuery(""); setSearchTerm(""); } }}>
+            <Dialog
+              open={searchOpen}
+              onOpenChange={(v) => {
+                setSearchOpen(v);
+                if (!v) {
+                  setQuery("");
+                  setSearchTerm("");
+                }
+              }}
+            >
               <DialogTrigger asChild>
                 <Button size="sm">
                   <Search className="mr-1.5 h-4 w-4" />
@@ -768,24 +908,37 @@ const ListDetail = () => {
                       className="flex-1 bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
                     />
                   </div>
-                  <Button size="sm" onClick={handleSearch} className="w-full sm:w-auto">Buscar</Button>
+                  <Button size="sm" onClick={handleSearch} className="w-full sm:w-auto">
+                    Buscar
+                  </Button>
                 </div>
                 {searchResults && (
                   <div className="mt-4 space-y-2 overflow-y-auto flex-1">
                     {searchResults.results.slice(0, 10).map((movie) => {
                       const alreadyAdded = list.movies.some((m) => m.id === movie.id);
                       return (
-                        <div key={movie.id} className="flex min-w-0 items-center gap-3 rounded-md border border-border bg-card p-2">
+                        <div
+                          key={movie.id}
+                          className="flex min-w-0 items-center gap-3 rounded-md border border-border bg-card p-2"
+                        >
                           {getPosterUrl(movie.poster_path, "w185") ? (
-                            <img src={getPosterUrl(movie.poster_path, "w185")!} alt={movie.title} className="h-16 w-11 rounded object-cover shrink-0" />
+                            <img
+                              src={getPosterUrl(movie.poster_path, "w185")!}
+                              alt={movie.title}
+                              className="h-16 w-11 rounded object-cover shrink-0"
+                            />
                           ) : (
                             <div className="flex h-16 w-11 items-center justify-center rounded bg-muted shrink-0">
                               <Film className="h-4 w-4 text-muted-foreground" />
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <p className="truncate text-sm font-medium text-card-foreground">{movie.title}</p>
-                            <p className="text-xs text-muted-foreground">{movie.release_date?.slice(0, 4)}</p>
+                            <p className="truncate text-sm font-medium text-card-foreground">
+                              {movie.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {movie.release_date?.slice(0, 4)}
+                            </p>
                           </div>
                           <Button
                             size="sm"
@@ -842,16 +995,23 @@ const ListDetail = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os gêneros</SelectItem>
-                  {Array.from(allGenres.entries()).sort(([, a], [, b]) => a.localeCompare(b)).map(([id, name]) => (
-                    <SelectItem key={id} value={String(id)}>{name}</SelectItem>
-                  ))}
+                  {Array.from(allGenres.entries())
+                    .sort(([, a], [, b]) => a.localeCompare(b))
+                    .map(([id, name]) => (
+                      <SelectItem key={id} value={String(id)}>
+                        {name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
 
-              <Select value={platformFilter} onValueChange={(v) => {
-                setPlatformFilter(v);
-                if (v !== "all") setUserFilter("all");
-              }}>
+              <Select
+                value={platformFilter}
+                onValueChange={(v) => {
+                  setPlatformFilter(v);
+                  if (v !== "all") setUserFilter("all");
+                }}
+              >
                 <SelectTrigger className="min-w-0 flex-1 basis-[calc(50%-0.5rem)] sm:basis-[180px] sm:flex-none sm:w-[180px]">
                   <Tv className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
                   <SelectValue placeholder="Plataforma" />
@@ -861,7 +1021,10 @@ const ListDetail = () => {
                   <SelectItem value="none">Não informado</SelectItem>
                   {PLATFORMS.map((p) => (
                     <SelectItem key={p.value} value={p.value}>
-                      <span className="flex items-center gap-2"><PlatformBadge value={p.value} />{p.label}</span>
+                      <span className="flex items-center gap-2">
+                        <PlatformBadge value={p.value} />
+                        {p.label}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -895,8 +1058,9 @@ const ListDetail = () => {
                   <SelectContent>
                     <SelectItem value="all">Todos os usuários</SelectItem>
                     {sharedUsers
-                      .filter(u => {
-                        const normalize = (p?: string | null) => p?.replace(/^@/, "").toLowerCase() ?? "";
+                      .filter((u) => {
+                        const normalize = (p?: string | null) =>
+                          p?.replace(/^@/, "").toLowerCase() ?? "";
                         return normalize(u.profileName) !== normalize(currentUser?.profileName);
                       })
                       .map((u) => (
@@ -904,9 +1068,15 @@ const ListDetail = () => {
                           <span className="flex items-center gap-2">
                             <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
                               {u.avatar ? (
-                                <img src={getImageUrl(u.avatar)} alt={u.name} className="h-full w-full object-cover" />
+                                <img
+                                  src={getImageUrl(u.avatar)}
+                                  alt={u.name}
+                                  className="h-full w-full object-cover"
+                                />
                               ) : (
-                                <span className="text-[10px] font-medium text-muted-foreground">{u.profileName.charAt(1).toUpperCase()}</span>
+                                <span className="text-[10px] font-medium text-muted-foreground">
+                                  {u.profileName.charAt(1).toUpperCase()}
+                                </span>
                               )}
                             </span>
                             {u.profileName}
@@ -917,18 +1087,26 @@ const ListDetail = () => {
                 </Select>
               )}
 
-              <Select value={datePreset} onValueChange={(v) => {
-                setDatePreset(v);
-                if (v !== "custom") { setDateFrom(undefined); setDateTo(undefined); }
-                if (v !== "all") setUserFilter("all");
-              }}>
+              <Select
+                value={datePreset}
+                onValueChange={(v) => {
+                  setDatePreset(v);
+                  if (v !== "custom") {
+                    setDateFrom(undefined);
+                    setDateTo(undefined);
+                  }
+                  if (v !== "all") setUserFilter("all");
+                }}
+              >
                 <SelectTrigger className="min-w-0 flex-1 basis-[calc(50%-0.5rem)] sm:basis-[180px] sm:flex-none sm:w-[180px]">
                   <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
                   <SelectValue placeholder="Período" />
                 </SelectTrigger>
                 <SelectContent>
                   {DATE_PRESETS.map((p) => (
-                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    <SelectItem key={p.value} value={p.value}>
+                      {p.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -937,7 +1115,7 @@ const ListDetail = () => {
                 variant="outline"
                 onClick={() =>
                   setSortOrder((prev) =>
-                    prev === "none" ? "asc" : prev === "asc" ? "desc" : "none"
+                    prev === "none" ? "asc" : prev === "asc" ? "desc" : "none",
                   )
                 }
                 className="shrink-0"
@@ -958,38 +1136,71 @@ const ListDetail = () => {
               </Button>
             </div>
 
-
             {datePreset === "custom" && (
               <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[180px_auto_180px_auto]">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal sm:w-[180px]", !dateFrom && "text-muted-foreground")}>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal sm:w-[180px]",
+                        !dateFrom && "text-muted-foreground",
+                      )}
+                    >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "Data inicial"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} disabled={(date) => date > new Date() || (dateTo ? date > dateTo : false)} initialFocus className={cn("p-3 pointer-events-auto")} />
+                    <Calendar
+                      mode="single"
+                      selected={dateFrom}
+                      onSelect={setDateFrom}
+                      disabled={(date) => date > new Date() || (dateTo ? date > dateTo : false)}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
                   </PopoverContent>
                 </Popover>
                 <span className="text-sm text-muted-foreground">até</span>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal sm:w-[180px]", !dateTo && "text-muted-foreground")}>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal sm:w-[180px]",
+                        !dateTo && "text-muted-foreground",
+                      )}
+                    >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dateTo ? format(dateTo, "dd/MM/yyyy") : "Data final"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={dateTo} onSelect={setDateTo} disabled={(date) => date > new Date() || (dateFrom ? date < dateFrom : false)} initialFocus className={cn("p-3 pointer-events-auto")} />
+                    <Calendar
+                      mode="single"
+                      selected={dateTo}
+                      onSelect={setDateTo}
+                      disabled={(date) => date > new Date() || (dateFrom ? date < dateFrom : false)}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
                   </PopoverContent>
                 </Popover>
                 {(dateFrom || dateTo) && (
-                  <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}>Limpar</Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setDateFrom(undefined);
+                      setDateTo(undefined);
+                    }}
+                  >
+                    Limpar
+                  </Button>
                 )}
               </div>
             )}
-
           </div>
         )}
 
@@ -999,12 +1210,16 @@ const ListDetail = () => {
           <div className="mt-20 flex flex-col items-center text-center">
             <Film className="h-16 w-16 text-muted-foreground" />
             <p className="mt-4 text-lg font-medium text-muted-foreground">Lista vazia</p>
-            <p className="mt-1 text-sm text-muted-foreground">Adicione filmes usando o botão acima</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Adicione filmes usando o botão acima
+            </p>
           </div>
         ) : filteredMovies.length === 0 ? (
           <div className="mt-20 flex flex-col items-center text-center">
             <Filter className="h-12 w-12 text-muted-foreground" />
-            <p className="mt-4 text-muted-foreground">Nenhum filme encontrado com os filtros selecionados.</p>
+            <p className="mt-4 text-muted-foreground">
+              Nenhum filme encontrado com os filtros selecionados.
+            </p>
           </div>
         ) : (
           <div className="mt-8 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-4 sm:gap-5 xl:grid-cols-6">
@@ -1012,26 +1227,38 @@ const ListDetail = () => {
               const url = getPosterUrl(movie.poster_path);
               const rating = movieRatings[movie.id];
               const ratingDate = rating?.createdAt
-                ? new Date(rating.createdAt + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
+                ? new Date(rating.createdAt + "T00:00:00").toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })
                 : null;
 
               const normalize = (p?: string | null) => p?.replace(/^@/, "").toLowerCase() ?? "";
 
-              const othersRatings = (list.isShared)
+              const othersRatings = list.isShared
                 ? (getMovieSharedRatings(movie.id) || []).filter(
-                  (r) =>
-                    normalize(r.profileName) !== normalize(currentUser.profileName) &&
-                    r.rating !== null &&
-                    r.rating !== undefined
-                )
+                    (r) =>
+                      normalize(r.profileName) !== normalize(currentUser.profileName) &&
+                      r.rating !== null &&
+                      r.rating !== undefined,
+                  )
                 : [];
 
               return (
-                <div key={movie.id} className="group relative overflow-visible rounded-lg border border-border bg-card animate-fade-in">
+                <div
+                  key={movie.id}
+                  className="group relative overflow-visible rounded-lg border border-border bg-card animate-fade-in"
+                >
                   <Link to={`/movie/${movie.id}`} className="block">
                     <div className="aspect-[2/3] overflow-hidden">
                       {url ? (
-                        <img src={url} alt={movie.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                        <img
+                          src={url}
+                          alt={movie.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-muted">
                           <Film className="h-8 w-8 text-muted-foreground" />
@@ -1039,15 +1266,18 @@ const ListDetail = () => {
                       )}
                     </div>
                     <div className="space-y-1.5 p-3">
-                      <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-5 text-card-foreground">{movie.title}</h3>
+                      <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-5 text-card-foreground">
+                        {movie.title}
+                      </h3>
 
                       {othersRatings.length > 0 && (
                         <div className="space-y-1.5 pb-1.5 border-b border-border">
                           {othersRatings.map((r) => (
-                            <div key={r.profileName} className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-
+                            <div
+                              key={r.profileName}
+                              className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground"
+                            >
                               <div className="relative h-5 w-5 shrink-0">
-
                                 <Link
                                   to={`/usuario/${r.profileName}`}
                                   className="peer block h-5 w-5 rounded-full overflow-hidden bg-muted"
@@ -1081,21 +1311,20 @@ const ListDetail = () => {
                                 >
                                   {r.profileName}
                                 </div>
-
                               </div>
 
                               <div className="flex min-w-0 flex-wrap items-center gap-0.5">
                                 {Array.from({ length: 5 }).map((_, i) => (
                                   <Star
                                     key={i}
-                                    className={`h-3 w-3 ${i < r.rating
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "fill-transparent text-star-empty"
-                                      }`}
+                                    className={`h-3 w-3 ${
+                                      i < r.rating
+                                        ? "fill-yellow-400 text-yellow-400"
+                                        : "fill-transparent text-star-empty"
+                                    }`}
                                   />
                                 ))}
                               </div>
-
                             </div>
                           ))}
                         </div>
@@ -1106,7 +1335,6 @@ const ListDetail = () => {
                           <div className="flex flex-wrap items-center gap-0.5">
                             {list.isShared && (
                               <div className="relative h-7 w-7 shrink-0 mr-1">
-
                                 <Link
                                   to={`/perfil`}
                                   className="peer block h-7 w-7 rounded-full overflow-hidden bg-muted"
@@ -1139,7 +1367,6 @@ const ListDetail = () => {
                                 >
                                   {currentUser?.profileName}
                                 </div>
-
                               </div>
                             )}
                             {[1, 2, 3, 4, 5].map((s) => (
@@ -1158,7 +1385,10 @@ const ListDetail = () => {
                           {rating.platform && (
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                               <PlatformBadge value={rating.platform} />
-                              <span className="truncate">{PLATFORMS.find((p) => p.value === rating.platform)?.label || rating.platform}</span>
+                              <span className="truncate">
+                                {PLATFORMS.find((p) => p.value === rating.platform)?.label ||
+                                  rating.platform}
+                              </span>
                             </div>
                           )}
                         </>
