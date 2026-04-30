@@ -21,15 +21,18 @@ public interface RatingRepository extends JpaRepository<Rating, RatingPK> {
 	Optional<Rating> findByIdUserIdAndIdMovieId(Long userId, Long movieId);
 
 	@Query("""
-			SELECT DISTINCT r
+			SELECT r
 			FROM Rating r
 			JOIN r.id.movie m
-			JOIN m.genres g
 			WHERE r.id.user.id = :userId
 			AND (:title IS NULL OR m.title ILIKE CONCAT('%', CAST(:title AS string), '%'))
 			AND (:platform IS NULL OR r.platform = :platform)
 			AND (:score IS NULL OR r.score = :score)
-			AND (:genreId IS NULL OR g.id = :genreId)
+			AND (:genreId IS NULL OR EXISTS (
+			    SELECT 1
+			    FROM m.genres g
+			    WHERE g.id = :genreId
+			))
 			AND r.createdAt >= COALESCE(:startDate, r.createdAt)
 			AND r.createdAt <= COALESCE(:endDate, r.createdAt)
 			""")

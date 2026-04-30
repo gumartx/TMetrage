@@ -54,7 +54,12 @@ const RatedMovies = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const genreParam = searchParams.get("genre");
 
-  const backendSort = "createdAt,desc";
+  const backendSort =
+    sortOrder === "asc"
+      ? "movieTitle,asc"
+      : sortOrder === "desc"
+        ? "movieTitle,desc"
+        : "createdAt,desc";
 
   useEffect(() => {
     getGenres().then(setAllGenres).catch(() => setAllGenres([]));
@@ -80,7 +85,7 @@ const RatedMovies = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, platformFilter, ratingFilter, genreFilter, datePreset, dateFrom, dateTo]);
+  }, [searchQuery, platformFilter, ratingFilter, genreFilter, datePreset, dateFrom, dateTo, sortOrder]);
 
   useEffect(() => {
     let cancelled = false;
@@ -155,21 +160,14 @@ const RatedMovies = () => {
     return () => {
       cancelled = true;
     };
-  }, [currentPage, searchQuery, platformFilter, ratingFilter, genreFilter, datePreset, dateFrom, dateTo]);
+  }, [currentPage, searchQuery, platformFilter, ratingFilter, genreFilter, datePreset, dateFrom, dateTo, backendSort]);
 
   const filtered = useMemo(() => {
-    const list = items.filter((rm) => {
+    return items.filter((rm) => {
       const matchesNoPlatform = platformFilter !== "none" || !rm.platform;
       return matchesNoPlatform;
     });
-
-    if (sortOrder === "asc") {
-      list.sort((a, b) => a.movie.title.localeCompare(b.movie.title, "pt-BR"));
-    } else if (sortOrder === "desc") {
-      list.sort((a, b) => b.movie.title.localeCompare(a.movie.title, "pt-BR"));
-    }
-    return list;
-  }, [items, platformFilter, sortOrder]);
+  }, [items, platformFilter]);
 
   return (
     <div className="min-h-screen bg-background">

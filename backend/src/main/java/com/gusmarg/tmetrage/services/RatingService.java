@@ -1,13 +1,16 @@
 package com.gusmarg.tmetrage.services;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,6 +68,8 @@ public class RatingService {
 
 		User user = authService.getAuthenticatedUser();
 
+		pageable = translateSort(pageable);
+		
 		LocalDate startDate = null;
 		LocalDate endDate = null;
 
@@ -247,4 +252,30 @@ public class RatingService {
 		return ratings.stream().map(rating -> new RatingResponseDTO(rating)).toList();
 	}
 
+	private Pageable translateSort(Pageable pageable) {
+
+	    if (pageable.getSort().isUnsorted()) {
+	        return pageable;
+	    }
+
+	    List<Sort.Order> orders = new ArrayList<>();
+
+	    for (Sort.Order order : pageable.getSort()) {
+
+	        String property = order.getProperty();
+
+	        if (property.equals("movieTitle")) {
+	            property = "id.movie.title";
+	        }
+
+	        orders.add(new Sort.Order(order.getDirection(), property));
+	    }
+
+	    return PageRequest.of(
+	            pageable.getPageNumber(),
+	            pageable.getPageSize(),
+	            Sort.by(orders)
+	    );
+	}
+	
 }
